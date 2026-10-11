@@ -1,3 +1,4 @@
+using KaedePhi.Core.Phigros.v3;
 using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Formats.Phigros.v3.Model

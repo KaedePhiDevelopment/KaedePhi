@@ -15,7 +15,7 @@ internal static class NumericValueFormatter
     /// <returns>格式化后的文本</returns>
     public static string Format(double value) =>
         // 整数使用定点格式去掉小数位，小数使用最短表示
-        value == Math.Floor(value)
+        Math.Abs(value - Math.Floor(value)) < float.Epsilon
             ? value.ToString("F0", CultureInfo.InvariantCulture)
             : value.ToString("G", CultureInfo.InvariantCulture);
 }

@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Formats.Phigros.v3.Model
 {
-    public partial class Chart
+    public class Chart
     {
         /// <summary>
         /// 格式版本号

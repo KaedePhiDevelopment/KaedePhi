@@ -69,31 +69,19 @@ public static class ChartFormatRegistry
                 ExportOptionsFactory = () => new ConvertOption(),
                 Importer = async (text, _, log, ct) =>
                 {
-                    var converter = Prepare(
-                        new StellateRePhiEditExtendedConverter(),
-                        log,
-                        ct
-                    );
+                    var converter = Prepare(new StellateRePhiEditExtendedConverter(), log, ct);
                     var source = await RpeSerialization.LoadFromJsonAsync(text);
                     return converter.ToIr(source);
                 },
                 StreamImporter = async (stream, _, log, ct) =>
                 {
-                    var converter = Prepare(
-                        new StellateRePhiEditExtendedConverter(),
-                        log,
-                        ct
-                    );
+                    var converter = Prepare(new StellateRePhiEditExtendedConverter(), log, ct);
                     var source = await RpeSerialization.LoadFromStreamAsync(stream);
                     return converter.ToIr(source);
                 },
                 Exporter = async (chart, path, write, options, log, ct) =>
                 {
-                    var converter = Prepare(
-                        new StellateRePhiEditExtendedConverter(),
-                        log,
-                        ct
-                    );
+                    var converter = Prepare(new StellateRePhiEditExtendedConverter(), log, ct);
                     var target = converter.FromIr(
                         chart,
                         Coerce(options, () => new ConvertOption())

@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace KaedePhi.Core.Formats.PhiEdit.Model
 {
-    public partial class Chart
+    public class Chart
     {
         /// <summary>
         /// 谱面偏移，单位为毫秒

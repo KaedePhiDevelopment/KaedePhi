@@ -1,4 +1,3 @@
-using System.Linq;
 using KaedePhi.Core.Intermediate.Model;
 using KaedePhi.Core.Primitives;
 using IrEvents = KaedePhi.Core.Intermediate.Model.Events;

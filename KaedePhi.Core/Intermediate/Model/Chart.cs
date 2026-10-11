@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace KaedePhi.Core.Intermediate.Model
 {
@@ -33,11 +34,13 @@ namespace KaedePhi.Core.Intermediate.Model
         /// <summary>
         /// 判定线列表
         /// </summary>
+        [AllowNull] // 无法避免用户向List自行添加null；无法避免Json反序列化时将null转换为List<JudgeLine>中的null元素
         public List<JudgeLine> JudgeLineList { get; set; } = new();
 
         /// <summary>
         /// 噪域列表。
         /// </summary>
+        [AllowNull] // 无法避免用户向List自行添加null；无法避免Json反序列化时将null转换为List<BlockArea>中的null元素
         public List<BlockArea> BlockAreaList { get; set; } = new();
     }
 }

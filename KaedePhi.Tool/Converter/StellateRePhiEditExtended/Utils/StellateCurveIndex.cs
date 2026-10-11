@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using KaedePhi.Tool.Converter.Phigros.v3.Utils;
-using RpeEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<float>;
 using IrBpmItem = KaedePhi.Core.Intermediate.Model.BpmItem;
+using RpeEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<float>;
 
 namespace KaedePhi.Tool.Converter.StellateRePhiEditExtended.Utils;
 
@@ -29,7 +26,8 @@ public sealed class StellateCurveIndex
         IReadOnlyList<RpeEvent> events,
         IReadOnlyList<IrBpmItem> bpmList,
         int cacheIndex
-    ) : this(events, new PhigrosV3TimeMapper(bpmList), cacheIndex) { }
+    )
+        : this(events, new PhigrosV3TimeMapper(bpmList), cacheIndex) { }
 
     internal StellateCurveIndex(
         IReadOnlyList<RpeEvent> events,
@@ -56,11 +54,14 @@ public sealed class StellateCurveIndex
         FirstIndex = firstIndex;
 
         var order = Enumerable.Range(0, events.Count).ToArray();
-        Array.Sort(order, (left, right) =>
-        {
-            var comparison = _startTimes[left].CompareTo(_startTimes[right]);
-            return comparison != 0 ? comparison : left.CompareTo(right);
-        });
+        Array.Sort(
+            order,
+            (left, right) =>
+            {
+                var comparison = _startTimes[left].CompareTo(_startTimes[right]);
+                return comparison != 0 ? comparison : left.CompareTo(right);
+            }
+        );
 
         _sortedStartTimes = new double[events.Count];
         _dominantByPrefix = new int[events.Count];
@@ -139,9 +140,7 @@ public sealed class StellateCurveIndex
                 upper = middle;
         }
 
-        return lower == 0
-            ? (-1, -1)
-            : (_dominantByPrefix[lower - 1], _previousByPrefix[lower - 1]);
+        return lower == 0 ? (-1, -1) : (_dominantByPrefix[lower - 1], _previousByPrefix[lower - 1]);
     }
 
     private int ComparePriority(int leftIndex, int rightIndex)

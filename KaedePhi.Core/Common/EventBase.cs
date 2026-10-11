@@ -72,7 +72,7 @@ namespace KaedePhi.Core.Common
             typeof(T) == typeof(byte[]) ? (T)(object)Array.Empty<byte>() : default!;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private float GetValueAsSingle(T value)
+        private static float GetValueAsSingle(T value)
         {
             if (typeof(T) == typeof(float))
                 return Cast<T, float>(value);
@@ -86,7 +86,7 @@ namespace KaedePhi.Core.Common
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double GetValueAsDouble(T value)
+        private static double GetValueAsDouble(T value)
         {
             if (typeof(T) == typeof(double))
                 return Cast<T, double>(value);
@@ -98,7 +98,7 @@ namespace KaedePhi.Core.Common
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int GetValueAsInt32(T value)
+        private static int GetValueAsInt32(T value)
         {
             if (typeof(T) == typeof(int))
                 return Cast<T, int>(value);
@@ -162,10 +162,8 @@ namespace KaedePhi.Core.Common
                 || type == typeof(float)
                 || type == typeof(double)
                 || type == typeof(byte)
+                || type == typeof(string)
             )
-                return value;
-
-            if (type == typeof(string))
                 return value;
 
             if (type == typeof(byte[]))

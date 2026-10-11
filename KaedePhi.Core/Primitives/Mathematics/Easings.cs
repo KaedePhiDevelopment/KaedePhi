@@ -1,5 +1,4 @@
 using System;
-using KaedePhi.Core.Primitives;
 
 namespace KaedePhi.Core.Primitives.Mathematics
 {

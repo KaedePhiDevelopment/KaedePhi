@@ -28,7 +28,7 @@ internal sealed class PhigrosV3TimeMapper
         var changes = new List<(Beat Beat, float Bpm)>();
         var currentBpm = initialBpm;
 
-        for (var start = 0; start < ordered.Count;)
+        for (var start = 0; start < ordered.Count; )
         {
             var beat = ordered[start].Item.StartBeat;
             var end = start + 1;
@@ -41,7 +41,10 @@ internal sealed class PhigrosV3TimeMapper
                 initialBpm = bpm;
                 currentBpm = bpm;
             }
-            else if (beat > new Beat(0) && Math.Abs(bpm - currentBpm) > Common.Constants.FloatEpsilon)
+            else if (
+                beat > new Beat(0)
+                && Math.Abs(bpm - currentBpm) > Common.Constants.FloatEpsilon
+            )
             {
                 changes.Add((beat, bpm));
                 currentBpm = bpm;
@@ -103,9 +106,7 @@ internal sealed class PhigrosV3TimeMapper
             segment = _segments[index];
         }
 
-        var beat =
-            segment.StartBeat
-            + (musicTime - segment.StartSeconds) * segment.Bpm / 60d;
+        var beat = segment.StartBeat + (musicTime - segment.StartSeconds) * segment.Bpm / 60d;
         return !double.IsFinite(beat)
             ? throw new FormatException("噪域音乐时间转换后的拍数不是有限数值。")
             : new Beat(beat);
@@ -126,8 +127,11 @@ internal sealed class PhigrosV3TimeMapper
 
     public IEnumerable<Beat> GetTempoChangeBeats(Beat startBeat, Beat endBeat)
     {
-        return _segments.Skip(1).Where(segment => segment.StartBeat > startBeat)
-            .TakeWhile(segment => segment.StartBeat < endBeat).Select(segment => segment.StartBeat);
+        return _segments
+            .Skip(1)
+            .Where(segment => segment.StartBeat > startBeat)
+            .TakeWhile(segment => segment.StartBeat < endBeat)
+            .Select(segment => segment.StartBeat);
     }
 
     private (long Time, double Seconds) Quantize(Beat beat, float bpmFactor)
@@ -151,9 +155,10 @@ internal sealed class PhigrosV3TimeMapper
 
         var segment = FindTempoSegment(beat);
         var seconds =
-            (segment.StartSeconds + (beat - segment.StartBeat) * 60d / segment.Bpm)
-            * bpmFactor;
-        return !double.IsFinite(seconds) ? throw new FormatException("IR BPM 时间积分结果不是有限数值。") : seconds;
+            (segment.StartSeconds + (beat - segment.StartBeat) * 60d / segment.Bpm) * bpmFactor;
+        return !double.IsFinite(seconds)
+            ? throw new FormatException("IR BPM 时间积分结果不是有限数值。")
+            : seconds;
     }
 
     private TempoSegment FindTempoSegment(Beat beat)

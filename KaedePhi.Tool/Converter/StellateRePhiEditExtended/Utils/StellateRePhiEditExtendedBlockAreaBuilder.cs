@@ -1,14 +1,8 @@
-using KaedePhi.Core.Primitives;
-using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter.RePhiEdit.Model;
-using KaedePhi.Tool.Converter.RePhiEdit.Utils;
-using RpeJudgeLine = KaedePhi.Core.Formats.RePhiEdit.Model.JudgeLine;
+using IrBlockArea = KaedePhi.Core.Intermediate.Model.BlockArea;
 using RpeEventLayer = KaedePhi.Core.Formats.RePhiEdit.Model.Events.EventLayer;
 using RpeExtendLayer = KaedePhi.Core.Formats.RePhiEdit.Model.Events.ExtendLayer;
-using IrBlockArea = KaedePhi.Core.Intermediate.Model.BlockArea;
-using IrEvent = KaedePhi.Core.Intermediate.Model.Events.Event<double>;
-using RpeEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<float>;
-using RpeAlphaEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<int>;
+using RpeJudgeLine = KaedePhi.Core.Formats.RePhiEdit.Model.JudgeLine;
 using RpeTransform = KaedePhi.Tool.Converter.RePhiEdit.Utils.Transform;
 
 namespace KaedePhi.Tool.Converter.StellateRePhiEditExtended.Utils;
@@ -137,9 +131,7 @@ public static class StellateRePhiEditExtendedBlockAreaBuilder
         return new RpeJudgeLine
         {
             Name = $"BlockArea_{index + 1}",
-            Texture = source.IsSubtract
-                ? @"Pictures\isSubtract1.png"
-                : @"Pictures\isSubtract0.png",
+            Texture = source.IsSubtract ? @"Pictures\isSubtract1.png" : @"Pictures\isSubtract0.png",
             Anchor = [0.5f, 0.5f],
             Father = -1,
             RotateWithFather = false,
@@ -198,5 +190,4 @@ public static class StellateRePhiEditExtendedBlockAreaBuilder
                 $"IR 噪域 {index} 的显示阶段顺序无效，无法转换为 StellateRePhiEditExtended。"
             );
     }
-
 }

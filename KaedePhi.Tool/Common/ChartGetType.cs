@@ -1,9 +1,5 @@
-using System;
 using System.Globalization;
-using System.IO;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 using KaedePhi.Tool.Converter.StellateRePhiEditExtended.Utils;
 using Newtonsoft.Json;
@@ -192,9 +188,7 @@ public static class ChartGetType
         }
 
         if (hasRePhiEditMeta)
-            return hasStellateTexture
-                ? ChartType.StellateRePhiEditExtended
-                : ChartType.RePhiEdit;
+            return hasStellateTexture ? ChartType.StellateRePhiEditExtended : ChartType.RePhiEdit;
 
         if (hasFormatVersion)
         {
@@ -298,9 +292,7 @@ public static class ChartGetType
         }
 
         if (hasRePhiEditMeta)
-            return hasStellateTexture
-                ? ChartType.StellateRePhiEditExtended
-                : ChartType.RePhiEdit;
+            return hasStellateTexture ? ChartType.StellateRePhiEditExtended : ChartType.RePhiEdit;
 
         if (hasFormatVersion)
         {
@@ -365,9 +357,7 @@ public static class ChartGetType
                     throw new JsonException("JSON 属性缺少值。");
                 if (
                     reader.TokenType == JsonToken.String
-                    && StellateRePhiEditExtendedTexture.IsBlockAreaTexture(
-                        reader.Value as string
-                    )
+                    && StellateRePhiEditExtendedTexture.IsBlockAreaTexture(reader.Value as string)
                 )
                 {
                     hasStellateTexture = true;
@@ -420,9 +410,7 @@ public static class ChartGetType
                     throw new JsonException("JSON 属性缺少值。");
                 if (
                     reader.TokenType == JsonToken.String
-                    && StellateRePhiEditExtendedTexture.IsBlockAreaTexture(
-                        reader.Value as string
-                    )
+                    && StellateRePhiEditExtendedTexture.IsBlockAreaTexture(reader.Value as string)
                 )
                 {
                     hasStellateTexture = true;

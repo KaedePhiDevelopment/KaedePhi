@@ -6,7 +6,6 @@ using Newtonsoft.Json.Linq;
 using Ir = KaedePhi.Core.Intermediate.Model;
 using Pc = KaedePhi.Core.Formats.PhiChain.v6.Model;
 using PcSerialization = KaedePhi.Core.Formats.PhiChain.v6.Serialization.ChartSerialization;
-using Pe = KaedePhi.Core.Formats.PhiEdit.Model;
 using PeSerialization = KaedePhi.Core.Formats.PhiEdit.Serialization.ChartSerialization;
 using Pf = KaedePhi.Core.Formats.PhiFans.Model;
 using PfSerialization = KaedePhi.Core.Formats.PhiFans.Serialization.ChartSerialization;

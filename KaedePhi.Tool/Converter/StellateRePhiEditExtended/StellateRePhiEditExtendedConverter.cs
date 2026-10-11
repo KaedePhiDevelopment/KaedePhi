@@ -53,10 +53,10 @@ public sealed class StellateRePhiEditExtendedConverter
             Meta = source.Meta,
             JudgeLineList =
             [
-                .. sourceLines
-                    .Select((line, index) =>
+                .. sourceLines.Select(
+                    (line, index) =>
                         isBlockAreaLine[index] ? new RpeJudgeLine { Father = line.Father } : line
-                    )
+                ),
             ],
         };
         var baseConverter = new RePhiEditConverter

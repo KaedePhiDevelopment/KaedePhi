@@ -16,12 +16,12 @@ namespace KaedePhi.Core.Primitives.Serialization
         {
             var contract = base.ResolveContract(type);
 
-            if (type == typeof(global::KaedePhi.Core.Primitives.Beat))
+            if (type == typeof(Beat))
             {
                 return contract with
                 {
-                    Converter = new BeatDataConverter<global::KaedePhi.Core.Primitives.Beat>(
-                        values => new global::KaedePhi.Core.Primitives.Beat(values),
+                    Converter = new BeatDataConverter<Beat>(
+                        values => new Beat(values),
                         (value, index) => value[index]
                     ),
                 };
@@ -44,7 +44,7 @@ namespace KaedePhi.Core.Primitives.Serialization
                 {
                     Converter = new PhiChainNoteDataConverter<
                         global::KaedePhi.Core.Formats.PhiChain.v6.Model.Note,
-                        global::KaedePhi.Core.Primitives.Beat
+                        Beat
                     >(
                         () => new global::KaedePhi.Core.Formats.PhiChain.v6.Model.Note(),
                         note => (int)note.Type,
@@ -61,23 +61,24 @@ namespace KaedePhi.Core.Primitives.Serialization
                         (note, value) => note.X = value,
                         note => note.Speed,
                         (note, value) => note.Speed = value,
-                        beat => beat > new global::KaedePhi.Core.Primitives.Beat(0),
-                        () => new global::KaedePhi.Core.Primitives.Beat(0)
+                        beat => beat > new Beat(0),
+                        () => new Beat(0)
                     ),
                 };
             }
 
-            if (type == typeof(global::KaedePhi.Core.PhiChain.v6.Note))
+            if (type == typeof(PhiChain.v6.Note))
             {
                 return contract with
                 {
                     Converter = new PhiChainNoteDataConverter<
-                        global::KaedePhi.Core.PhiChain.v6.Note,
+                        PhiChain.v6.Note,
                         global::KaedePhi.Core.Common.Beat
                     >(
-                        () => new global::KaedePhi.Core.PhiChain.v6.Note(),
+                        () => new PhiChain.v6.Note(),
                         note => (int)note.Type,
-                        (note, value) => note.Type = (global::KaedePhi.Core.PhiChain.v6.NoteType)value,
+                        (note, value) =>
+                            note.Type = (global::KaedePhi.Core.PhiChain.v6.NoteType)value,
                         note => note.Above,
                         (note, value) => note.Above = value,
                         note => note.Beat,
@@ -111,7 +112,10 @@ namespace KaedePhi.Core.Primitives.Serialization
                 )
                 {
                     properties ??= new List<DataProperty>(contract.Properties);
-                    properties[i] = property with { Converter = GetConverter(property.PropertyType) };
+                    properties[i] = property with
+                    {
+                        Converter = GetConverter(property.PropertyType),
+                    };
                 }
             }
 

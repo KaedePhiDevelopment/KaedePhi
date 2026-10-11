@@ -46,7 +46,8 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Serialization.JsonConverter
             {
                 return new AreaEase(Convert.ToInt32(reader.Value, CultureInfo.InvariantCulture));
             }
-            catch (Exception exception) when (exception is FormatException || exception is OverflowException)
+            catch (Exception exception)
+                when (exception is FormatException || exception is OverflowException)
             {
                 throw new JsonSerializationException("噪域缓动类型超出整数范围。", exception);
             }

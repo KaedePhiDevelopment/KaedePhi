@@ -1,12 +1,10 @@
 using KaedePhi.Core.Primitives;
-using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter.RePhiEdit.Model;
-using KaedePhi.Tool.Converter.RePhiEdit.Utils;
 using IrBlockArea = KaedePhi.Core.Intermediate.Model.BlockArea;
 using IrEasing = KaedePhi.Core.Intermediate.Model.Easing;
 using IrEvent = KaedePhi.Core.Intermediate.Model.Events.Event<double>;
-using RpeEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<float>;
 using RpeAlphaEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<int>;
+using RpeEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<float>;
 using RpeEventBuilder = KaedePhi.Tool.Converter.RePhiEdit.Utils.EventBuilder;
 
 namespace KaedePhi.Tool.Converter.StellateRePhiEditExtended.Utils;
@@ -43,14 +41,15 @@ public static class StellateBlockAreaEventConverter
             if (!ensureBaseline)
                 return null;
 
-            ValidateEncodedValue(
-                valueTransformer(defaultValue),
-                blockAreaIndex,
-                trackName
-            );
+            ValidateEncodedValue(valueTransformer(defaultValue), blockAreaIndex, trackName);
             source =
             [
-                CreateEvent(StellateBlockAreaConstants.ZeroBeat, StellateBlockAreaConstants.ZeroBeat, defaultValue, defaultValue),
+                CreateEvent(
+                    StellateBlockAreaConstants.ZeroBeat,
+                    StellateBlockAreaConstants.ZeroBeat,
+                    defaultValue,
+                    defaultValue
+                ),
             ];
         }
 
@@ -91,11 +90,7 @@ public static class StellateBlockAreaEventConverter
         {
             cancellationToken.ThrowIfCancellationRequested();
             converted.AddRange(
-                RpeEventBuilder.ConvertDoubleEventExpanding(
-                    evt,
-                    options,
-                    valueTransformer
-                )
+                RpeEventBuilder.ConvertDoubleEventExpanding(evt, options, valueTransformer)
             );
         }
 
@@ -153,16 +148,8 @@ public static class StellateBlockAreaEventConverter
     )
     {
         ValidateEventFields(evt, blockAreaIndex, trackName);
-        ValidateEncodedValue(
-            valueTransformer(evt.StartValue),
-            blockAreaIndex,
-            trackName
-        );
-        ValidateEncodedValue(
-            valueTransformer(evt.EndValue),
-            blockAreaIndex,
-            trackName
-        );
+        ValidateEncodedValue(valueTransformer(evt.StartValue), blockAreaIndex, trackName);
+        ValidateEncodedValue(valueTransformer(evt.EndValue), blockAreaIndex, trackName);
     }
 
     /// <summary>
@@ -171,11 +158,7 @@ public static class StellateBlockAreaEventConverter
     /// <param name="evt">待验证的 IR 事件</param>
     /// <param name="blockAreaIndex">所属噪域的索引</param>
     /// <param name="trackName">事件轨道名称</param>
-    public static void ValidateEventFields(
-        IrEvent evt,
-        int blockAreaIndex,
-        string trackName
-    )
+    public static void ValidateEventFields(IrEvent evt, int blockAreaIndex, string trackName)
     {
         if (evt.StartBeat > evt.EndBeat)
             throw new FormatException(
@@ -190,9 +173,7 @@ public static class StellateBlockAreaEventConverter
                 $"IR 噪域 {blockAreaIndex} 的{trackName}缓动范围必须是有限数值。"
             );
         if (evt.Easing is null)
-            throw new FormatException(
-                $"IR 噪域 {blockAreaIndex} 的{trackName}缓动类型不能为空。"
-            );
+            throw new FormatException($"IR 噪域 {blockAreaIndex} 的{trackName}缓动类型不能为空。");
         if (
             evt.IsBezier
             && (
@@ -200,9 +181,7 @@ public static class StellateBlockAreaEventConverter
                 || evt.BezierPoints.Any(point => !float.IsFinite(point))
             )
         )
-            throw new FormatException(
-                $"IR 噪域 {blockAreaIndex} 的{trackName}贝塞尔控制点无效。"
-            );
+            throw new FormatException($"IR 噪域 {blockAreaIndex} 的{trackName}贝塞尔控制点无效。");
     }
 
     private static void ValidateEncodedValue(double value, int blockAreaIndex, string trackName)

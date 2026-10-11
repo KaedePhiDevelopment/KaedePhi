@@ -1,12 +1,7 @@
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Converter.Phigros.v3.Utils;
-using KaedePhi.Tool.Converter.StellateRePhiEditExtended.Model;
-using KaedePhi.Tool.Converter.StellateRePhiEditExtended.Utils;
-using RpeChart = KaedePhi.Core.Formats.RePhiEdit.Model.Chart;
-using RpeEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<float>;
-using RpeEventLayer = KaedePhi.Core.Formats.RePhiEdit.Model.Events.EventLayer;
-using RpeJudgeLine = KaedePhi.Core.Formats.RePhiEdit.Model.JudgeLine;
 using IrBpmItem = KaedePhi.Core.Intermediate.Model.BpmItem;
+using RpeChart = KaedePhi.Core.Formats.RePhiEdit.Model.Chart;
 using RpeTransform = KaedePhi.Tool.Converter.RePhiEdit.Utils.Transform;
 
 namespace KaedePhi.Tool.Converter.StellateRePhiEditExtended.Utils;
@@ -32,7 +27,8 @@ public sealed class StellateRePhiEditGeometry
         RpeChart source,
         IReadOnlyList<IrBpmItem> bpmList,
         CancellationToken cancellationToken
-    ) : this(source, new PhigrosV3TimeMapper(bpmList), cancellationToken) { }
+    )
+        : this(source, new PhigrosV3TimeMapper(bpmList), cancellationToken) { }
 
     internal StellateRePhiEditGeometry(
         RpeChart source,
@@ -78,30 +74,55 @@ public sealed class StellateRePhiEditGeometry
         StellateBlockAreaPathBuilder.AddCurveBoundaries(source.Extended?.ScaleXEvents, hardBeats);
         StellateBlockAreaPathBuilder.AddCurveBoundaries(source.Extended?.ScaleYEvents, hardBeats);
         var scaleHardBeats = new SortedSet<Beat> { new(0) };
-        StellateBlockAreaPathBuilder.AddCurveBoundaries(source.Extended?.ScaleXEvents, scaleHardBeats);
-        StellateBlockAreaPathBuilder.AddCurveBoundaries(source.Extended?.ScaleYEvents, scaleHardBeats);
+        StellateBlockAreaPathBuilder.AddCurveBoundaries(
+            source.Extended?.ScaleXEvents,
+            scaleHardBeats
+        );
+        StellateBlockAreaPathBuilder.AddCurveBoundaries(
+            source.Extended?.ScaleYEvents,
+            scaleHardBeats
+        );
         var rotateHardBeats = new SortedSet<Beat> { new(0) };
         _sampler.CollectRotationBreaks(lineIndex, rotateHardBeats, []);
 
-        var moveXSourceEvents = StellateDirectCurveConverter.GetSingleCurve(source, static layer => layer.MoveXEvents);
-        var moveYSourceEvents = StellateDirectCurveConverter.GetSingleCurve(source, static layer => layer.MoveYEvents);
-        var rotateSourceEvents = StellateDirectCurveConverter.GetDirectRotationCurve(source, out var hasMultipleRotationCurves);
-        var rotateDirectSourceEvents = StellateDirectCurveConverter.RemoveRedundantConstantEvents(rotateSourceEvents);
+        var moveXSourceEvents = StellateDirectCurveConverter.GetSingleCurve(
+            source,
+            static layer => layer.MoveXEvents
+        );
+        var moveYSourceEvents = StellateDirectCurveConverter.GetSingleCurve(
+            source,
+            static layer => layer.MoveYEvents
+        );
+        var rotateSourceEvents = StellateDirectCurveConverter.GetDirectRotationCurve(
+            source,
+            out var hasMultipleRotationCurves
+        );
+        var rotateDirectSourceEvents = StellateDirectCurveConverter.RemoveRedundantConstantEvents(
+            rotateSourceEvents
+        );
         var scaleXSourceEvents = source.Extended?.ScaleXEvents;
         var scaleYSourceEvents = source.Extended?.ScaleYEvents;
         var isDirectMoveShape =
             source.Father < 0
             && StellateDirectCurveConverter.IsCenteredAnchor(source)
-            && StellateDirectCurveConverter.NonEmptyLayerCount(source, static layer => layer.MoveXEvents) <= 1
-            && StellateDirectCurveConverter.NonEmptyLayerCount(source, static layer => layer.MoveYEvents) <= 1;
+            && StellateDirectCurveConverter.NonEmptyLayerCount(
+                source,
+                static layer => layer.MoveXEvents
+            ) <= 1
+            && StellateDirectCurveConverter.NonEmptyLayerCount(
+                source,
+                static layer => layer.MoveYEvents
+            ) <= 1;
         var canUseDirectMove =
             isDirectMoveShape
             && StellateDirectCurveConverter.CanConvertDirectCurve(moveXSourceEvents)
             && StellateDirectCurveConverter.CanConvertDirectCurve(moveYSourceEvents)
-            && !StellateDirectCurveConverter.HasInteriorCurveBoundary(moveXSourceEvents, moveYSourceEvents);
+            && !StellateDirectCurveConverter.HasInteriorCurveBoundary(
+                moveXSourceEvents,
+                moveYSourceEvents
+            );
         var isDirectRotateShape =
-            !(source.Father >= 0 && source.RotateWithFather)
-            && !hasMultipleRotationCurves;
+            !(source.Father >= 0 && source.RotateWithFather) && !hasMultipleRotationCurves;
         var canUseDirectRotate =
             isDirectRotateShape
             && StellateDirectCurveConverter.CanConvertDirectCurve(rotateDirectSourceEvents)
@@ -109,7 +130,10 @@ public sealed class StellateRePhiEditGeometry
         var canUseDirectScale =
             StellateDirectCurveConverter.CanConvertDirectScale(scaleXSourceEvents)
             && StellateDirectCurveConverter.CanConvertDirectScale(scaleYSourceEvents)
-            && !StellateDirectCurveConverter.HasInteriorCurveBoundary(scaleXSourceEvents, scaleYSourceEvents);
+            && !StellateDirectCurveConverter.HasInteriorCurveBoundary(
+                scaleXSourceEvents,
+                scaleYSourceEvents
+            );
 
         var sampleBeats = new SortedSet<Beat>(hardBeats);
         if (isDirectMoveShape && !canUseDirectMove)
@@ -118,32 +142,51 @@ public sealed class StellateRePhiEditGeometry
             _pathBuilder.AddRotationCutPoints(sampleBeats, rotateSourceEvents);
         _pathBuilder.AddScaleCutPoints(sampleBeats, scaleXSourceEvents, scaleYSourceEvents);
         _pathBuilder.AddUniformGrid(sampleBeats, endBeat);
-        var sampleParallelism = maxDegreeOfParallelism > 0
-            ? maxDegreeOfParallelism
-            : Environment.ProcessorCount;
-        var samples = _sampler.SampleGeometry(lineIndex, sampleBeats, hardBeats, sampleParallelism).ToList();
+        var sampleParallelism =
+            maxDegreeOfParallelism > 0 ? maxDegreeOfParallelism : Environment.ProcessorCount;
+        var samples = _sampler
+            .SampleGeometry(lineIndex, sampleBeats, hardBeats, sampleParallelism)
+            .ToList();
 
         var baseBeat = new Beat(0);
         var baseGeometry = _sampler.GetGeometryAtBeat(lineIndex, baseBeat, rightSide: true);
-        var baseWidth = baseGeometry.Width > StellateGeometryConstants.MinimumBaseSize
-            ? baseGeometry.Width
-            : StellateGeometryConstants.TextureWidth / 1350d;
-        var baseHeight = baseGeometry.Height > StellateGeometryConstants.MinimumBaseSize
-            ? baseGeometry.Height
-            : StellateGeometryConstants.TextureHeight / 900d;
+        var baseWidth =
+            baseGeometry.Width > StellateGeometryConstants.MinimumBaseSize
+                ? baseGeometry.Width
+                : StellateGeometryConstants.TextureWidth / 1350d;
+        var baseHeight =
+            baseGeometry.Height > StellateGeometryConstants.MinimumBaseSize
+                ? baseGeometry.Height
+                : StellateGeometryConstants.TextureHeight / 900d;
         var baseCenterX = StellateGeometryConstants.ToIrCoordinate(baseGeometry.CenterX);
         var baseCenterY = StellateGeometryConstants.ToIrCoordinate(baseGeometry.CenterY);
 
-        var movePath = _pathBuilder.SimplifyVector(
-            _pathBuilder.BuildVectorPath(samples, geometry => (geometry.CenterX, geometry.CenterY))
-        ).ConvertAll(point =>
-            (point.Beat, StellateGeometryConstants.ToIrCoordinate(point.X), StellateGeometryConstants.ToIrCoordinate(point.Y), point.Hard)
-        );
+        var movePath = _pathBuilder
+            .SimplifyVector(
+                _pathBuilder.BuildVectorPath(
+                    samples,
+                    geometry => (geometry.CenterX, geometry.CenterY)
+                )
+            )
+            .ConvertAll(point =>
+                (
+                    point.Beat,
+                    StellateGeometryConstants.ToIrCoordinate(point.X),
+                    StellateGeometryConstants.ToIrCoordinate(point.Y),
+                    point.Hard
+                )
+            );
         var scaleSamples = samples.ConvertAll(sample =>
-            sample with { Hard = scaleHardBeats.Contains(sample.Beat) }
+            sample with
+            {
+                Hard = scaleHardBeats.Contains(sample.Beat),
+            }
         );
         var rotateSamples = samples.ConvertAll(sample =>
-            sample with { Hard = rotateHardBeats.Contains(sample.Beat) }
+            sample with
+            {
+                Hard = rotateHardBeats.Contains(sample.Beat),
+            }
         );
         var scalePath = _pathBuilder.SimplifyVector(
             _pathBuilder.BuildVectorPath(
@@ -154,10 +197,30 @@ public sealed class StellateRePhiEditGeometry
         var rotatePath = _pathBuilder.SimplifyScalar(
             _pathBuilder.BuildScalarPath(rotateSamples, geometry => geometry.Rotation)
         );
-        var moveXEvents = StellateBlockAreaPathBuilder.CreateVectorEvents(movePath, baseCenterX, baseCenterY, xAxis: true);
-        var moveYEvents = StellateBlockAreaPathBuilder.CreateVectorEvents(movePath, baseCenterX, baseCenterY, xAxis: false);
-        var scaleXEvents = StellateBlockAreaPathBuilder.CreateVectorEvents(scalePath, 1d, 1d, xAxis: true);
-        var scaleYEvents = StellateBlockAreaPathBuilder.CreateVectorEvents(scalePath, 1d, 1d, xAxis: false);
+        var moveXEvents = StellateBlockAreaPathBuilder.CreateVectorEvents(
+            movePath,
+            baseCenterX,
+            baseCenterY,
+            xAxis: true
+        );
+        var moveYEvents = StellateBlockAreaPathBuilder.CreateVectorEvents(
+            movePath,
+            baseCenterX,
+            baseCenterY,
+            xAxis: false
+        );
+        var scaleXEvents = StellateBlockAreaPathBuilder.CreateVectorEvents(
+            scalePath,
+            1d,
+            1d,
+            xAxis: true
+        );
+        var scaleYEvents = StellateBlockAreaPathBuilder.CreateVectorEvents(
+            scalePath,
+            1d,
+            1d,
+            xAxis: false
+        );
         var rotateEvents = StellateBlockAreaPathBuilder.CreateScalarEvents(rotatePath, 0d);
 
         if (canUseDirectMove)
@@ -216,8 +279,8 @@ public sealed class StellateRePhiEditGeometry
                     scaleYSourceEvents,
                     baseBeat: new Beat(0),
                     canonicalBaseSize: StellateGeometryConstants.TextureHeight
-                                       * StellateGeometryConstants.AspectWidth
-                                       / (1350d * StellateGeometryConstants.AspectHeight),
+                        * StellateGeometryConstants.AspectWidth
+                        / (1350d * StellateGeometryConstants.AspectHeight),
                     geometrySampler: _sampler,
                     out var directScaleY
                 )
@@ -230,10 +293,18 @@ public sealed class StellateRePhiEditGeometry
 
         var geometryTemplate = new Ir.BlockArea
         {
-            TopRightX = StellateGeometryConstants.ToIrCoordinate(baseGeometry.CenterX + baseWidth / 2d),
-            TopRightY = StellateGeometryConstants.ToIrCoordinate(baseGeometry.CenterY + baseHeight / 2d),
-            BottomLeftX = StellateGeometryConstants.ToIrCoordinate(baseGeometry.CenterX - baseWidth / 2d),
-            BottomLeftY = StellateGeometryConstants.ToIrCoordinate(baseGeometry.CenterY - baseHeight / 2d),
+            TopRightX = StellateGeometryConstants.ToIrCoordinate(
+                baseGeometry.CenterX + baseWidth / 2d
+            ),
+            TopRightY = StellateGeometryConstants.ToIrCoordinate(
+                baseGeometry.CenterY + baseHeight / 2d
+            ),
+            BottomLeftX = StellateGeometryConstants.ToIrCoordinate(
+                baseGeometry.CenterX - baseWidth / 2d
+            ),
+            BottomLeftY = StellateGeometryConstants.ToIrCoordinate(
+                baseGeometry.CenterY - baseHeight / 2d
+            ),
             IsSubtract = StellateRePhiEditExtendedTexture.IsSubtractTexture(source.Texture),
             MoveXEvents = moveXEvents,
             MoveYEvents = moveYEvents,
@@ -256,5 +327,4 @@ public sealed class StellateRePhiEditGeometry
 
         return result;
     }
-
 }

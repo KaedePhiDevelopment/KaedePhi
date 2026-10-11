@@ -1,4 +1,3 @@
-using System.IO;
 using System.Text;
 using KaedePhi.Tool.Common;
 
@@ -39,7 +38,10 @@ public class ChartGetTypeTests
         "{\"judgeLineList\":[{\"Texture\":\"isSubtract1.png\"}],\"META\":{}}",
         ChartType.StellateRePhiEditExtended
     )]
-    [InlineData("{\"META\":{},\"judgeLineList\":[{\"Texture\":\"line.png\"}]}", ChartType.RePhiEdit)]
+    [InlineData(
+        "{\"META\":{},\"judgeLineList\":[{\"Texture\":\"line.png\"}]}",
+        ChartType.RePhiEdit
+    )]
     public void GetType_WithRePhiEditTextureMarker_ReturnsExpectedType(
         string chartText,
         ChartType expected

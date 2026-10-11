@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Formats.RePhiEdit.Model
 {
-    public partial class Chart
+    public class Chart
     {
         /// <summary>
         /// 坐标系边界

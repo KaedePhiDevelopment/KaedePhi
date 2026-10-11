@@ -88,14 +88,7 @@ internal sealed class ImportController
             else
             {
                 // 不需要选项，直接加载
-                await LoadChartWithOptions(
-                    filePath,
-                    useStream,
-                    detectedType,
-                    null,
-                    progress,
-                    ct
-                );
+                await LoadChartWithOptions(filePath, useStream, detectedType, null, progress, ct);
             }
         }
         catch (OperationCanceledException)
@@ -131,9 +124,7 @@ internal sealed class ImportController
         _navigation.ImportOptions.Progress.Reset();
         _cts = new CancellationTokenSource();
         var ct = _cts.Token;
-        var progress = new Progress<double?>(
-            _navigation.ImportOptions.Progress.SetProgress
-        );
+        var progress = new Progress<double?>(_navigation.ImportOptions.Progress.SetProgress);
 
         try
         {

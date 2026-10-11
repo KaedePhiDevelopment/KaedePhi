@@ -120,8 +120,7 @@ public static class StellateRePhiEditEasing
                     + 2.70158d * Math.Pow(progress * 2d - 2d, 3d)
                     + 1.70158d * Math.Pow(progress * 2d - 2d, 2d)
                 ) / 2d,
-            24 => Math.Pow(2d, -10d * progress)
-                * Math.Sin((10d * progress - 0.75d) * 2.094395d)
+            24 => Math.Pow(2d, -10d * progress) * Math.Sin((10d * progress - 0.75d) * 2.094395d)
                 + 1d,
             25 => -Math.Pow(2d, 10d * (progress - 1d))
                 * Math.Sin((10d * progress - 10.75d) * 2.094395d),
@@ -146,10 +145,12 @@ public static class StellateRePhiEditEasing
 
         for (var iteration = 0; iteration < maxIterations; iteration++)
         {
-            var currentX = 3d * (1d - t) * (1d - t) * t * points[0]
+            var currentX =
+                3d * (1d - t) * (1d - t) * t * points[0]
                 + 3d * (1d - t) * t * t * points[2]
                 + t * t * t;
-            var currentY = 3d * (1d - t) * (1d - t) * t * points[1]
+            var currentY =
+                3d * (1d - t) * (1d - t) * t * points[1]
                 + 3d * (1d - t) * t * t * points[3]
                 + t * t * t;
             var distance = Math.Abs(currentX - x);
@@ -161,7 +162,8 @@ public static class StellateRePhiEditEasing
             if (distance < epsilon)
                 return currentY;
 
-            var dx = 3d * (1d - t - 2d * t) * (1d - t) * points[0]
+            var dx =
+                3d * (1d - t - 2d * t) * (1d - t) * points[0]
                 + 3d * ((1d - t) * 2d - t) * t * points[2]
                 + 3d * t * t;
             if (Math.Abs(dx) < 1e-12d)

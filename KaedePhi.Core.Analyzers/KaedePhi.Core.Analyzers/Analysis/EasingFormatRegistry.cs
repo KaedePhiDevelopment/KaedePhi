@@ -10,10 +10,10 @@ internal static class EasingFormatRegistry
 {
     private static readonly EasingFormatRange[] Ranges =
     [
-        new("KaedePhi.Core.KaedePhi.Easing", "KPC", 1, 31),
-        new("KaedePhi.Core.PhiEdit.Easing", "PE", 1, 29),
-        new("KaedePhi.Core.RePhiEdit.Easing", "RePhiEdit", 1, 29),
-        new("KaedePhi.Core.PhiFans.Easing", "PhiFans", 0, 30),
+        new("KaedePhi.Core.Intermediate.Model.Easing", "Ir", 1, 31),
+        new("KaedePhi.Core.Formats.PhiEdit.Model.Easing", "PE", 1, 29),
+        new("KaedePhi.Core.Formats.RePhiEdit.Model.Easing", "RePhiEdit", 1, 29),
+        new("KaedePhi.Core.Formats.PhiFans.Model.Easing", "PhiFans", 0, 30),
     ];
 
     /// <summary>

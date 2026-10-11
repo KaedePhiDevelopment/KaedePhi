@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Formats.PhiChain.v6.Model
 {
-    public sealed partial class Chart
+    public sealed class Chart
     {
         [JsonProperty("format")]
         public ulong Format { get; set; } = Constants.CurrentFormat;

@@ -4,6 +4,7 @@
     <AssemblyName>KaedePhi.Core</AssemblyName>
     <RootNamespace>KaedePhi.Core</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Title>KaedePhi Core Lib</Title>
     <Authors>NuanR_Star Ciallo Team</Authors>
     <Description>我知晓，那无边的旅途。</Description>
@@ -42,7 +43,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\KaedePhi.Core.Analyzers\KaedePhi.Core.Analyzers\KaedePhi.Core.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference
+      Include="..\KaedePhi.Core.Analyzers\KaedePhi.Core.Analyzers\KaedePhi.Core.Analyzers.csproj"
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="false"
+    />
   </ItemGroup>
 
   <ItemGroup>

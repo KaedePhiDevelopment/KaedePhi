@@ -6,16 +6,10 @@ namespace KaedePhi.Core.Primitives.Serialization
 {
     internal static class JsonCodec
     {
-        private static readonly JsonSerializerSettings Settings = new()
-        {
-            MaxDepth = 64,
-        };
+        private static readonly JsonSerializerSettings Settings = new() { MaxDepth = 64 };
 
         internal static string Serialize<T>(T value, bool indented) =>
-            JsonConvert.SerializeObject(
-                value,
-                indented ? Formatting.Indented : Formatting.None
-            );
+            JsonConvert.SerializeObject(value, indented ? Formatting.Indented : Formatting.None);
 
         internal static void Serialize<T>(Stream stream, T value, bool indented)
         {
@@ -64,10 +58,6 @@ namespace KaedePhi.Core.Primitives.Serialization
         }
 
         private static JsonSerializer CreateSerializer(bool indented) =>
-            new()
-            {
-                Formatting = indented ? Formatting.Indented : Formatting.None,
-                MaxDepth = 64,
-            };
+            new() { Formatting = indented ? Formatting.Indented : Formatting.None, MaxDepth = 64 };
     }
 }

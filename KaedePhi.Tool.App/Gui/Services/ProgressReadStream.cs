@@ -73,9 +73,7 @@ internal sealed class ProgressReadStream : Stream
         CancellationToken cancellationToken = default
     )
     {
-        var bytesRead = await _inner
-            .ReadAsync(buffer, cancellationToken)
-            .ConfigureAwait(false);
+        var bytesRead = await _inner.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
         ReportProgress(bytesRead, buffer.Length);
         return bytesRead;
     }

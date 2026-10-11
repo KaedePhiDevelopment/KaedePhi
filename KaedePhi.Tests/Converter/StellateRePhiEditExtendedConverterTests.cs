@@ -5,20 +5,19 @@ using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter;
 using KaedePhi.Tool.Converter.Phigros.v3;
 using KaedePhi.Tool.Converter.Phigros.v3.Model;
+using IrBlockArea = KaedePhi.Core.Intermediate.Model.BlockArea;
+using IrBpmItem = KaedePhi.Core.Intermediate.Model.BpmItem;
+using IrChart = KaedePhi.Core.Intermediate.Model.Chart;
+using IrEasing = KaedePhi.Core.Intermediate.Model.Easing;
+using IrEvent = KaedePhi.Core.Intermediate.Model.Events.Event<double>;
+using IrJudgeLine = KaedePhi.Core.Intermediate.Model.JudgeLine;
 using PhigrosAreaEase = KaedePhi.Core.Formats.Phigros.v3.Model.AreaEase;
 using PhigrosAreaEaseType = KaedePhi.Core.Formats.Phigros.v3.Model.AreaEaseType;
 using PhigrosBlockArea = KaedePhi.Core.Formats.Phigros.v3.Model.BlockArea;
-using IrBlockArea = KaedePhi.Core.Intermediate.Model.BlockArea;
-using IrEvent = KaedePhi.Core.Intermediate.Model.Events.Event<double>;
 using RpeEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<float>;
 using RpeEventLayer = KaedePhi.Core.Formats.RePhiEdit.Model.Events.EventLayer;
 using RpeExtendLayer = KaedePhi.Core.Formats.RePhiEdit.Model.Events.ExtendLayer;
 using RpeJudgeLine = KaedePhi.Core.Formats.RePhiEdit.Model.JudgeLine;
-using IrBpmItem = KaedePhi.Core.Intermediate.Model.BpmItem;
-using IrChart = KaedePhi.Core.Intermediate.Model.Chart;
-using IrEasing = KaedePhi.Core.Intermediate.Model.Easing;
-using IrJudgeLine = KaedePhi.Core.Intermediate.Model.JudgeLine;
-using Xunit;
 
 namespace KaedePhi.Tests.Converter;
 
@@ -67,20 +66,14 @@ public class StellateRePhiEditExtendedConverterTests
                 ct: TestContext.Current.CancellationToken
             );
 
-            var json = await File.ReadAllTextAsync(
-                path,
-                TestContext.Current.CancellationToken
-            );
+            var json = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
             var exported = await ChartSerialization.LoadFromJsonAsync(json);
             Assert.Equal(2, exported.JudgeLineList.Count);
             var markerLine = exported.JudgeLineList[1];
             Assert.Equal(@"Pictures\isSubtract1.png", markerLine.Texture);
             Assert.Equal(4, markerLine.EventLayers[0].SpeedEvents!.Count);
             var alphaEvents = markerLine.EventLayers[0].AlphaEvents!;
-            Assert.Equal(
-                new[] { 0, 128, 255, 0 },
-                alphaEvents.Select(evt => evt.EndValue)
-            );
+            Assert.Equal(new[] { 0, 128, 255, 0 }, alphaEvents.Select(evt => evt.EndValue));
             Assert.Equal(
                 new[] { 0, 1, 2, 3 }.Select(beat => new Beat(beat)),
                 alphaEvents.Select(evt => evt.StartBeat)
@@ -142,22 +135,14 @@ public class StellateRePhiEditExtendedConverterTests
         var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         try
         {
-            await ChartFormatRegistry.Get(ChartType.StellateRePhiEditExtended).ExportAsync(
-                source,
-                path,
-                ct: TestContext.Current.CancellationToken
-            );
-            var json = await File.ReadAllTextAsync(
-                path,
-                TestContext.Current.CancellationToken
-            );
+            await ChartFormatRegistry
+                .Get(ChartType.StellateRePhiEditExtended)
+                .ExportAsync(source, path, ct: TestContext.Current.CancellationToken);
+            var json = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
             var exported = await ChartSerialization.LoadFromJsonAsync(json);
             var alphaEvents = exported.JudgeLineList[0].EventLayers[0].AlphaEvents!;
 
-            Assert.Equal(
-                new[] { 0, 255, 0 },
-                alphaEvents.Select(evt => evt.EndValue)
-            );
+            Assert.Equal(new[] { 0, 255, 0 }, alphaEvents.Select(evt => evt.EndValue));
             Assert.Equal(
                 new[] { 0, 2, 4 }.Select(beat => new Beat(beat)),
                 alphaEvents.Select(evt => evt.StartBeat)
@@ -202,15 +187,10 @@ public class StellateRePhiEditExtendedConverterTests
         var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         try
         {
-            await ChartFormatRegistry.Get(ChartType.StellateRePhiEditExtended).ExportAsync(
-                source,
-                path,
-                ct: TestContext.Current.CancellationToken
-            );
-            var json = await File.ReadAllTextAsync(
-                path,
-                TestContext.Current.CancellationToken
-            );
+            await ChartFormatRegistry
+                .Get(ChartType.StellateRePhiEditExtended)
+                .ExportAsync(source, path, ct: TestContext.Current.CancellationToken);
+            var json = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
             var (_, converted) = await ChartFormatRegistry.ImportIrAsync(
                 json,
                 ct: TestContext.Current.CancellationToken
@@ -264,15 +244,10 @@ public class StellateRePhiEditExtendedConverterTests
         var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         try
         {
-            await ChartFormatRegistry.Get(ChartType.StellateRePhiEditExtended).ExportAsync(
-                source,
-                path,
-                ct: TestContext.Current.CancellationToken
-            );
-            var json = await File.ReadAllTextAsync(
-                path,
-                TestContext.Current.CancellationToken
-            );
+            await ChartFormatRegistry
+                .Get(ChartType.StellateRePhiEditExtended)
+                .ExportAsync(source, path, ct: TestContext.Current.CancellationToken);
+            var json = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
             var (_, converted) = await ChartFormatRegistry.ImportIrAsync(
                 json,
                 ct: TestContext.Current.CancellationToken
@@ -324,15 +299,10 @@ public class StellateRePhiEditExtendedConverterTests
         var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         try
         {
-            await ChartFormatRegistry.Get(ChartType.StellateRePhiEditExtended).ExportAsync(
-                source,
-                path,
-                ct: TestContext.Current.CancellationToken
-            );
-            var json = await File.ReadAllTextAsync(
-                path,
-                TestContext.Current.CancellationToken
-            );
+            await ChartFormatRegistry
+                .Get(ChartType.StellateRePhiEditExtended)
+                .ExportAsync(source, path, ct: TestContext.Current.CancellationToken);
+            var json = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
             var (_, converted) = await ChartFormatRegistry.ImportIrAsync(
                 json,
                 ct: TestContext.Current.CancellationToken
@@ -357,10 +327,7 @@ public class StellateRePhiEditExtendedConverterTests
     {
         var source = new KaedePhi.Core.Formats.Phigros.v3.Model.Chart
         {
-            JudgeLineList =
-            [
-                new KaedePhi.Core.Formats.Phigros.v3.Model.JudgeLine { Bpm = 120f },
-            ],
+            JudgeLineList = [new KaedePhi.Core.Formats.Phigros.v3.Model.JudgeLine { Bpm = 120f }],
             BlockAreaList =
             [
                 new PhigrosBlockArea
@@ -414,15 +381,10 @@ public class StellateRePhiEditExtendedConverterTests
         var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         try
         {
-            await ChartFormatRegistry.Get(ChartType.StellateRePhiEditExtended).ExportAsync(
-                intermediate,
-                path,
-                ct: TestContext.Current.CancellationToken
-            );
-            var json = await File.ReadAllTextAsync(
-                path,
-                TestContext.Current.CancellationToken
-            );
+            await ChartFormatRegistry
+                .Get(ChartType.StellateRePhiEditExtended)
+                .ExportAsync(intermediate, path, ct: TestContext.Current.CancellationToken);
+            var json = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
             var (_, converted) = await ChartFormatRegistry.ImportIrAsync(
                 json,
                 ct: TestContext.Current.CancellationToken
@@ -467,15 +429,10 @@ public class StellateRePhiEditExtendedConverterTests
         var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         try
         {
-            await ChartFormatRegistry.Get(ChartType.StellateRePhiEditExtended).ExportAsync(
-                source,
-                path,
-                ct: TestContext.Current.CancellationToken
-            );
-            var json = await File.ReadAllTextAsync(
-                path,
-                TestContext.Current.CancellationToken
-            );
+            await ChartFormatRegistry
+                .Get(ChartType.StellateRePhiEditExtended)
+                .ExportAsync(source, path, ct: TestContext.Current.CancellationToken);
+            var json = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
             var (_, converted) = await ChartFormatRegistry.ImportIrAsync(
                 json,
                 ct: TestContext.Current.CancellationToken
@@ -540,10 +497,7 @@ public class StellateRePhiEditExtendedConverterTests
         Assert.Equal(1d, converted.BlockAreaList[0].TopRightY, 6);
         Assert.Equal(-1d, converted.BlockAreaList[0].BottomLeftY, 6);
 
-        var phigros = new PhigrosV3Converter().FromIr(
-            converted,
-            new IrToPhigrosV3ConvertOptions()
-        );
+        var phigros = new PhigrosV3Converter().FromIr(converted, new IrToPhigrosV3ConvertOptions());
         var firstArea = phigros.BlockAreaList[0];
 
         Assert.Equal(5f / 6f, firstArea.TopRightPercentage.X, 6);
@@ -557,10 +511,7 @@ public class StellateRePhiEditExtendedConverterTests
         Assert.Equal(2, firstArea.MoveEvents.Count);
         Assert.Equal(1f, firstArea.MoveEvents[^1].EndPosition.X);
         Assert.Equal(0f, firstArea.MoveEvents[^1].EndPosition.Y);
-        Assert.Equal(
-            PhigrosAreaEaseType.EaseInQuad,
-            firstArea.MoveEvents[0].EaseTypeX.Type
-        );
+        Assert.Equal(PhigrosAreaEaseType.EaseInQuad, firstArea.MoveEvents[0].EaseTypeX.Type);
         Assert.Equal(PhigrosAreaEaseType.One, firstArea.MoveEvents[^1].EaseTypeX.Type);
         Assert.Equal(-90f, Assert.Single(firstArea.RotateEvents).Rotation);
         Assert.Equal(2f, Assert.Single(firstArea.ScaleEvents).Scale.X);
@@ -576,10 +527,7 @@ public class StellateRePhiEditExtendedConverterTests
         };
         var imported = await ChartFormatRegistry
             .Get(ChartType.RePhiEdit)
-            .ImportIrAsync(
-                source.ExportToJson(false),
-                ct: TestContext.Current.CancellationToken
-            );
+            .ImportIrAsync(source.ExportToJson(false), ct: TestContext.Current.CancellationToken);
 
         Assert.Single(imported.JudgeLineList);
         Assert.Equal("isSubtract1.png", imported.JudgeLineList[0].Texture);
@@ -701,10 +649,7 @@ public class StellateRePhiEditExtendedConverterTests
         marker.EventLayers[0].MoveYEvents = null;
         var parent = new RpeJudgeLine
         {
-            EventLayers =
-            [
-                new RpeEventLayer { MoveXEvents = [CreateEvent(0, 4, 0f, 337.5f)] },
-            ],
+            EventLayers = [new RpeEventLayer { MoveXEvents = [CreateEvent(0, 4, 0f, 337.5f)] }],
         };
         var source = new Chart
         {
@@ -733,10 +678,7 @@ public class StellateRePhiEditExtendedConverterTests
         marker.EventLayers[0].RotateEvents = null;
         var parent = new RpeJudgeLine
         {
-            EventLayers =
-            [
-                new RpeEventLayer { RotateEvents = [CreateEvent(0, 4, 0f, 90f)] },
-            ],
+            EventLayers = [new RpeEventLayer { RotateEvents = [CreateEvent(0, 4, 0f, 90f)] }],
         };
         var source = new Chart
         {
@@ -783,7 +725,8 @@ public class StellateRePhiEditExtendedConverterTests
             [
                 new RpeEventLayer
                 {
-                    MoveXEvents = Enumerable.Range(0, 64)
+                    MoveXEvents = Enumerable
+                        .Range(0, 64)
                         .Select(index =>
                         {
                             var start = index / 4d;
@@ -809,10 +752,7 @@ public class StellateRePhiEditExtendedConverterTests
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
-        var exported = new PhigrosV3Converter().FromIr(
-            imported,
-            new IrToPhigrosV3ConvertOptions()
-        );
+        var exported = new PhigrosV3Converter().FromIr(imported, new IrToPhigrosV3ConvertOptions());
         var area = Assert.Single(exported.BlockAreaList);
 
         Assert.Equal(3, area.RotateEvents.Count);
@@ -834,9 +774,7 @@ public class StellateRePhiEditExtendedConverterTests
         marker.EventLayers[0].MoveYEvents = null;
         marker.EventLayers[0].RotateEvents = [CreateEvent(0, 4, 0f, 30f)];
         marker.EventLayers[0].RotateEvents![0].Easing = new(5);
-        marker.EventLayers.Add(
-            new RpeEventLayer { RotateEvents = [CreateEvent(0, 4, 0f, 20f)] }
-        );
+        marker.EventLayers.Add(new RpeEventLayer { RotateEvents = [CreateEvent(0, 4, 0f, 20f)] });
         marker.EventLayers[1].RotateEvents![0].Easing = new(8);
         marker.Extended.ScaleXEvents = null;
         marker.Extended.ScaleYEvents = null;
@@ -874,10 +812,7 @@ public class StellateRePhiEditExtendedConverterTests
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
-        var exported = new PhigrosV3Converter().FromIr(
-            imported,
-            new IrToPhigrosV3ConvertOptions()
-        );
+        var exported = new PhigrosV3Converter().FromIr(imported, new IrToPhigrosV3ConvertOptions());
         var area = Assert.Single(exported.BlockAreaList);
 
         Assert.True(area.RotateEvents.Count < 40);
@@ -937,15 +872,9 @@ public class StellateRePhiEditExtendedConverterTests
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
-        var exported = new PhigrosV3Converter().FromIr(
-            imported,
-            new IrToPhigrosV3ConvertOptions()
-        );
+        var exported = new PhigrosV3Converter().FromIr(imported, new IrToPhigrosV3ConvertOptions());
 
-        Assert.Equal(
-            expected,
-            Assert.Single(exported.BlockAreaList).MoveEvents[0].EaseTypeX.Type
-        );
+        Assert.Equal(expected, Assert.Single(exported.BlockAreaList).MoveEvents[0].EaseTypeX.Type);
     }
 
     [Fact]
@@ -972,14 +901,8 @@ public class StellateRePhiEditExtendedConverterTests
         var area = Assert.Single(imported.BlockAreaList);
         var progress = 0.125d;
         var expected =
-            Math.Pow(2d, -10d * progress)
-                * Math.Sin((10d * progress - 0.75d) * 2.094395d)
-            + 1d;
-        var actual = EvaluateIrTrack(
-            area.MoveXEvents,
-            new Beat(0.5d),
-            GetIrCenterX(area)
-        );
+            Math.Pow(2d, -10d * progress) * Math.Sin((10d * progress - 0.75d) * 2.094395d) + 1d;
+        var actual = EvaluateIrTrack(area.MoveXEvents, new Beat(0.5d), GetIrCenterX(area));
 
         Assert.InRange(Math.Abs(actual - expected), 0d, 0.02d);
     }
@@ -1006,15 +929,8 @@ public class StellateRePhiEditExtendedConverterTests
             ct: TestContext.Current.CancellationToken
         );
         var area = Assert.Single(imported.BlockAreaList);
-        var irValue = EvaluateIrTrack(
-            area.MoveXEvents,
-            new Beat(1),
-            GetIrCenterX(area)
-        );
-        var exported = new PhigrosV3Converter().FromIr(
-            imported,
-            new IrToPhigrosV3ConvertOptions()
-        );
+        var irValue = EvaluateIrTrack(area.MoveXEvents, new Beat(1), GetIrCenterX(area));
+        var exported = new PhigrosV3Converter().FromIr(imported, new IrToPhigrosV3ConvertOptions());
         var phigrosArea = Assert.Single(exported.BlockAreaList);
         var phigrosValue = EvaluatePhigrosMoveX(phigrosArea, 0.5f);
 
@@ -1048,10 +964,7 @@ public class StellateRePhiEditExtendedConverterTests
         );
         var area = Assert.Single(imported.BlockAreaList);
         var irValue = EvaluateIrTrack(area.MoveXEvents, new Beat(3), GetIrCenterX(area));
-        var exported = new PhigrosV3Converter().FromIr(
-            imported,
-            new IrToPhigrosV3ConvertOptions()
-        );
+        var exported = new PhigrosV3Converter().FromIr(imported, new IrToPhigrosV3ConvertOptions());
         var phigrosValue = EvaluatePhigrosMoveX(Assert.Single(exported.BlockAreaList), 1.5f);
 
         Assert.Equal(0.75d, irValue, 2);
@@ -1107,10 +1020,7 @@ public class StellateRePhiEditExtendedConverterTests
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
-        var exported = new PhigrosV3Converter().FromIr(
-            imported,
-            new IrToPhigrosV3ConvertOptions()
-        );
+        var exported = new PhigrosV3Converter().FromIr(imported, new IrToPhigrosV3ConvertOptions());
 
         Assert.Equal(
             PhigrosAreaEaseType.EaseInQuad,
@@ -1121,8 +1031,7 @@ public class StellateRePhiEditExtendedConverterTests
     [Fact]
     public async Task ImportTreatsMissingBezierPointsAsRegularEasing()
     {
-        const string source =
-            """
+        const string source = """
             {
               "BPMList": [{ "bpm": 120, "startTime": [0, 0, 1] }],
               "META": {},
@@ -1153,10 +1062,7 @@ public class StellateRePhiEditExtendedConverterTests
             source,
             ct: TestContext.Current.CancellationToken
         );
-        var exported = new PhigrosV3Converter().FromIr(
-            imported,
-            new IrToPhigrosV3ConvertOptions()
-        );
+        var exported = new PhigrosV3Converter().FromIr(imported, new IrToPhigrosV3ConvertOptions());
 
         Assert.Equal(
             PhigrosAreaEaseType.EaseInQuad,
@@ -1184,10 +1090,7 @@ public class StellateRePhiEditExtendedConverterTests
             ct: TestContext.Current.CancellationToken
         );
         var area = Assert.Single(imported.BlockAreaList);
-        var exported = new PhigrosV3Converter().FromIr(
-            imported,
-            new IrToPhigrosV3ConvertOptions()
-        );
+        var exported = new PhigrosV3Converter().FromIr(imported, new IrToPhigrosV3ConvertOptions());
         var scaleEvents = Assert.Single(exported.BlockAreaList).ScaleEvents;
 
         Assert.InRange(Math.Abs(area.ScaleXEvents!.Last().EndValue - 2e-14d), 0d, 1e-20d);
@@ -1258,18 +1161,12 @@ public class StellateRePhiEditExtendedConverterTests
     private static double GetIrCenterX(IrBlockArea area) =>
         (area.TopRightX + area.BottomLeftX) / 2d;
 
-    private static double EvaluateIrTrack(
-        List<IrEvent>? events,
-        Beat beat,
-        double defaultValue
-    )
+    private static double EvaluateIrTrack(List<IrEvent>? events, Beat beat, double defaultValue)
     {
         var dominant = events?.LastOrDefault(evt => evt.StartBeat <= beat);
         if (dominant is null)
             return defaultValue;
-        return beat <= dominant.EndBeat
-            ? dominant.GetValueAtBeatAsDouble(beat)
-            : dominant.EndValue;
+        return beat <= dominant.EndBeat ? dominant.GetValueAtBeatAsDouble(beat) : dominant.EndValue;
     }
 
     private static float EvaluatePhigrosMoveX(PhigrosBlockArea area, float time)
@@ -1281,11 +1178,7 @@ public class StellateRePhiEditExtendedConverterTests
         {
             if (time <= moveEvent.Time)
             {
-                var progress = PhigrosAreaEase.GetProgress(
-                    previousTime,
-                    moveEvent.Time,
-                    time
-                );
+                var progress = PhigrosAreaEase.GetProgress(previousTime, moveEvent.Time, time);
                 var easedProgress = PhigrosAreaEase.GetEaseWithProgress(progress, leftEase);
                 return startPosition.X
                     + (moveEvent.EndPosition.X - startPosition.X) * easedProgress;

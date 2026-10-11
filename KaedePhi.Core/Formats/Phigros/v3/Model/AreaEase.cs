@@ -137,10 +137,7 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
         public static float GetEaseWithProgress(float progress, int type)
         {
             if (float.IsNaN(progress) || float.IsInfinity(progress))
-                throw new ArgumentOutOfRangeException(
-                    nameof(progress),
-                    "进度必须是有限数值。"
-                );
+                throw new ArgumentOutOfRangeException(nameof(progress), "进度必须是有限数值。");
             if (type is < 0 or >= EaseTypeCount)
                 throw new ArgumentOutOfRangeException(
                     nameof(type),
@@ -165,7 +162,7 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
                 {
                     var sampleProgress = scaledProgress - index;
                     return EaseTable[type, index]
-                           + sampleProgress * (EaseTable[type, index + 1] - EaseTable[type, index]);
+                        + sampleProgress * (EaseTable[type, index + 1] - EaseTable[type, index]);
                 }
             }
         }
@@ -187,12 +184,7 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
         /// <param name="progress">事件进度，通常位于 0 到 1 之间。</param>
         /// <param name="type">缓动类型。</param>
         /// <returns>插值结果。</returns>
-        public static float Interpolate(
-            float start,
-            float end,
-            float progress,
-            AreaEaseType type
-        )
+        public static float Interpolate(float start, float end, float progress, AreaEaseType type)
         {
             var easedProgress = GetEaseWithProgress(progress, type);
             return start + (end - start) * easedProgress;
@@ -214,10 +206,7 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
                     "时间必须是有限数值。"
                 );
             if (!IsFinite(eventTime))
-                throw new ArgumentOutOfRangeException(
-                    nameof(eventTime),
-                    "时间必须是有限数值。"
-                );
+                throw new ArgumentOutOfRangeException(nameof(eventTime), "时间必须是有限数值。");
             if (!IsFinite(time))
                 throw new ArgumentOutOfRangeException(nameof(time), "时间必须是有限数值。");
 

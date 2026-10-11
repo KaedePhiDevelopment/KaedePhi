@@ -2,7 +2,6 @@ using KaedePhi.Core.Formats.PhiFans.Model;
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Event.Intermediate;
-using KaedePhi.Tool.Layer.Intermediate;
 using PfEvent = KaedePhi.Core.Formats.PhiFans.Model.Event;
 
 namespace KaedePhi.Tool.Converter.PhiFans.Utils;

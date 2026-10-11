@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using KaedePhi.Core.Common;
 using JsonCodec = KaedePhi.Core.Primitives.Serialization.JsonCodec;
 
 namespace KaedePhi.Core.PhiFans
@@ -15,16 +14,15 @@ namespace KaedePhi.Core.PhiFans
         /// <param name="format">是否需要格式化</param>
         /// <returns>JSON 字符串</returns>
         [PublicAPI]
-        public string ExportToJson(bool format)
-            => JsonCodec.Serialize(this, format);
+        public string ExportToJson(bool format) => JsonCodec.Serialize(this, format);
 
         /// <summary>
         /// 将谱面序列化为 JSON 并写入流。
         /// </summary>
         /// <param name="stream">目标流</param>
         /// <param name="format">是否需要格式化</param>
-        public void ExportToJsonStream(Stream stream, bool format)
-            => JsonCodec.Serialize(stream, this, format);
+        public void ExportToJsonStream(Stream stream, bool format) =>
+            JsonCodec.Serialize(stream, this, format);
 
         /// <summary>
         /// 异步将谱面序列化为 JSON 并写入流。
@@ -85,7 +83,8 @@ namespace KaedePhi.Core.PhiFans
         /// <returns>谱面</returns>
         public static Task<Chart> LoadFromStreamAsync(Stream stream)
         {
-            var chart = JsonCodec.Deserialize<Chart>(stream)
+            var chart =
+                JsonCodec.Deserialize<Chart>(stream)
                 ?? throw new InvalidOperationException(
                     "Failed to deserialize PhiFans Chart from stream."
                 );

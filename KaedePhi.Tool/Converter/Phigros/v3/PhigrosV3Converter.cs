@@ -118,9 +118,9 @@ public class PhigrosV3Converter
 
         var blockAreaTimeMapper =
             timeMapper
-            ?? new PhigrosV3TimeMapper(
-                [new Ir.BpmItem { Bpm = options.DefaultBpm, StartBeat = new Beat(0) }]
-            );
+            ?? new PhigrosV3TimeMapper([
+                new Ir.BpmItem { Bpm = options.DefaultBpm, StartBeat = new Beat(0) },
+            ]);
         var blockAreas = PhigrosV3BlockAreaBuilder.ConvertBlockAreas(
             normalized.BlockAreaList,
             blockAreaTimeMapper,

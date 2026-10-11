@@ -22,6 +22,12 @@ namespace KaedePhi.Core.Common
 
         private int EffectiveDenominator => _denominator == 0 ? 1 : _denominator;
 
+        /// <summary>
+        /// 通过 beatArray 构建 Beat 对象，要求数组长度为 3，且 beat[2] 不为零。
+        /// </summary>
+        /// <param name="beatArray">拍数组</param>
+        /// <exception cref="ArgumentNullException">拍数组为<see langword="null"/></exception>
+        /// <exception cref="ArgumentException">拍数组长度不为 3，或 beat[2] 为零或负数</exception>
         public Beat(int[] beatArray)
         {
             if (beatArray is null)
@@ -31,16 +37,19 @@ namespace KaedePhi.Core.Common
                     "Beat array must have exactly 3 elements.",
                     nameof(beatArray)
                 );
-            if (beatArray[2] == 0)
-                throw new ArgumentException(
-                    "Beat denominator (beat[2]) cannot be zero.",
-                    nameof(beatArray)
-                );
-            if (beatArray[2] < 0)
-                throw new ArgumentException(
-                    "Beat denominator (beat[2]) must be positive.",
-                    nameof(beatArray)
-                );
+            switch (beatArray[2])
+            {
+                case 0:
+                    throw new ArgumentException(
+                        "Beat denominator (beat[2]) cannot be zero.",
+                        nameof(beatArray)
+                    );
+                case < 0:
+                    throw new ArgumentException(
+                        "Beat denominator (beat[2]) must be positive.",
+                        nameof(beatArray)
+                    );
+            }
 
             _whole = beatArray[0];
             _numerator = beatArray[1];
@@ -49,6 +58,11 @@ namespace KaedePhi.Core.Common
             _curBeatFloat = (float)_curBeatDouble;
         }
 
+        /// <summary>
+        /// 通过 double 推测 beatArray 并构建 Beat 对象，要求 beat 为有限数且在 int 范围内。
+        /// </summary>
+        /// <param name="beat">拍的值</param>
+        /// <exception cref="ArgumentOutOfRangeException">拍的值超出范围</exception>
         public Beat(double beat)
         {
             if (double.IsNaN(beat) || double.IsInfinity(beat))
@@ -105,7 +119,7 @@ namespace KaedePhi.Core.Common
                 {
                     denominator = MaxDenominator;
                     numerator = (int)Math.Round(fractionalPart * denominator);
-                    var gcd = Gcd(numerator, denominator);
+                    var gcd = GreatestCommonDivisor(numerator, denominator);
                     numerator /= gcd;
                     denominator /= gcd;
                 }
@@ -128,7 +142,7 @@ namespace KaedePhi.Core.Common
             _curBeatFloat = (float)_curBeatDouble;
         }
 
-        private static int Gcd(int a, int b)
+        private static int GreatestCommonDivisor(int a, int b)
         {
             while (b != 0)
             {
@@ -140,7 +154,7 @@ namespace KaedePhi.Core.Common
             return a;
         }
 
-        private static long Gcd(long a, long b)
+        private static long GreatestCommonDivisor(long a, long b)
         {
             while (b != 0)
             {
@@ -201,7 +215,7 @@ namespace KaedePhi.Core.Common
             if (numerator == 0)
                 return new Beat(wholePart, 0, 1);
 
-            var gcd = Gcd(Math.Abs(numerator), denominator);
+            var gcd = GreatestCommonDivisor(Math.Abs(numerator), denominator);
             numerator /= gcd;
             denominator /= gcd;
 
@@ -232,7 +246,7 @@ namespace KaedePhi.Core.Common
             if (numerator == 0)
                 return new Beat(wholePart, 0, 1);
 
-            var gcd = Gcd(Math.Abs(numerator), denominator);
+            var gcd = GreatestCommonDivisor(Math.Abs(numerator), denominator);
             numerator /= gcd;
             denominator /= gcd;
 

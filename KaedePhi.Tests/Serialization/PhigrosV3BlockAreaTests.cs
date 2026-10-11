@@ -1,6 +1,5 @@
 using KaedePhi.Core.Formats.Phigros.v3.Model;
 using KaedePhi.Core.Formats.Phigros.v3.Serialization;
-using Xunit;
 
 namespace KaedePhi.Tests.Serialization;
 
@@ -9,8 +8,7 @@ public class PhigrosV3BlockAreaTests
     [Fact]
     public void BlockAreaListUsesCanonicalJsonNameAndReadsDocumentedFields()
     {
-        const string json =
-            """
+        const string json = """
             {
               "blockAreaList": [{
                 "topRightPercentage": { "x": 1.5, "y": 1.2 },

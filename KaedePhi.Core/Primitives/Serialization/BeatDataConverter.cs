@@ -9,10 +9,7 @@ namespace KaedePhi.Core.Primitives.Serialization
         private readonly Func<int[], TBeat> _create;
         private readonly Func<TBeat, int, int> _getComponent;
 
-        internal BeatDataConverter(
-            Func<int[], TBeat> create,
-            Func<TBeat, int, int> getComponent
-        )
+        internal BeatDataConverter(Func<int[], TBeat> create, Func<TBeat, int, int> getComponent)
         {
             _create = create;
             _getComponent = getComponent;

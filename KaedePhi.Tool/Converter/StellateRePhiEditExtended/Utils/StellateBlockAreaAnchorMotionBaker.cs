@@ -1,6 +1,5 @@
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Common;
-using KaedePhi.Tool.Converter.Phigros.v3.Utils;
 using IrBlockArea = KaedePhi.Core.Intermediate.Model.BlockArea;
 using IrEvent = KaedePhi.Core.Intermediate.Model.Events.Event<double>;
 
@@ -110,38 +109,16 @@ public static class StellateBlockAreaAnchorMotionBaker
             var moveCenterX = EvaluateTrack(moveX, beat, baseCenterX, rightSide);
             var moveCenterY = EvaluateTrack(moveY, beat, baseCenterY, rightSide);
             var rotation = EvaluateTrack(rotate, beat, 0d, rightSide);
-            var rotationAnchorValueX = EvaluateAnchor(
-                rotateAnchorX,
-                beat,
-                baseCenterX,
-                rightSide
-            );
-            var rotationAnchorValueY = EvaluateAnchor(
-                rotateAnchorY,
-                beat,
-                baseCenterY,
-                rightSide
-            );
+            var rotationAnchorValueX = EvaluateAnchor(rotateAnchorX, beat, baseCenterX, rightSide);
+            var rotationAnchorValueY = EvaluateAnchor(rotateAnchorY, beat, baseCenterY, rightSide);
             var scaleValueX = EvaluateTrack(scaleX, beat, 1d, rightSide);
             var scaleValueY = EvaluateTrack(scaleY, beat, 1d, rightSide);
-            var scaleAnchorValueX = EvaluateAnchor(
-                scaleAnchorX,
-                beat,
-                baseCenterX,
-                rightSide
-            );
-            var scaleAnchorValueY = EvaluateAnchor(
-                scaleAnchorY,
-                beat,
-                baseCenterY,
-                rightSide
-            );
+            var scaleAnchorValueX = EvaluateAnchor(scaleAnchorX, beat, baseCenterX, rightSide);
+            var scaleAnchorValueY = EvaluateAnchor(scaleAnchorY, beat, baseCenterY, rightSide);
 
             // 锚点为绝对坐标：先变换原始中心，再叠加移动中心相对原始中心的偏移。
-            var scaledCenterX =
-                scaleAnchorValueX + (baseCenterX - scaleAnchorValueX) * scaleValueX;
-            var scaledCenterY =
-                scaleAnchorValueY + (baseCenterY - scaleAnchorValueY) * scaleValueY;
+            var scaledCenterX = scaleAnchorValueX + (baseCenterX - scaleAnchorValueX) * scaleValueX;
+            var scaledCenterY = scaleAnchorValueY + (baseCenterY - scaleAnchorValueY) * scaleValueY;
             var rotatedOffset = CoordinateGeometry.RotateIrOffset(
                 scaledCenterX - rotationAnchorValueX,
                 scaledCenterY - rotationAnchorValueY,
@@ -150,7 +127,9 @@ public static class StellateBlockAreaAnchorMotionBaker
             var centerX = rotationAnchorValueX + rotatedOffset.X + moveCenterX - baseCenterX;
             var centerY = rotationAnchorValueY + rotatedOffset.Y + moveCenterY - baseCenterY;
             if (!double.IsFinite(centerX) || !double.IsFinite(centerY))
-                throw new FormatException($"IR 噪域 {blockAreaIndex} 的锚点变换后位置不是有限数值。");
+                throw new FormatException(
+                    $"IR 噪域 {blockAreaIndex} 的锚点变换后位置不是有限数值。"
+                );
 
             return (centerX, centerY);
         }
@@ -166,7 +145,10 @@ public static class StellateBlockAreaAnchorMotionBaker
         {
             cancellationToken.ThrowIfCancellationRequested();
             var right = EvaluateCenter(beat, rightSide: true);
-            var left = beat == StellateBlockAreaConstants.ZeroBeat ? right : EvaluateCenter(beat, rightSide: false);
+            var left =
+                beat == StellateBlockAreaConstants.ZeroBeat
+                    ? right
+                    : EvaluateCenter(beat, rightSide: false);
             samples.Add((beat, left.X, left.Y, right.X, right.Y));
         }
 
@@ -255,7 +237,12 @@ public static class StellateBlockAreaAnchorMotionBaker
                 && Math.Abs(leftValue - rightValue) > StellateBlockAreaConstants.ValueEpsilon
             )
                 result.Add(
-                    StellateBlockAreaEventConverter.CreateEvent(sample.Beat, sample.Beat, leftValue, rightValue)
+                    StellateBlockAreaEventConverter.CreateEvent(
+                        sample.Beat,
+                        sample.Beat,
+                        leftValue,
+                        rightValue
+                    )
                 );
 
             if (index + 1 >= samples.Count)
@@ -268,7 +255,12 @@ public static class StellateBlockAreaAnchorMotionBaker
                 && Math.Abs(rightValue - endValue) > StellateBlockAreaConstants.ValueEpsilon
             )
                 result.Add(
-                    StellateBlockAreaEventConverter.CreateEvent(sample.Beat, next.Beat, rightValue, endValue)
+                    StellateBlockAreaEventConverter.CreateEvent(
+                        sample.Beat,
+                        next.Beat,
+                        rightValue,
+                        endValue
+                    )
                 );
         }
 
@@ -310,10 +302,7 @@ public static class StellateBlockAreaAnchorMotionBaker
         Beat beat,
         double baseValue,
         bool includeStartAtBeat
-    ) =>
-        events.Count == 0
-            ? baseValue
-            : EvaluateTrack(events, beat, baseValue, includeStartAtBeat);
+    ) => events.Count == 0 ? baseValue : EvaluateTrack(events, beat, baseValue, includeStartAtBeat);
 
     private static double EvaluateTrack(
         IReadOnlyList<IrEvent> events,
@@ -346,9 +335,6 @@ public static class StellateBlockAreaAnchorMotionBaker
             return defaultValue;
 
         var dominant = events[dominantIndex];
-        return beat <= dominant.EndBeat
-            ? dominant.GetValueAtBeatAsDouble(beat)
-            : dominant.EndValue;
+        return beat <= dominant.EndBeat ? dominant.GetValueAtBeatAsDouble(beat) : dominant.EndValue;
     }
-
 }

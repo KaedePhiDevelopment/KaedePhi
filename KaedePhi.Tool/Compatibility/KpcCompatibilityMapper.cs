@@ -142,14 +142,28 @@ internal static class KpcCompatibilityMapper
             RotateWithFather = line.RotateWithFather,
         };
 
-        target.EventLayers = MapList(line.EventLayers, ToIntermediate)!;
-        target.Notes = MapList(line.Notes, ToIntermediate)!;
+        target.EventLayers =
+            MapList(line.EventLayers, ToIntermediate)
+            ?? throw new InvalidOperationException("EventLayers cannot be null.");
+        target.Notes =
+            MapList(line.Notes, ToIntermediate)
+            ?? throw new InvalidOperationException("Notes cannot be null.");
         target.Extended = ToIntermediate(line.Extended);
-        target.PositionControls = MapList(line.PositionControls, ToIntermediate)!;
-        target.AlphaControls = MapList(line.AlphaControls, ToIntermediate)!;
-        target.SizeControls = MapList(line.SizeControls, ToIntermediate)!;
-        target.SkewControls = MapList(line.SkewControls, ToIntermediate)!;
-        target.YControls = MapList(line.YControls, ToIntermediate)!;
+        target.PositionControls =
+            MapList(line.PositionControls, ToIntermediate)
+            ?? throw new InvalidOperationException("PositionControls cannot be null.");
+        target.AlphaControls =
+            MapList(line.AlphaControls, ToIntermediate)
+            ?? throw new InvalidOperationException("AlphaControls cannot be null.");
+        target.SizeControls =
+            MapList(line.SizeControls, ToIntermediate)
+            ?? throw new InvalidOperationException("SizeControls cannot be null.");
+        target.SkewControls =
+            MapList(line.SkewControls, ToIntermediate)
+            ?? throw new InvalidOperationException("SkewControls cannot be null.");
+        target.YControls =
+            MapList(line.YControls, ToIntermediate)
+            ?? throw new InvalidOperationException("YControls cannot be null.");
         return target;
     }
 
@@ -167,16 +181,30 @@ internal static class KpcCompatibilityMapper
             IsGif = line.IsGif,
             BpmFactor = line.BpmFactor,
             RotateWithFather = line.RotateWithFather,
+            EventLayers =
+                MapList(line.EventLayers, ToKpc)
+                ?? throw new InvalidOperationException("EventLayers cannot be null."),
+            Notes =
+                MapList(line.Notes, ToKpc)
+                ?? throw new InvalidOperationException("Notes cannot be null."),
+            Extended = ToKpc(line.Extended),
+            PositionControls =
+                MapList(line.PositionControls, ToKpc)
+                ?? throw new InvalidOperationException("PositionControls cannot be null."),
+            AlphaControls =
+                MapList(line.AlphaControls, ToKpc)
+                ?? throw new InvalidOperationException("AlphaControls cannot be null."),
+            SizeControls =
+                MapList(line.SizeControls, ToKpc)
+                ?? throw new InvalidOperationException("SizeControls cannot be null."),
+            SkewControls =
+                MapList(line.SkewControls, ToKpc)
+                ?? throw new InvalidOperationException("SkewControls cannot be null."),
+            YControls =
+                MapList(line.YControls, ToKpc)
+                ?? throw new InvalidOperationException("YControls cannot be null."),
         };
 
-        target.EventLayers = MapList(line.EventLayers, ToKpc)!;
-        target.Notes = MapList(line.Notes, ToKpc)!;
-        target.Extended = ToKpc(line.Extended);
-        target.PositionControls = MapList(line.PositionControls, ToKpc)!;
-        target.AlphaControls = MapList(line.AlphaControls, ToKpc)!;
-        target.SizeControls = MapList(line.SizeControls, ToKpc)!;
-        target.SkewControls = MapList(line.SkewControls, ToKpc)!;
-        target.YControls = MapList(line.YControls, ToKpc)!;
         return target;
     }
 
@@ -199,7 +227,7 @@ internal static class KpcCompatibilityMapper
             VisibleTime = note.VisibleTime,
             YOffset = note.YOffset,
             Tint = (byte[])note.Tint.Clone(),
-            HitFxColor = note.HitFxColor is null ? null : (byte[])note.HitFxColor.Clone(),
+            HitFxColor = (byte[]?)note.HitFxColor?.Clone(),
             HitSound = note.HitSound,
             FloorPosition = note.FloorPosition,
             EndFloorPosition = note.EndFloorPosition,
@@ -225,7 +253,7 @@ internal static class KpcCompatibilityMapper
             VisibleTime = note.VisibleTime,
             YOffset = note.YOffset,
             Tint = (byte[])note.Tint.Clone(),
-            HitFxColor = note.HitFxColor is null ? null : (byte[])note.HitFxColor.Clone(),
+            HitFxColor = (byte[]?)note.HitFxColor?.Clone(),
             HitSound = note.HitSound,
             FloorPosition = note.FloorPosition,
             EndFloorPosition = note.EndFloorPosition,

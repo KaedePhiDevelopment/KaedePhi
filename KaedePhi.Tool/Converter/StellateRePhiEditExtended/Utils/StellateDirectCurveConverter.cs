@@ -1,15 +1,11 @@
 using KaedePhi.Core.Primitives;
-using KaedePhi.Tool.Converter.Phigros.v3.Utils;
-using KaedePhi.Tool.Converter.RePhiEdit.Model;
-using KaedePhi.Tool.Converter.RePhiEdit.Utils;
+using IrEvent = KaedePhi.Core.Intermediate.Model.Events.Event<double>;
+using RpeEasing = KaedePhi.Core.Formats.RePhiEdit.Model.Easing;
+using RpeEasingConverter = KaedePhi.Tool.Converter.RePhiEdit.Utils.EasingConverter;
 using RpeEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<float>;
+using RpeEventBuilder = KaedePhi.Tool.Converter.RePhiEdit.Utils.EventBuilder;
 using RpeEventLayer = KaedePhi.Core.Formats.RePhiEdit.Model.Events.EventLayer;
 using RpeJudgeLine = KaedePhi.Core.Formats.RePhiEdit.Model.JudgeLine;
-using IrEvent = KaedePhi.Core.Intermediate.Model.Events.Event<double>;
-using RpeEasingConverter = KaedePhi.Tool.Converter.RePhiEdit.Utils.EasingConverter;
-using RpeEventBuilder = KaedePhi.Tool.Converter.RePhiEdit.Utils.EventBuilder;
-using RpeTransform = KaedePhi.Tool.Converter.RePhiEdit.Utils.Transform;
-using RpeEasing = KaedePhi.Core.Formats.RePhiEdit.Model.Easing;
 
 namespace KaedePhi.Tool.Converter.StellateRePhiEditExtended.Utils;
 
@@ -41,18 +37,19 @@ public static class StellateDirectCurveConverter
             return false;
 
         var baseScale = StellateGeometryConstants.FiniteOr(
-            geometrySampler.EvaluateCurveAtBeat(events, baseBeat, rightSide: true, defaultValue: 1d),
+            geometrySampler.EvaluateCurveAtBeat(
+                events,
+                baseBeat,
+                rightSide: true,
+                defaultValue: 1d
+            ),
             1d
         );
-        var divisor = Math.Abs(baseScale) * canonicalBaseSize > StellateGeometryConstants.MinimumBaseSize
-            ? Math.Abs(baseScale)
-            : 1d;
-        return TryConvertDirectCurve(
-            events,
-            value => Math.Abs(value) / divisor,
-            1d,
-            out converted
-        );
+        var divisor =
+            Math.Abs(baseScale) * canonicalBaseSize > StellateGeometryConstants.MinimumBaseSize
+                ? Math.Abs(baseScale)
+                : 1d;
+        return TryConvertDirectCurve(events, value => Math.Abs(value) / divisor, 1d, out converted);
     }
 
     /// <summary>
@@ -100,10 +97,7 @@ public static class StellateDirectCurveConverter
                     };
                 }
 
-                var convertedEvent = RpeEventBuilder.ConvertFloatToDoubleEvent(
-                    evt,
-                    valueTransform
-                );
+                var convertedEvent = RpeEventBuilder.ConvertFloatToDoubleEvent(evt, valueTransform);
                 convertedEvent.IsBezier = false;
                 convertedEvent.EasingLeft = 0f;
                 convertedEvent.EasingRight = 1f;
@@ -184,9 +178,7 @@ public static class StellateDirectCurveConverter
         CanConvertDirectCurve(events)
         && (
             events is not { Count: > 0 }
-            || !events.Any(evt =>
-                evt.StartBeat < evt.EndBeat && evt.StartValue * evt.EndValue < 0f
-            )
+            || !events.Any(evt => evt.StartBeat < evt.EndBeat && evt.StartValue * evt.EndValue < 0f)
         );
 
     /// <summary>
@@ -209,13 +201,18 @@ public static class StellateDirectCurveConverter
         {
             var current = ordered[index].Event;
             var isRedundantConstant =
-                Math.Abs(current.StartValue - current.EndValue) <= StellateGeometryConstants.ValueEpsilon
-                && ordered.Skip(index + 1).Any(item =>
-                    item.Event.StartBeat == current.StartBeat
-                    && item.Event.EndBeat >= current.EndBeat
-                    && Math.Abs(item.Event.StartValue - current.StartValue) <= StellateGeometryConstants.ValueEpsilon
-                    && Math.Abs(item.Event.EndValue - current.EndValue) <= StellateGeometryConstants.ValueEpsilon
-                );
+                Math.Abs(current.StartValue - current.EndValue)
+                    <= StellateGeometryConstants.ValueEpsilon
+                && ordered
+                    .Skip(index + 1)
+                    .Any(item =>
+                        item.Event.StartBeat == current.StartBeat
+                        && item.Event.EndBeat >= current.EndBeat
+                        && Math.Abs(item.Event.StartValue - current.StartValue)
+                            <= StellateGeometryConstants.ValueEpsilon
+                        && Math.Abs(item.Event.EndValue - current.EndValue)
+                            <= StellateGeometryConstants.ValueEpsilon
+                    );
             if (!isRedundantConstant)
                 result.Add(current);
         }
@@ -245,7 +242,11 @@ public static class StellateDirectCurveConverter
 
         return events.Any(evt =>
             evt.StartBeat < evt.EndBeat
-            && StellateBlockAreaPathBuilder.HasInteriorBoundary(boundaries, evt.StartBeat, evt.EndBeat)
+            && StellateBlockAreaPathBuilder.HasInteriorBoundary(
+                boundaries,
+                evt.StartBeat,
+                evt.EndBeat
+            )
         );
     }
 
@@ -276,9 +277,11 @@ public static class StellateDirectCurveConverter
     public static List<RpeEvent>? GetSingleCurve(
         RpeJudgeLine line,
         Func<RpeEventLayer, List<RpeEvent>?> selector
-    ) => line.EventLayers.Where(layer => layer is not null)
-        .Select(selector)
-        .FirstOrDefault(events => events is { Count: > 0 });
+    ) =>
+        line
+            .EventLayers.Where(layer => layer is not null)
+            .Select(selector)
+            .FirstOrDefault(events => events is { Count: > 0 });
 
     /// <summary>
     /// 获取判定线的直接旋转曲线，并标记是否存在多条有效旋转曲线。
@@ -314,7 +317,7 @@ public static class StellateDirectCurveConverter
     /// <param name="events">待检查的旋转事件</param>
     public static bool IsNeutralRotationCurve(IEnumerable<RpeEvent> events) =>
         events.All(evt =>
-            Math.Abs(evt.StartValue) <= StellateGeometryConstants.ValueEpsilon && Math.Abs(evt.EndValue) <= StellateGeometryConstants.ValueEpsilon
+            Math.Abs(evt.StartValue) <= StellateGeometryConstants.ValueEpsilon
+            && Math.Abs(evt.EndValue) <= StellateGeometryConstants.ValueEpsilon
         );
-
 }

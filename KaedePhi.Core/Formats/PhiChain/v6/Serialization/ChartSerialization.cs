@@ -43,7 +43,8 @@ namespace KaedePhi.Core.Formats.PhiChain.v6.Serialization
                     ex
                 );
             }
-            catch (TargetInvocationException ex) when (ex.InnerException is JsonException jsonException)
+            catch (TargetInvocationException ex)
+                when (ex.InnerException is JsonException jsonException)
             {
                 throw new InvalidOperationException(
                     $"Failed to deserialize Chart from JSON: {jsonException.Message}",
@@ -108,7 +109,8 @@ namespace KaedePhi.Core.Formats.PhiChain.v6.Serialization
                     ex
                 );
             }
-            catch (TargetInvocationException ex) when (ex.InnerException is JsonException jsonException)
+            catch (TargetInvocationException ex)
+                when (ex.InnerException is JsonException jsonException)
             {
                 throw new InvalidOperationException(
                     $"Failed to deserialize Chart from JSON: {jsonException.Message}",
@@ -124,8 +126,8 @@ namespace KaedePhi.Core.Formats.PhiChain.v6.Serialization
         /// <param name="format">是否格式化输出</param>
         /// <returns>JSON 字符串</returns>
         [PublicAPI]
-        public static string ExportToJson(this Chart chart, bool format = false)
-            => JsonCodec.Serialize(chart, format);
+        public static string ExportToJson(this Chart chart, bool format = false) =>
+            JsonCodec.Serialize(chart, format);
 
         /// <summary>
         /// 异步序列化 Chart 为 JSON 字符串
@@ -143,8 +145,11 @@ namespace KaedePhi.Core.Formats.PhiChain.v6.Serialization
         /// <param name="chart">待序列化的谱面。</param>
         /// <param name="stream">目标流</param>
         /// <param name="format">是否格式化输出</param>
-        public static void ExportToJsonStream(this Chart chart, Stream stream, bool format = false)
-            => JsonCodec.Serialize(stream, chart, format);
+        public static void ExportToJsonStream(
+            this Chart chart,
+            Stream stream,
+            bool format = false
+        ) => JsonCodec.Serialize(stream, chart, format);
 
         /// <summary>
         /// 异步序列化 Chart 为 JSON 并写入流

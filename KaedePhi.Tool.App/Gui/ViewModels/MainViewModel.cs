@@ -302,7 +302,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             _log.Error(ex, ui_background_refresh_failed);
             BackgroundMessage = ui_background_refresh_failed;
-            
+
             return false;
         }
         finally

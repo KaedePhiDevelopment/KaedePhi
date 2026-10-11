@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Formats.PhiFans.Model
 {
-    public partial class Chart
+    public class Chart
     {
         /// <summary>
         /// 谱面基本信息

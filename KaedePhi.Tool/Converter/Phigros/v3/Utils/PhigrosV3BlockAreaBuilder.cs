@@ -1,6 +1,5 @@
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Common;
-using KaedePhi.Tool.Converter.Phigros.v3.Model;
 using IrBlockArea = KaedePhi.Core.Intermediate.Model.BlockArea;
 using IrEasing = KaedePhi.Core.Intermediate.Model.Easing;
 using IrEvent = KaedePhi.Core.Intermediate.Model.Events.Event<double>;
@@ -39,9 +38,7 @@ internal static class PhigrosV3BlockAreaBuilder
             var blockArea = blockAreas[index];
             if (blockArea is null)
                 throw new FormatException("IR 噪域列表不能包含 null。");
-            result.Add(
-                ConvertBlockArea(blockArea, timeMapper, easingPrecision, warnLogger, index)
-            );
+            result.Add(ConvertBlockArea(blockArea, timeMapper, easingPrecision, warnLogger, index));
         }
 
         return result;
@@ -62,7 +59,10 @@ internal static class PhigrosV3BlockAreaBuilder
         var moveFrames = BuildKeyframes(
             [source.MoveXEvents, source.MoveYEvents],
             [centerX, centerY],
-            [[0], [1]],
+            [
+                [0],
+                [1],
+            ],
             easingPrecision,
             warnLogger,
             index,
@@ -71,7 +71,9 @@ internal static class PhigrosV3BlockAreaBuilder
         var rotateFrames = BuildKeyframes(
             [source.RotateEvents, source.RotateAnchorXEvents, source.RotateAnchorYEvents],
             [0d, centerX, centerY],
-            [[0, 1, 2]],
+            [
+                [0, 1, 2],
+            ],
             easingPrecision,
             warnLogger,
             index,
@@ -85,7 +87,10 @@ internal static class PhigrosV3BlockAreaBuilder
                 source.ScaleAnchorYEvents,
             ],
             [1d, 1d, centerX, centerY],
-            [[0, 2], [1, 3]],
+            [
+                [0, 2],
+                [1, 3],
+            ],
             easingPrecision,
             warnLogger,
             index,
@@ -111,58 +116,59 @@ internal static class PhigrosV3BlockAreaBuilder
             IsSubtract = source.IsSubtract,
             MoveEvents =
             [
-                .. moveFrames
-                    .Select(frame => new PhigrosMoveEvent
+                .. moveFrames.Select(frame => new PhigrosMoveEvent
+                {
+                    Time = ToPhigrosTime(frame.Beat, timeMapper),
+                    EndPosition = new PhigrosPosition
                     {
-                        Time = ToPhigrosTime(frame.Beat, timeMapper),
-                        EndPosition = new PhigrosPosition
-                        {
-                            X = ToPhigrosX(frame.Values[0]),
-                            Y = ToPhigrosY(frame.Values[1]),
-                        },
-                        EaseTypeX = new PhigrosAreaEase(frame.EasingTypes[0]),
-                        EaseTypeY = new PhigrosAreaEase(frame.EasingTypes[1]),
-                    })
+                        X = ToPhigrosX(frame.Values[0]),
+                        Y = ToPhigrosY(frame.Values[1]),
+                    },
+                    EaseTypeX = new PhigrosAreaEase(frame.EasingTypes[0]),
+                    EaseTypeY = new PhigrosAreaEase(frame.EasingTypes[1]),
+                }),
             ],
             RotateEvents =
             [
-                .. rotateFrames
-                    .Select(frame => new PhigrosRotateEvent
+                .. rotateFrames.Select(frame => new PhigrosRotateEvent
+                {
+                    Time = ToPhigrosTime(frame.Beat, timeMapper),
+                    Rotation = ToPhigrosAngle(frame.Values[0]),
+                    Anchor = new PhigrosPosition
                     {
-                        Time = ToPhigrosTime(frame.Beat, timeMapper),
-                        Rotation = ToPhigrosAngle(frame.Values[0]),
-                        Anchor = new PhigrosPosition
-                        {
-                            X = ToPhigrosX(frame.Values[1]),
-                            Y = ToPhigrosY(frame.Values[2]),
-                        },
-                        EaseType = new PhigrosAreaEase(frame.EasingTypes[0]),
-                    })
+                        X = ToPhigrosX(frame.Values[1]),
+                        Y = ToPhigrosY(frame.Values[2]),
+                    },
+                    EaseType = new PhigrosAreaEase(frame.EasingTypes[0]),
+                }),
             ],
             ScaleEvents =
             [
-                .. scaleFrames
-                    .Select(frame => new PhigrosScaleEvent
+                .. scaleFrames.Select(frame => new PhigrosScaleEvent
+                {
+                    Time = ToPhigrosTime(frame.Beat, timeMapper),
+                    Scale = new PhigrosPosition
                     {
-                        Time = ToPhigrosTime(frame.Beat, timeMapper),
-                        Scale = new PhigrosPosition
-                        {
-                            X = ToPhigrosFloat(frame.Values[0]),
-                            Y = ToPhigrosFloat(frame.Values[1]),
-                        },
-                        Anchor = new PhigrosPosition
-                        {
-                            X = ToPhigrosX(frame.Values[2]),
-                            Y = ToPhigrosY(frame.Values[3]),
-                        },
-                        EaseTypeX = new PhigrosAreaEase(frame.EasingTypes[0]),
-                        EaseTypeY = new PhigrosAreaEase(frame.EasingTypes[1]),
-                    })
+                        X = ToPhigrosFloat(frame.Values[0]),
+                        Y = ToPhigrosFloat(frame.Values[1]),
+                    },
+                    Anchor = new PhigrosPosition
+                    {
+                        X = ToPhigrosX(frame.Values[2]),
+                        Y = ToPhigrosY(frame.Values[3]),
+                    },
+                    EaseTypeX = new PhigrosAreaEase(frame.EasingTypes[0]),
+                    EaseTypeY = new PhigrosAreaEase(frame.EasingTypes[1]),
+                }),
             ],
         };
     }
 
-    private static List<(Beat Beat, double[] Values, PhigrosAreaEaseType[] EasingTypes)> BuildKeyframes(
+    private static List<(
+        Beat Beat,
+        double[] Values,
+        PhigrosAreaEaseType[] EasingTypes
+    )> BuildKeyframes(
         List<IrEvent>?[] sourceTracks,
         double[] initialValues,
         int[][] linkedTracks,
@@ -220,9 +226,8 @@ internal static class PhigrosV3BlockAreaBuilder
 
             var stepGroups = new bool[linkedTracks.Length];
             for (var groupIndex = 0; groupIndex < linkedTracks.Length; groupIndex++)
-                stepGroups[groupIndex] = linkedTracks[groupIndex].Any(trackIndex =>
-                    !ValuesEqual(beforeValues[trackIndex], values[trackIndex])
-                );
+                stepGroups[groupIndex] = linkedTracks[groupIndex]
+                    .Any(trackIndex => !ValuesEqual(beforeValues[trackIndex], values[trackIndex]));
 
             if (stepGroups.Any(isStep => isStep))
             {
@@ -244,12 +249,7 @@ internal static class PhigrosV3BlockAreaBuilder
                 continue;
             }
 
-            var easingTypes = GetEaseTypesAfterBeat(
-                tracks,
-                linkedTracks,
-                beat,
-                useNativeEasings
-            );
+            var easingTypes = GetEaseTypesAfterBeat(tracks, linkedTracks, beat, useNativeEasings);
 
             if (
                 beat == zeroBeat
@@ -349,8 +349,14 @@ internal static class PhigrosV3BlockAreaBuilder
             }
         }
 
-        if ((from track in tracks from evt in track where !ValuesEqual(evt.StartValue, evt.EndValue) select evt)
-            .Any(evt => boundaries.Any(beat => beat > evt.StartBeat && beat < evt.EndBeat)))
+        if (
+            (
+                from track in tracks
+                from evt in track
+                where !ValuesEqual(evt.StartValue, evt.EndValue)
+                select evt
+            ).Any(evt => boundaries.Any(beat => beat > evt.StartBeat && beat < evt.EndBeat))
+        )
         {
             return false;
         }
@@ -365,11 +371,12 @@ internal static class PhigrosV3BlockAreaBuilder
                 var groupEasing = -1;
                 foreach (var trackIndex in linkedGroup)
                 {
-                    var evt = tracks[trackIndex].FirstOrDefault(candidate =>
-                        candidate.StartBeat == startBeat
-                        && candidate.EndBeat == endBeat
-                        && !ValuesEqual(candidate.StartValue, candidate.EndValue)
-                    );
+                    var evt = tracks[trackIndex]
+                        .FirstOrDefault(candidate =>
+                            candidate.StartBeat == startBeat
+                            && candidate.EndBeat == endBeat
+                            && !ValuesEqual(candidate.StartValue, candidate.EndValue)
+                        );
                     if (evt is null)
                         continue;
                     if (!TryToAreaEase(evt.Easing, out var areaEaseType))
@@ -446,14 +453,8 @@ internal static class PhigrosV3BlockAreaBuilder
         var easingType = PhigrosAreaEaseType.Linear;
         foreach (var trackIndex in linkedTracks)
         {
-            var evt = tracks[trackIndex].LastOrDefault(candidate =>
-                candidate.StartBeat <= beat
-            );
-            if (
-                evt is null
-                || evt.EndBeat <= beat
-                || ValuesEqual(evt.StartValue, evt.EndValue)
-            )
+            var evt = tracks[trackIndex].LastOrDefault(candidate => candidate.StartBeat <= beat);
+            if (evt is null || evt.EndBeat <= beat || ValuesEqual(evt.StartValue, evt.EndValue))
                 continue;
 
             hasActiveEvent = true;
@@ -469,11 +470,7 @@ internal static class PhigrosV3BlockAreaBuilder
         return hasActiveEvent ? easingType : PhigrosAreaEaseType.One;
     }
 
-    private static double GetValueBeforeBeat(
-        List<IrEvent> events,
-        Beat beat,
-        double defaultValue
-    )
+    private static double GetValueBeforeBeat(List<IrEvent> events, Beat beat, double defaultValue)
     {
         IrEvent? dominant = null;
         foreach (var evt in events.TakeWhile(evt => evt.StartBeat < beat))
@@ -494,10 +491,7 @@ internal static class PhigrosV3BlockAreaBuilder
     private static bool ValuesEqual(double left, double right) =>
         Math.Abs(left - right) <= Constants.FloatEpsilon;
 
-    private static bool TryToAreaEase(
-        IrEasing easing,
-        out PhigrosAreaEaseType areaEaseType
-    )
+    private static bool TryToAreaEase(IrEasing easing, out PhigrosAreaEaseType areaEaseType)
     {
         areaEaseType = (int)easing switch
         {
@@ -530,11 +524,9 @@ internal static class PhigrosV3BlockAreaBuilder
             throw new FormatException("IR 噪域坐标必须是有限数值。");
     }
 
-    private static float ToPhigrosX(double value) =>
-        ToPhigrosFloat(Transform.ToPhigrosV3X(value));
+    private static float ToPhigrosX(double value) => ToPhigrosFloat(Transform.ToPhigrosV3X(value));
 
-    private static float ToPhigrosY(double value) =>
-        ToPhigrosFloat(Transform.ToPhigrosV3Y(value));
+    private static float ToPhigrosY(double value) => ToPhigrosFloat(Transform.ToPhigrosV3Y(value));
 
     private static float ToPhigrosAngle(double value) =>
         ToPhigrosFloat(Transform.ToPhigrosV3Angle(value));

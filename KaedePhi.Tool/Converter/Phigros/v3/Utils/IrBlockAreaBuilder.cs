@@ -159,14 +159,7 @@ internal static class IrBlockAreaBuilder
             if (!double.IsFinite(startValue) || !double.IsFinite(endValue))
                 throw new FormatException("PhigrosV3 噪域事件值必须是有限数值。");
 
-            AddEvent(
-                result,
-                startBeat,
-                endBeat,
-                startValue,
-                endValue,
-                easingSelector(leftEvent)
-            );
+            AddEvent(result, startBeat, endBeat, startValue, endValue, easingSelector(leftEvent));
         }
 
         var lastEvent = ordered[^1].Event;
@@ -215,9 +208,7 @@ internal static class IrBlockAreaBuilder
                 throw new FormatException("PhigrosV3 噪域锚点必须是有限数值。");
 
             if (keyframeBeat > startBeat)
-                result.Add(
-                    CreateEvent(startBeat, keyframeBeat, previousValue, previousValue, 1)
-                );
+                result.Add(CreateEvent(startBeat, keyframeBeat, previousValue, previousValue, 1));
             // 锚点在两帧之间保持左帧的绝对坐标，到新帧时才切换。
             result.Add(CreateEvent(keyframeBeat, keyframeBeat, previousValue, anchorValue, 1));
             previousBeat = keyframeBeat;
@@ -302,18 +293,17 @@ internal static class IrBlockAreaBuilder
             _ => throw new FormatException($"PhigrosV3 噪域缓动编号 {areaEaseType} 无效。"),
         };
 
-    private static double ToIrX(float value) =>
-        Transform.ToIrX(ToFiniteFloat(value));
+    private static double ToIrX(float value) => Transform.ToIrX(ToFiniteFloat(value));
 
-    private static double ToIrY(float value) =>
-        Transform.ToIrY(ToFiniteFloat(value));
+    private static double ToIrY(float value) => Transform.ToIrY(ToFiniteFloat(value));
 
-    private static double ToIrAngle(float value) =>
-        Transform.ToIrAngle(ToFiniteFloat(value));
+    private static double ToIrAngle(float value) => Transform.ToIrAngle(ToFiniteFloat(value));
 
     private static double ToFiniteDouble(float value)
     {
-        return !float.IsFinite(value) ? throw new FormatException("PhigrosV3 噪域值必须是有限数值。") : value;
+        return !float.IsFinite(value)
+            ? throw new FormatException("PhigrosV3 噪域值必须是有限数值。")
+            : value;
     }
 
     private static float ToFiniteFloat(float value) =>

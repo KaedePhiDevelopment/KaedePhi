@@ -1,10 +1,9 @@
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Converter.Phigros.v3.Utils;
 using KaedePhi.Tool.Converter.StellateRePhiEditExtended.Model;
-using RpeEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<float>;
 using IrBpmItem = KaedePhi.Core.Intermediate.Model.BpmItem;
 using IrEvent = KaedePhi.Core.Intermediate.Model.Events.Event<double>;
-using IrEasing = KaedePhi.Core.Intermediate.Model.Easing;
+using RpeEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<float>;
 
 namespace KaedePhi.Tool.Converter.StellateRePhiEditExtended.Utils;
 
@@ -25,7 +24,8 @@ public sealed class StellateBlockAreaPathBuilder
     public StellateBlockAreaPathBuilder(
         IReadOnlyList<IrBpmItem> bpmList,
         CancellationToken cancellationToken
-    ) : this(new PhigrosV3TimeMapper(bpmList), cancellationToken) { }
+    )
+        : this(new PhigrosV3TimeMapper(bpmList), cancellationToken) { }
 
     internal StellateBlockAreaPathBuilder(
         PhigrosV3TimeMapper timeMapper,
@@ -88,10 +88,7 @@ public sealed class StellateBlockAreaPathBuilder
     /// </summary>
     /// <param name="sampleBeats">接收采样拍数的集合</param>
     /// <param name="rotateEvents">旋转事件</param>
-    public void AddRotationCutPoints(
-        SortedSet<Beat> sampleBeats,
-        List<RpeEvent>? rotateEvents
-    )
+    public void AddRotationCutPoints(SortedSet<Beat> sampleBeats, List<RpeEvent>? rotateEvents)
     {
         var times = CreateCurveBoundarySet(rotateEvents);
         AddCurveCutPoints(times, rotateEvents, splitSupportedIfInterrupted: false);
@@ -139,15 +136,15 @@ public sealed class StellateBlockAreaPathBuilder
 
             var isMapped = CanMapNativeEasing(evt, out var areaEaseType);
             var hasInteriorBoundary = HasInteriorBoundary(times, evt);
-            if (!isMapped || (splitSupportedIfInterrupted && areaEaseType != 0 && hasInteriorBoundary))
+            if (
+                !isMapped
+                || (splitSupportedIfInterrupted && areaEaseType != 0 && hasInteriorBoundary)
+            )
                 AddUniformCutPoints(times, evt);
         }
     }
 
-    private void AddScaleZeroCrossingCutPoints(
-        SortedSet<Beat> times,
-        List<RpeEvent>? events
-    )
+    private void AddScaleZeroCrossingCutPoints(SortedSet<Beat> times, List<RpeEvent>? events)
     {
         if (events is not { Count: > 0 })
             return;
@@ -155,18 +152,17 @@ public sealed class StellateBlockAreaPathBuilder
         foreach (var evt in events)
         {
             _ct.ThrowIfCancellationRequested();
-            if (
-                evt.StartBeat < evt.EndBeat
-                && (double)evt.StartValue * evt.EndValue < 0d
-            )
+            if (evt.StartBeat < evt.EndBeat && (double)evt.StartValue * evt.EndValue < 0d)
                 AddUniformCutPoints(times, evt);
         }
     }
 
     private void AddUniformCutPoints(SortedSet<Beat> times, RpeEvent evt)
     {
-        var first = (long)Math.Floor((double)evt.StartBeat * StellateGeometryConstants.SamplesPerBeat) + 1L;
-        var last = (long)Math.Ceiling((double)evt.EndBeat * StellateGeometryConstants.SamplesPerBeat) - 1L;
+        var first =
+            (long)Math.Floor((double)evt.StartBeat * StellateGeometryConstants.SamplesPerBeat) + 1L;
+        var last =
+            (long)Math.Ceiling((double)evt.EndBeat * StellateGeometryConstants.SamplesPerBeat) - 1L;
         for (var index = first; index <= last; index++)
         {
             _ct.ThrowIfCancellationRequested();
@@ -187,16 +183,14 @@ public sealed class StellateBlockAreaPathBuilder
     /// <param name="endBeat">区间结束拍</param>
     public static bool HasInteriorBoundary(SortedSet<Beat> times, Beat startBeat, Beat endBeat) =>
         startBeat < endBeat
-        && times
-            .GetViewBetween(startBeat, endBeat)
-            .Any(beat => startBeat < beat && beat < endBeat);
+        && times.GetViewBetween(startBeat, endBeat).Any(beat => startBeat < beat && beat < endBeat);
 
     private static bool CanMapNativeEasing(RpeEvent evt, out int areaEaseType)
     {
         areaEaseType = -1;
         return !StellateRePhiEditEasing.IsBezierEvent(evt)
-               && StellateDirectCurveConverter.IsFullEasingRange(evt)
-               && StellateRePhiEditEasing.TryMapToBlockArea((int)evt.Easing, out areaEaseType);
+            && StellateDirectCurveConverter.IsFullEasingRange(evt)
+            && StellateRePhiEditEasing.TryMapToBlockArea((int)evt.Easing, out areaEaseType);
     }
 
     /// <summary>
@@ -206,7 +200,8 @@ public sealed class StellateBlockAreaPathBuilder
     /// <param name="endBeat">采样结束拍</param>
     public void AddUniformGrid(SortedSet<Beat> beats, Beat endBeat)
     {
-        var count = (long)Math.Floor(Math.Max(0d, endBeat) * StellateGeometryConstants.SamplesPerBeat + 1e-9);
+        var count = (long)
+            Math.Floor(Math.Max(0d, endBeat) * StellateGeometryConstants.SamplesPerBeat + 1e-9);
         for (long index = 0; index <= count; index++)
         {
             _ct.ThrowIfCancellationRequested();
@@ -228,7 +223,7 @@ public sealed class StellateBlockAreaPathBuilder
             StellateBlockAreaGeometry Left,
             StellateBlockAreaGeometry Right,
             bool Hard
-            )> samples,
+        )> samples,
         Func<StellateBlockAreaGeometry, (double X, double Y)> selector
     )
     {
@@ -264,7 +259,7 @@ public sealed class StellateBlockAreaPathBuilder
             StellateBlockAreaGeometry Left,
             StellateBlockAreaGeometry Right,
             bool Hard
-            )> samples,
+        )> samples,
         Func<StellateBlockAreaGeometry, double> selector
     )
     {
@@ -302,7 +297,8 @@ public sealed class StellateBlockAreaPathBuilder
         keep[^1] = true;
         for (var index = 1; index < points.Count; index++)
         {
-            if (!(times[index] <= times[index - 1] + 1e-12)) continue;
+            if (!(times[index] <= times[index - 1] + 1e-12))
+                continue;
             keep[index - 1] = true;
             keep[index] = true;
         }
@@ -316,10 +312,7 @@ public sealed class StellateBlockAreaPathBuilder
         {
             var startIndex = range.Start;
             var endIndex = range.End;
-            if (
-                endIndex <= startIndex + 1
-                || times[endIndex] <= times[startIndex] + 1e-12
-            )
+            if (endIndex <= startIndex + 1 || times[endIndex] <= times[startIndex] + 1e-12)
                 continue;
 
             var largestDeviation = 1d;
@@ -329,11 +322,9 @@ public sealed class StellateBlockAreaPathBuilder
                 var progress =
                     (times[index] - times[startIndex]) / (times[endIndex] - times[startIndex]);
                 var expectedX =
-                    points[startIndex].X
-                    + (points[endIndex].X - points[startIndex].X) * progress;
+                    points[startIndex].X + (points[endIndex].X - points[startIndex].X) * progress;
                 var expectedY =
-                    points[startIndex].Y
-                    + (points[endIndex].Y - points[startIndex].Y) * progress;
+                    points[startIndex].Y + (points[endIndex].Y - points[startIndex].Y) * progress;
                 var deviationX = RelativeDeviation(
                     points[index].X,
                     expectedX,
@@ -358,7 +349,8 @@ public sealed class StellateBlockAreaPathBuilder
                             deviationY / StellateGeometryConstants.HardPointEpsilon
                         )
                     );
-                if (!(deviation > largestDeviation)) continue;
+                if (!(deviation > largestDeviation))
+                    continue;
                 largestDeviation = deviation;
                 splitIndex = index;
             }
@@ -391,7 +383,8 @@ public sealed class StellateBlockAreaPathBuilder
         keep[^1] = true;
         for (var index = 1; index < points.Count; index++)
         {
-            if (!(times[index] <= times[index - 1] + 1e-12)) continue;
+            if (!(times[index] <= times[index - 1] + 1e-12))
+                continue;
             keep[index - 1] = true;
             keep[index] = true;
         }
@@ -405,10 +398,7 @@ public sealed class StellateBlockAreaPathBuilder
         {
             var startIndex = range.Start;
             var endIndex = range.End;
-            if (
-                endIndex <= startIndex + 1
-                || times[endIndex] <= times[startIndex] + 1e-12
-            )
+            if (endIndex <= startIndex + 1 || times[endIndex] <= times[startIndex] + 1e-12)
                 continue;
 
             var largestDeviation = 1d;
@@ -476,14 +466,7 @@ public sealed class StellateBlockAreaPathBuilder
             var previousValue = xAxis ? previousX : previousY;
             if (Math.Abs(nextValue - previousValue) > StellateGeometryConstants.ValueEpsilon)
             {
-                events.Add(
-                    CreateEvent(
-                        previousBeat,
-                        point.Beat,
-                        previousValue,
-                        nextValue
-                    )
-                );
+                events.Add(CreateEvent(previousBeat, point.Beat, previousValue, nextValue));
             }
 
             previousBeat = point.Beat;
@@ -537,12 +520,16 @@ public sealed class StellateBlockAreaPathBuilder
             Easing = new Ir.Easing(1),
         };
 
-    private static double RelativeDeviation(double actual, double expected, double start, double end)
+    private static double RelativeDeviation(
+        double actual,
+        double expected,
+        double start,
+        double end
+    )
     {
         var span = end - start;
         return Math.Abs(span) <= 1e-12
             ? Math.Abs(actual - expected)
             : Math.Abs((actual - expected) / span);
     }
-
 }

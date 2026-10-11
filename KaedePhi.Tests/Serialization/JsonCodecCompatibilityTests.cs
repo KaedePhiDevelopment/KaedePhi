@@ -1,13 +1,11 @@
 #pragma warning disable CS0618
 
-using System.IO;
-using System.Linq;
 using System.Text;
 using KaedePhi.Core.Primitives;
+using Newtonsoft.Json.Linq;
 using LegacyPc = KaedePhi.Core.PhiChain.v6;
 using LegacyPf = KaedePhi.Core.PhiFans;
 using LegacyPh = KaedePhi.Core.Phigros.v3;
-using Newtonsoft.Json.Linq;
 using Pc = KaedePhi.Core.Formats.PhiChain.v6.Model;
 using PcSerialization = KaedePhi.Core.Formats.PhiChain.v6.Serialization.ChartSerialization;
 using Pf = KaedePhi.Core.Formats.PhiFans.Model;
@@ -41,10 +39,14 @@ public class JsonCodecCompatibilityTests
         };
 
         var formatJson = PfSerialization.ExportToJson(formatChart, false);
-        var formatBeat = JObject.Parse(formatJson)["lines"]![0]!["notes"]![0]!["beat"]!
-            .ToObject<int[]>();
+        var formatBeat = JObject.Parse(formatJson)["lines"]![0]!["notes"]![0]![
+            "beat"
+        ]!.ToObject<int[]>();
         Assert.Equal(new[] { 2, 1, 4 }, formatBeat);
-        Assert.Equal(new Beat([2, 1, 4]), PfSerialization.LoadFromJson(formatJson).JudgeLineList[0].NoteList[0].Beat);
+        Assert.Equal(
+            new Beat([2, 1, 4]),
+            PfSerialization.LoadFromJson(formatJson).JudgeLineList[0].NoteList[0].Beat
+        );
 
         using var stream = new MemoryStream();
         PfSerialization.ExportToJsonStream(formatChart, stream, false);
@@ -100,7 +102,15 @@ public class JsonCodecCompatibilityTests
             [
                 new Ph.JudgeLine
                 {
-                    NotesAbove = [new Ph.Note { Type = Ph.NoteType.Hold, HoldTime = 32, Time = 64 }],
+                    NotesAbove =
+                    [
+                        new Ph.Note
+                        {
+                            Type = Ph.NoteType.Hold,
+                            HoldTime = 32,
+                            Time = 64,
+                        },
+                    ],
                 },
             ],
         };

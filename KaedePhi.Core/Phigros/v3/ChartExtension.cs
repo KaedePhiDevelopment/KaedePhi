@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using KaedePhi.Core.Common;
 using JsonCodec = KaedePhi.Core.Primitives.Serialization.JsonCodec;
 
 namespace KaedePhi.Core.Phigros.v3
@@ -15,16 +14,15 @@ namespace KaedePhi.Core.Phigros.v3
         /// <param name="format">是否需要格式化</param>
         /// <returns>Json</returns>
         [PublicAPI]
-        public string ExportToJson(bool format)
-            => JsonCodec.Serialize(this, format);
+        public string ExportToJson(bool format) => JsonCodec.Serialize(this, format);
 
         /// <summary>
         /// 将谱面序列化为Json并写入流
         /// </summary>
         /// <param name="stream">流</param>
         /// <param name="format">是否需要格式化</param>
-        public void ExportToJsonStream(Stream stream, bool format)
-            => JsonCodec.Serialize(stream, this, format);
+        public void ExportToJsonStream(Stream stream, bool format) =>
+            JsonCodec.Serialize(stream, this, format);
 
         /// <summary>
         /// 异步将谱面序列化为Json并写入流
@@ -82,7 +80,8 @@ namespace KaedePhi.Core.Phigros.v3
         /// <exception cref="InvalidOperationException">反序列化失败</exception>
         public static Task<Chart> LoadFromStreamAsync(Stream stream)
         {
-            var chart = JsonCodec.Deserialize<Chart>(stream)
+            var chart =
+                JsonCodec.Deserialize<Chart>(stream)
                 ?? throw new InvalidOperationException("Failed to deserialize Chart from stream.");
             return Task.FromResult(chart);
         }

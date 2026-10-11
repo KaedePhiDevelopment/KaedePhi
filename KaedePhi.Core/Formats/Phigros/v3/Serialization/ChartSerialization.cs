@@ -19,8 +19,8 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Serialization
         /// <param name="format">是否需要格式化</param>
         /// <returns>Json</returns>
         [PublicAPI]
-        public static string ExportToJson(this Chart chart, bool format)
-            => JsonCodec.Serialize(chart, format);
+        public static string ExportToJson(this Chart chart, bool format) =>
+            JsonCodec.Serialize(chart, format);
 
         /// <summary>
         /// 将谱面序列化为Json并写入流
@@ -28,8 +28,8 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Serialization
         /// <param name="chart">待序列化的谱面。</param>
         /// <param name="stream">流</param>
         /// <param name="format">是否需要格式化</param>
-        public static void ExportToJsonStream(this Chart chart, Stream stream, bool format)
-            => JsonCodec.Serialize(stream, chart, format);
+        public static void ExportToJsonStream(this Chart chart, Stream stream, bool format) =>
+            JsonCodec.Serialize(stream, chart, format);
 
         /// <summary>
         /// 异步将谱面序列化为Json并写入流
@@ -37,11 +37,8 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Serialization
         /// <param name="chart">待序列化的谱面。</param>
         /// <param name="stream">流</param>
         /// <param name="format">是否需要格式化</param>
-        public static Task ExportToJsonStreamAsync(
-            this Chart chart,
-            Stream stream,
-            bool format
-        ) => JsonCodec.SerializeAsync(stream, chart, format);
+        public static Task ExportToJsonStreamAsync(this Chart chart, Stream stream, bool format) =>
+            JsonCodec.SerializeAsync(stream, chart, format);
 
         /// <summary>
         /// 异步序列化为Json
@@ -91,7 +88,8 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Serialization
         /// <exception cref="InvalidOperationException">反序列化失败</exception>
         public static Task<Chart> LoadFromStreamAsync(Stream stream)
         {
-            var chart = JsonCodec.Deserialize<Chart>(stream)
+            var chart =
+                JsonCodec.Deserialize<Chart>(stream)
                 ?? throw new InvalidOperationException("Failed to deserialize Chart from stream.");
             return Task.FromResult(chart);
         }

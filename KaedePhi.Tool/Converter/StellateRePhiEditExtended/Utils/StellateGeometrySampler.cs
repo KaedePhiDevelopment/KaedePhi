@@ -2,12 +2,11 @@ using System.Runtime.ExceptionServices;
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Converter.Phigros.v3.Utils;
 using KaedePhi.Tool.Converter.StellateRePhiEditExtended.Model;
+using IrBpmItem = KaedePhi.Core.Intermediate.Model.BpmItem;
 using RpeChart = KaedePhi.Core.Formats.RePhiEdit.Model.Chart;
 using RpeEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<float>;
 using RpeEventLayer = KaedePhi.Core.Formats.RePhiEdit.Model.Events.EventLayer;
 using RpeJudgeLine = KaedePhi.Core.Formats.RePhiEdit.Model.JudgeLine;
-using IrBpmItem = KaedePhi.Core.Intermediate.Model.BpmItem;
-using IrEvent = KaedePhi.Core.Intermediate.Model.Events.Event<double>;
 
 namespace KaedePhi.Tool.Converter.StellateRePhiEditExtended.Utils;
 
@@ -31,7 +30,8 @@ public sealed class StellateGeometrySampler
         RpeChart source,
         IReadOnlyList<IrBpmItem> bpmList,
         CancellationToken cancellationToken
-    ) : this(source, new PhigrosV3TimeMapper(bpmList), cancellationToken) { }
+    )
+        : this(source, new PhigrosV3TimeMapper(bpmList), cancellationToken) { }
 
     internal StellateGeometrySampler(
         RpeChart source,
@@ -133,12 +133,12 @@ public sealed class StellateGeometrySampler
         StellateBlockAreaGeometry Left,
         StellateBlockAreaGeometry Right,
         bool Hard
-        )[] SampleGeometry(
-            int lineIndex,
-            SortedSet<Beat> sampleBeats,
-            SortedSet<Beat> hardBeats,
-            int maxDegreeOfParallelism
-        )
+    )[] SampleGeometry(
+        int lineIndex,
+        SortedSet<Beat> sampleBeats,
+        SortedSet<Beat> hardBeats,
+        int maxDegreeOfParallelism
+    )
     {
         var beats = sampleBeats.ToArray();
         var samples = new (
@@ -146,13 +146,9 @@ public sealed class StellateGeometrySampler
             StellateBlockAreaGeometry Left,
             StellateBlockAreaGeometry Right,
             bool Hard
-            )[beats.Length];
+        )[beats.Length];
 
-        void Sample(
-            int index,
-            HashSet<int> visiting,
-            StellateCurveValueCache curveValues
-        )
+        void Sample(int index, HashSet<int> visiting, StellateCurveValueCache curveValues)
         {
             _ct.ThrowIfCancellationRequested();
             curveValues.BeginSample();
@@ -190,10 +186,11 @@ public sealed class StellateGeometrySampler
                     CancellationToken = _ct,
                     MaxDegreeOfParallelism = maxDegreeOfParallelism,
                 },
-                () => (
-                    Visiting: new HashSet<int>(),
-                    CurveValues: new StellateCurveValueCache(_curveIndexes.Count)
-                ),
+                () =>
+                    (
+                        Visiting: new HashSet<int>(),
+                        CurveValues: new StellateCurveValueCache(_curveIndexes.Count)
+                    ),
                 (index, _, state) =>
                 {
                     Sample(index, state.Visiting, state.CurveValues);
@@ -233,12 +230,24 @@ public sealed class StellateGeometrySampler
             1d
         );
 
-        var imageWidth = StellateGeometryConstants.TextureWidth * scaleX * StellateGeometryConstants.AspectWidth / 1350d;
-        var imageHeight = StellateGeometryConstants.TextureHeight * scaleY * StellateGeometryConstants.AspectWidth / 1350d;
+        var imageWidth =
+            StellateGeometryConstants.TextureWidth
+            * scaleX
+            * StellateGeometryConstants.AspectWidth
+            / 1350d;
+        var imageHeight =
+            StellateGeometryConstants.TextureHeight
+            * scaleY
+            * StellateGeometryConstants.AspectWidth
+            / 1350d;
         var anchorX = line.Anchor is { Length: >= 2 } ? line.Anchor[0] : 0.5d;
         var anchorY = line.Anchor is { Length: >= 2 } ? line.Anchor[1] : 0.5d;
-        var lineScreenX = StellateGeometryConstants.AspectWidth * 0.5d + pose.X * StellateGeometryConstants.AspectWidth / 1350d;
-        var lineScreenY = StellateGeometryConstants.AspectHeight * 0.5d - pose.Y * StellateGeometryConstants.AspectHeight / 900d;
+        var lineScreenX =
+            StellateGeometryConstants.AspectWidth * 0.5d
+            + pose.X * StellateGeometryConstants.AspectWidth / 1350d;
+        var lineScreenY =
+            StellateGeometryConstants.AspectHeight * 0.5d
+            - pose.Y * StellateGeometryConstants.AspectHeight / 900d;
         var deltaX = (0.5d - anchorX) * imageWidth;
         var deltaY = (anchorY - 0.5d) * imageHeight;
         var radians = pose.Rotation * Math.PI / 180d;
@@ -269,15 +278,33 @@ public sealed class StellateGeometrySampler
         {
             var line = _source.JudgeLineList[lineIndex];
             var x = StellateGeometryConstants.FiniteOr(
-                SumLayerCurve(line, musicTime, rightSide, static layer => layer.MoveXEvents, curveValues),
+                SumLayerCurve(
+                    line,
+                    musicTime,
+                    rightSide,
+                    static layer => layer.MoveXEvents,
+                    curveValues
+                ),
                 0d
             );
             var y = StellateGeometryConstants.FiniteOr(
-                SumLayerCurve(line, musicTime, rightSide, static layer => layer.MoveYEvents, curveValues),
+                SumLayerCurve(
+                    line,
+                    musicTime,
+                    rightSide,
+                    static layer => layer.MoveYEvents,
+                    curveValues
+                ),
                 0d
             );
             var rotation = StellateGeometryConstants.FiniteOr(
-                SumLayerCurve(line, musicTime, rightSide, static layer => layer.RotateEvents, curveValues),
+                SumLayerCurve(
+                    line,
+                    musicTime,
+                    rightSide,
+                    static layer => layer.RotateEvents,
+                    curveValues
+                ),
                 0d
             );
 
@@ -381,7 +408,12 @@ public sealed class StellateGeometrySampler
 
         var dominant = curveIndex.GetEvent(dominantIndex);
         var dominantStartTime = curveIndex.GetStartTime(dominantIndex);
-        if (!(Math.Abs(musicTime - dominantStartTime) <= StellateGeometryConstants.CurveStartTimeEpsilon))
+        if (
+            !(
+                Math.Abs(musicTime - dominantStartTime)
+                <= StellateGeometryConstants.CurveStartTimeEpsilon
+            )
+        )
         {
             var value = EventValueAtMusicTime(
                 curveIndex,
@@ -443,7 +475,8 @@ public sealed class StellateGeometrySampler
     {
         while (true)
         {
-            if (!visited.Add(lineIndex)) return;
+            if (!visited.Add(lineIndex))
+                return;
             var line = _source.JudgeLineList[lineIndex];
             foreach (var layer in line.EventLayers.OfType<RpeEventLayer>())
             {
@@ -472,7 +505,8 @@ public sealed class StellateGeometrySampler
     {
         while (true)
         {
-            if (!visited.Add(lineIndex)) return;
+            if (!visited.Add(lineIndex))
+                return;
 
             var line = _source.JudgeLineList[lineIndex];
             foreach (var layer in line.EventLayers.OfType<RpeEventLayer>())
@@ -480,7 +514,11 @@ public sealed class StellateGeometrySampler
                 StellateBlockAreaPathBuilder.AddCurveBoundaries(layer.RotateEvents, beats);
             }
 
-            if (line.RotateWithFather && line.Father >= 0 && line.Father < _source.JudgeLineList.Count)
+            if (
+                line.RotateWithFather
+                && line.Father >= 0
+                && line.Father < _source.JudgeLineList.Count
+            )
             {
                 lineIndex = line.Father;
                 continue;
@@ -489,5 +527,4 @@ public sealed class StellateGeometrySampler
             break;
         }
     }
-
 }

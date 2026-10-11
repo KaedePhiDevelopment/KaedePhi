@@ -9,7 +9,6 @@ using IrEvent = KaedePhi.Core.Intermediate.Model.Events.Event<double>;
 using PhigrosAreaEaseType = KaedePhi.Core.Formats.Phigros.v3.Model.AreaEaseType;
 using PhigrosChart = KaedePhi.Core.Formats.Phigros.v3.Model.Chart;
 using PhigrosJudgeLine = KaedePhi.Core.Formats.Phigros.v3.Model.JudgeLine;
-using Xunit;
 
 namespace KaedePhi.Tests.Converter;
 
@@ -111,10 +110,7 @@ public class PhigrosV3BlockAreaConversionTests
         );
         Assert.Equal(PhigrosAreaEaseType.One, result.RotateEvents[^1].EaseType.Type);
         Assert.Equal(3, result.ScaleEvents.Count);
-        Assert.Equal(
-            source.BlockAreaList[0].ScaleEvents[0].Scale,
-            result.ScaleEvents[^1].Scale
-        );
+        Assert.Equal(source.BlockAreaList[0].ScaleEvents[0].Scale, result.ScaleEvents[^1].Scale);
         Assert.Equal(PhigrosAreaEaseType.One, result.ScaleEvents[^1].EaseTypeY.Type);
     }
 
@@ -336,10 +332,7 @@ public class PhigrosV3BlockAreaConversionTests
             ],
         };
 
-        var converted = new PhigrosV3Converter().FromIr(
-            source,
-            new IrToPhigrosV3ConvertOptions()
-        );
+        var converted = new PhigrosV3Converter().FromIr(source, new IrToPhigrosV3ConvertOptions());
         var moves = Assert.Single(converted.BlockAreaList).MoveEvents;
 
         Assert.Equal(4, moves.Count);
@@ -438,10 +431,7 @@ public class PhigrosV3BlockAreaConversionTests
             BlockAreaList = [new IrBlockArea { AppearBeat = new Beat(6) }],
         };
 
-        var converted = new PhigrosV3Converter().FromIr(
-            source,
-            new IrToPhigrosV3ConvertOptions()
-        );
+        var converted = new PhigrosV3Converter().FromIr(source, new IrToPhigrosV3ConvertOptions());
 
         Assert.Equal(4f, Assert.Single(converted.BlockAreaList).AppearTime);
     }
@@ -487,17 +477,11 @@ public class PhigrosV3BlockAreaConversionTests
         Assert.Contains(warnings, message => message.Contains("线性事件"));
     }
 
-    private static double EvaluateIrTrack(
-        List<IrEvent>? events,
-        Beat beat,
-        double defaultValue
-    )
+    private static double EvaluateIrTrack(List<IrEvent>? events, Beat beat, double defaultValue)
     {
         var dominant = events?.LastOrDefault(evt => evt.StartBeat <= beat);
         if (dominant is null)
             return defaultValue;
-        return beat <= dominant.EndBeat
-            ? dominant.GetValueAtBeatAsDouble(beat)
-            : dominant.EndValue;
+        return beat <= dominant.EndBeat ? dominant.GetValueAtBeatAsDouble(beat) : dominant.EndValue;
     }
 }

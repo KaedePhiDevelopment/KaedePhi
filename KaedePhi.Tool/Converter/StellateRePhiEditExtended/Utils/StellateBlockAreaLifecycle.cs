@@ -37,12 +37,7 @@ public static class StellateBlockAreaLifecycle
             }
         }
 
-        return
-        [
-            .. result
-                .OrderBy(marker => marker.Beat)
-                .ThenBy(marker => marker.Order),
-        ];
+        return [.. result.OrderBy(marker => marker.Beat).ThenBy(marker => marker.Order)];
     }
 
     /// <summary>
@@ -51,7 +46,12 @@ public static class StellateBlockAreaLifecycle
     /// <param name="markers">按拍数排列的生命周期标记</param>
     /// <param name="chartEndBeat">谱面结束拍</param>
     /// <param name="cancellationToken">用于取消处理的令牌</param>
-    public static List<(Beat AppearBeat, Beat EnableBeat, Beat DisableBeat, Beat DisappearBeat)> BuildLifeCycles(
+    public static List<(
+        Beat AppearBeat,
+        Beat EnableBeat,
+        Beat DisableBeat,
+        Beat DisappearBeat
+    )> BuildLifeCycles(
         List<(int Code, Beat Beat, int Order)> markers,
         Beat chartEndBeat,
         CancellationToken cancellationToken
@@ -74,9 +74,8 @@ public static class StellateBlockAreaLifecycle
         {
             cancellationToken.ThrowIfCancellationRequested();
             var group = groups[groupIndex];
-            var groupEndBeat = groupIndex + 1 < groups.Count
-                ? groups[groupIndex + 1][0].Beat
-                : chartEndBeat;
+            var groupEndBeat =
+                groupIndex + 1 < groups.Count ? groups[groupIndex + 1][0].Beat : chartEndBeat;
             if (groupEndBeat < group[^1].Beat)
                 groupEndBeat = group[^1].Beat;
 
@@ -86,9 +85,8 @@ public static class StellateBlockAreaLifecycle
                 var markerIndex = 0;
                 while (markerIndex < group.Count && group[markerIndex].Code < phase)
                     markerIndex++;
-                phaseBeats[phase - 1] = markerIndex < group.Count
-                    ? group[markerIndex].Beat
-                    : groupEndBeat;
+                phaseBeats[phase - 1] =
+                    markerIndex < group.Count ? group[markerIndex].Beat : groupEndBeat;
             }
 
             result.Add((phaseBeats[0], phaseBeats[1], phaseBeats[2], phaseBeats[3]));
@@ -138,10 +136,7 @@ public static class StellateBlockAreaLifecycle
         return endBeat;
     }
 
-    private static void UpdateEndBeat<T>(
-        List<RpeEvents.Event<T>>? events,
-        ref Beat endBeat
-    )
+    private static void UpdateEndBeat<T>(List<RpeEvents.Event<T>>? events, ref Beat endBeat)
         where T : notnull
     {
         if (events is null)

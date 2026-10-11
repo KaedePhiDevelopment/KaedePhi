@@ -97,8 +97,18 @@ namespace KaedePhi.Core.Primitives.Serialization
             if (
                 length >= 4
                 && (
-                    (prefix[0] == 0x00 && prefix[1] == 0x00 && prefix[2] == 0xfe && prefix[3] == 0xff)
-                    || (prefix[0] == 0xff && prefix[1] == 0xfe && prefix[2] == 0x00 && prefix[3] == 0x00)
+                    (
+                        prefix[0] == 0x00
+                        && prefix[1] == 0x00
+                        && prefix[2] == 0xfe
+                        && prefix[3] == 0xff
+                    )
+                    || (
+                        prefix[0] == 0xff
+                        && prefix[1] == 0xfe
+                        && prefix[2] == 0x00
+                        && prefix[3] == 0x00
+                    )
                 )
             )
                 return true;

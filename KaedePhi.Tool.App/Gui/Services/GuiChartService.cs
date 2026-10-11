@@ -235,10 +235,7 @@ public sealed class GuiChartService
             Debug = msg => _log.Debug(msg),
         };
 
-    private static Stream OpenProgressReadStream(
-        string filePath,
-        IProgress<double?>? progress
-    )
+    private static Stream OpenProgressReadStream(string filePath, IProgress<double?>? progress)
     {
         var inputStream = new FileStream(
             filePath,
