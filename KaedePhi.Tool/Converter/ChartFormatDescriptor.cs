@@ -8,8 +8,13 @@ namespace KaedePhi.Tool.Converter;
 /// </summary>
 public sealed class ChartFormatDescriptor
 {
-    /// <summary>格式类型。</summary>
+    /// <summary>内置格式类型；由工厂创建的外部格式返回未定义的枚举值 -1，应使用 <see cref="FormatId"/> 标识。</summary>
     public required ChartType Type { get; init; }
+
+    /// <summary>格式的稳定字符串标识；内置格式使用枚举名称。</summary>
+    public string FormatId => ExternalFormatId ?? Type.ToString();
+
+    private string? ExternalFormatId { get; init; }
 
     /// <summary>该格式的默认文件扩展名（不含点）。</summary>
     public required string FileExtension { get; init; }
@@ -19,6 +24,48 @@ public sealed class ChartFormatDescriptor
 
     /// <summary>创建该格式导出选项的默认实例，无选项时返回 <see langword="null"/>。</summary>
     public Func<object?>? ExportOptionsFactory { get; init; }
+
+    /// <summary>
+    /// 创建不依赖内置 <see cref="ChartType"/> 枚举的外部格式描述。
+    /// </summary>
+    /// <param name="formatId">格式的稳定唯一标识。</param>
+    /// <param name="fileExtension">默认文件扩展名，不含点。</param>
+    /// <param name="importer">文本导入回调。</param>
+    /// <param name="streamImporter">流式导入回调。</param>
+    /// <param name="exporter">导出回调。</param>
+    /// <param name="importOptionsFactory">导入选项工厂。</param>
+    /// <param name="exportOptionsFactory">导出选项工厂。</param>
+    /// <returns>外部格式描述。</returns>
+    public static ChartFormatDescriptor Create(
+        string formatId,
+        string fileExtension,
+        Func<string, object?, ChartLogSink, CancellationToken, Task<Ir.Chart>>? importer = null,
+        Func<Stream, object?, ChartLogSink, CancellationToken, Task<Ir.Chart>>? streamImporter = null,
+        Func<Ir.Chart, string, ChartWriteSettings, object?, ChartLogSink, CancellationToken, Task>? exporter = null,
+        Func<object?>? importOptionsFactory = null,
+        Func<object?>? exportOptionsFactory = null
+    )
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(formatId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(fileExtension);
+        if (formatId != formatId.Trim())
+            throw new ArgumentException("格式标识不能包含首尾空白。", nameof(formatId));
+        if (importer is null && streamImporter is null && exporter is null)
+            throw new ArgumentException("至少提供一种导入或导出能力。", nameof(importer));
+        if (fileExtension.StartsWith('.') || fileExtension.Any(c => !char.IsLetterOrDigit(c)))
+            throw new ArgumentException("文件扩展名只能包含字母或数字，且不含点。", nameof(fileExtension));
+        return new ChartFormatDescriptor
+        {
+            Type = (ChartType)(-1),
+            ExternalFormatId = formatId,
+            FileExtension = fileExtension,
+            Importer = importer,
+            StreamImporter = streamImporter,
+            Exporter = exporter,
+            ImportOptionsFactory = importOptionsFactory,
+            ExportOptionsFactory = exportOptionsFactory,
+        };
+    }
 
     /// <summary>将该格式的谱面文本转换为 IR 中间格式。</summary>
     internal Func<
@@ -50,7 +97,7 @@ public sealed class ChartFormatDescriptor
     >? Exporter { get; init; }
 
     /// <summary>该格式是否支持作为导入源。</summary>
-    public bool CanImport => Importer is not null;
+    public bool CanImport => Importer is not null || StreamImporter is not null;
 
     /// <summary>
     /// 该格式是否支持流式导入。
@@ -88,9 +135,11 @@ public sealed class ChartFormatDescriptor
     )
     {
         if (Importer is null)
-            throw new NotSupportedException($"{Type} 不支持作为导入源。");
+            throw new NotSupportedException($"{FormatName} 不支持作为导入源。");
         ArgumentNullException.ThrowIfNull(text);
-        var chart = await Importer(text, importOptions, log ?? ChartLogSink.None, ct);
+        ct.ThrowIfCancellationRequested();
+        var chart = await Importer(text, importOptions ?? CreateDefaultImportOptions(), log ?? ChartLogSink.None, ct);
+        ct.ThrowIfCancellationRequested();
         var normalized = IrChartNormalizer.NormalizeAndValidateNoteEndBeats(chart);
         return normalized;
     }
@@ -112,10 +161,11 @@ public sealed class ChartFormatDescriptor
     {
         ArgumentNullException.ThrowIfNull(stream);
         if (StreamImporter is null)
-            throw new NotSupportedException($"{Type} 不支持流式导入。");
+            throw new NotSupportedException($"{FormatName} 不支持流式导入。");
 
         ct.ThrowIfCancellationRequested();
-        var chart = await StreamImporter(stream, importOptions, log ?? ChartLogSink.None, ct);
+        var chart = await StreamImporter(stream, importOptions ?? CreateDefaultImportOptions(), log ?? ChartLogSink.None, ct);
+        ct.ThrowIfCancellationRequested();
         var normalized = IrChartNormalizer.NormalizeAndValidateNoteEndBeats(chart);
         return normalized;
     }
@@ -178,14 +228,15 @@ public sealed class ChartFormatDescriptor
     )
     {
         if (Exporter is null)
-            throw new NotSupportedException($"{Type} 不支持作为导出目标。");
+            throw new NotSupportedException($"{FormatName} 不支持作为导出目标。");
         ArgumentNullException.ThrowIfNull(chart);
+        ct.ThrowIfCancellationRequested();
         var normalized = IrChartNormalizer.NormalizeAndValidateNoteEndBeats(chart);
         return Exporter(
             normalized,
             outputPath,
             writeSettings ?? new ChartWriteSettings(),
-            exportOptions,
+            exportOptions ?? CreateDefaultExportOptions(),
             log ?? ChartLogSink.None,
             ct
         );
@@ -218,4 +269,6 @@ public sealed class ChartFormatDescriptor
             log,
             ct
         );
+
+    private string FormatName => FormatId;
 }

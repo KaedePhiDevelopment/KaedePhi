@@ -25,6 +25,10 @@ namespace KaedePhi.Tool.Converter;
 /// </summary>
 public static class ChartFormatRegistry
 {
+    private static readonly object ExternalLock = new();
+    private static readonly Dictionary<string, ChartFormatDescriptor> ExternalDescriptors =
+        new(StringComparer.OrdinalIgnoreCase);
+
     private static readonly ReadOnlyDictionary<ChartType, ChartFormatDescriptor> Descriptors = new(
         new Dictionary<ChartType, ChartFormatDescriptor>
         {
@@ -258,6 +262,54 @@ public static class ChartFormatRegistry
         Descriptors.GetValueOrDefault(type);
 
     /// <summary>
+    /// 按格式标识获取内置或外部格式描述，标识不区分大小写。
+    /// </summary>
+    /// <param name="formatId">格式的稳定字符串标识。</param>
+    /// <returns>格式描述，未注册时返回 <see langword="null"/>。</returns>
+    public static ChartFormatDescriptor? Find(string formatId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(formatId);
+        var builtIn = Descriptors.Values.FirstOrDefault(descriptor =>
+            string.Equals(descriptor.FormatId, formatId, StringComparison.OrdinalIgnoreCase));
+        if (builtIn is not null)
+            return builtIn;
+        lock (ExternalLock)
+            return ExternalDescriptors.GetValueOrDefault(formatId);
+    }
+
+    /// <summary>
+    /// 注册外部格式；标识不区分大小写，重复标识及内置格式名称不能被覆盖。
+    /// </summary>
+    /// <param name="descriptor">由 <see cref="ChartFormatDescriptor.Create"/> 创建的格式描述。</param>
+    public static void Register(ChartFormatDescriptor descriptor)
+    {
+        ArgumentNullException.ThrowIfNull(descriptor);
+        if (descriptor.Type != (ChartType)(-1))
+            throw new ArgumentException("请使用格式工厂创建外部格式描述。", nameof(descriptor));
+        if (Enum.GetNames<ChartType>().Any(name =>
+                string.Equals(name, descriptor.FormatId, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException($"格式标识已被内置格式占用：{descriptor.FormatId}");
+
+        lock (ExternalLock)
+        {
+            if (!ExternalDescriptors.TryAdd(descriptor.FormatId, descriptor))
+                throw new InvalidOperationException($"格式标识已注册：{descriptor.FormatId}");
+        }
+    }
+
+    /// <summary>
+    /// 取消注册外部格式。
+    /// </summary>
+    /// <param name="formatId">外部格式的稳定字符串标识。</param>
+    /// <returns>是否移除了已注册格式。</returns>
+    public static bool Unregister(string formatId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(formatId);
+        lock (ExternalLock)
+            return ExternalDescriptors.Remove(formatId);
+    }
+
+    /// <summary>
     /// 获取指定格式的能力描述，未注册时抛出异常。
     /// </summary>
     /// <param name="type">谱面格式</param>
@@ -266,16 +318,91 @@ public static class ChartFormatRegistry
         Find(type) ?? throw new NotSupportedException($"未注册的谱面格式：{type}");
 
     /// <summary>
+    /// 按格式标识获取内置或外部格式描述，未注册时抛出异常。
+    /// </summary>
+    /// <param name="formatId">格式的稳定字符串标识。</param>
+    /// <returns>格式描述。</returns>
+    public static ChartFormatDescriptor Get(string formatId) =>
+        Find(formatId) ?? throw new NotSupportedException($"未注册的谱面格式：{formatId}");
+
+    /// <summary>
+    /// 将外部格式文本转换为 IR 中间格式。
+    /// </summary>
+    /// <param name="formatId">外部格式的稳定字符串标识。</param>
+    /// <param name="text">谱面原始文本。</param>
+    /// <param name="importOptions">导入选项。</param>
+    /// <param name="log">日志回调集合。</param>
+    /// <param name="ct">取消令牌。</param>
+    /// <returns>IR 谱面。</returns>
+    public static Task<Ir.Chart> ImportExternalIrAsync(
+        string formatId,
+        string text,
+        object? importOptions = null,
+        ChartLogSink? log = null,
+        CancellationToken ct = default
+    ) => Get(formatId).ImportIrAsync(text, importOptions, log, ct);
+
+    /// <summary>
+    /// 从流式输入转换外部格式为 IR 中间格式。
+    /// </summary>
+    /// <param name="formatId">外部格式的稳定字符串标识。</param>
+    /// <param name="stream">谱面输入流。</param>
+    /// <param name="importOptions">导入选项。</param>
+    /// <param name="log">日志回调集合。</param>
+    /// <param name="ct">取消令牌。</param>
+    /// <returns>IR 谱面。</returns>
+    public static Task<Ir.Chart> ImportExternalStreamIrAsync(
+        string formatId,
+        Stream stream,
+        object? importOptions = null,
+        ChartLogSink? log = null,
+        CancellationToken ct = default
+    ) => Get(formatId).ImportStreamIrAsync(stream, importOptions, log, ct);
+
+    /// <summary>
+    /// 将 IR 谱面导出为外部格式。
+    /// </summary>
+    /// <param name="formatId">外部格式的稳定字符串标识。</param>
+    /// <param name="chart">IR 谱面。</param>
+    /// <param name="outputPath">输出文件路径。</param>
+    /// <param name="writeSettings">写入设置。</param>
+    /// <param name="exportOptions">导出选项。</param>
+    /// <param name="log">日志回调集合。</param>
+    /// <param name="ct">取消令牌。</param>
+    /// <returns>导出任务。</returns>
+    public static Task ExportExternalAsync(
+        string formatId,
+        Ir.Chart chart,
+        string outputPath,
+        ChartWriteSettings? writeSettings = null,
+        object? exportOptions = null,
+        ChartLogSink? log = null,
+        CancellationToken ct = default
+    ) => Get(formatId).ExportAsync(chart, outputPath, writeSettings, exportOptions, log, ct);
+
+    /// <summary>
     /// 所有支持导入的格式。
     /// </summary>
     public static IEnumerable<ChartFormatDescriptor> ImportableFormats =>
-        Descriptors.Values.Where(d => d.CanImport);
+        Formats.Where(d => d.CanImport);
 
     /// <summary>
     /// 所有支持导出的格式。
     /// </summary>
     public static IEnumerable<ChartFormatDescriptor> ExportableFormats =>
-        Descriptors.Values.Where(d => d.CanExport);
+        Formats.Where(d => d.CanExport);
+
+    /// <summary>
+    /// 获取内置与外部格式的快照。
+    /// </summary>
+    public static IReadOnlyList<ChartFormatDescriptor> Formats
+    {
+        get
+        {
+            lock (ExternalLock)
+                return Descriptors.Values.Concat(ExternalDescriptors.Values).ToArray();
+        }
+    }
 
     /// <summary>
     /// 检测谱面文本格式并转换为 IR 中间格式。
