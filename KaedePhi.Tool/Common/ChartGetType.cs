@@ -6,6 +6,9 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Tool.Common;
 
+/// <summary>
+/// 表示谱面获取类型数据。
+/// </summary>
 public static class ChartGetType
 {
     private const string UnsupportedChartMessage =
@@ -74,7 +77,7 @@ public static class ChartGetType
     /// 异步从输入流中推算谱面类型，匹配到足够的类型标记后停止读取，不缓存完整谱面文本。
     /// </summary>
     /// <param name="stream">待检测的谱面输入流。</param>
-    /// <param name="ct">取消令牌。</param>
+    /// <param name="ct">用于响应取消请求的令牌。</param>
     /// <returns>检测到的谱面类型。</returns>
     /// <exception cref="NotSupportedException">输入了不支持的谱面类别。</exception>
     [PublicAPI]

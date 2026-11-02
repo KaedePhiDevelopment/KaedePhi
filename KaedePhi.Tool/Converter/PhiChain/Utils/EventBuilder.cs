@@ -489,6 +489,7 @@ public static class EventBuilder
     /// </summary>
     /// <param name="src">源事件</param>
     /// <param name="precision">每拍细分数量</param>
+    /// <param name="ct">用于响应取消请求的令牌。</param>
     /// <returns>切段后的事件列表</returns>
     public static List<LineEvent> SliceUnsupportedEasing(
         LineEvent src,

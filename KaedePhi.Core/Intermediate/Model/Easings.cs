@@ -2,6 +2,9 @@ using static KaedePhi.Core.Primitives.Mathematics.Easings;
 
 namespace KaedePhi.Core.Intermediate.Model
 {
+    /// <summary>
+    /// 表示缓动函数数据。
+    /// </summary>
     public static class Easings
     {
         // 在任意起点和终点之间评估缓动
@@ -18,10 +21,10 @@ namespace KaedePhi.Core.Intermediate.Model
         /// <summary>
         /// 使用指定编号的缓动函数在给定区间计算进度。
         /// </summary>
-        /// <param name="easingType">缓动函数编号。</param>
+        /// <param name="easingType">缓动类型。</param>
         /// <param name="start">缓动区间左端点。</param>
         /// <param name="end">缓动区间右端点。</param>
-        /// <param name="t">区间内的线性进度。</param>
+        /// <param name="t">输入进度值。</param>
         /// <returns>归一化后的缓动进度。</returns>
         public static double Evaluate(int easingType, double start, double end, double t)
         {

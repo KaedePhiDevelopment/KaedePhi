@@ -29,7 +29,9 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
         /// </summary>
         /// <param name="type">缓动类型。</param>
         public AreaEase(AreaEaseType type)
-            : this((int)type) { }
+            : this((int)type)
+        {
+        }
 
         /// <summary>
         /// 获取线性缓动类型。
@@ -137,11 +139,11 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
         public static float GetEaseWithProgress(float progress, int type)
         {
             if (float.IsNaN(progress) || float.IsInfinity(progress))
-                throw new ArgumentOutOfRangeException(nameof(progress), "进度必须是有限数值。");
+                throw new ArgumentOutOfRangeException(nameof(progress), Resources.illegal_progress_infinity);
             if (type is < 0 or >= EaseTypeCount)
                 throw new ArgumentOutOfRangeException(
                     nameof(type),
-                    "缓动类型必须处于 0 到 14 之间。"
+                    string.Format(Resources.illegal_ease_type_out_of_range, "0", "14")
                 );
 
             if (progress >= 1f)
@@ -162,7 +164,7 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
                 {
                     var sampleProgress = scaledProgress - index;
                     return EaseTable[type, index]
-                        + sampleProgress * (EaseTable[type, index + 1] - EaseTable[type, index]);
+                           + sampleProgress * (EaseTable[type, index + 1] - EaseTable[type, index]);
                 }
             }
         }
@@ -203,12 +205,12 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
             if (!IsFinite(previousEventTime))
                 throw new ArgumentOutOfRangeException(
                     nameof(previousEventTime),
-                    "时间必须是有限数值。"
+                    Resources.illegal_time_infinity
                 );
             if (!IsFinite(eventTime))
-                throw new ArgumentOutOfRangeException(nameof(eventTime), "时间必须是有限数值。");
+                throw new ArgumentOutOfRangeException(nameof(eventTime), Resources.illegal_time_infinity);
             if (!IsFinite(time))
-                throw new ArgumentOutOfRangeException(nameof(time), "时间必须是有限数值。");
+                throw new ArgumentOutOfRangeException(nameof(time), Resources.illegal_time_infinity);
 
             if (Math.Abs(previousEventTime - eventTime) < Common.CoreConstants.FloatEpsilon)
                 return time < eventTime ? 0f : 1f;

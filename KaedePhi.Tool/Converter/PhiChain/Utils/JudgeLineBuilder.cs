@@ -22,6 +22,8 @@ public static class JudgeLineBuilder
     /// <param name="currentIndex">当前线索引（引用传递）</param>
     /// <param name="options">转换选项</param>
     /// <param name="warn">警告回调</param>
+    /// <param name="ct">用于响应取消请求的令牌。</param>
+    /// <param name="depth">当前递归深度，用于限制判定线树的嵌套层级。</param>
     public static void FlattenLine(
         SerializedLine line,
         int fatherIndex,
@@ -58,6 +60,7 @@ public static class JudgeLineBuilder
     /// <param name="lineIndex">当前线索引</param>
     /// <param name="options">转换选项</param>
     /// <param name="warn">警告回调</param>
+    /// <param name="ct">用于响应取消请求的令牌。</param>
     /// <returns>IR 判定线</returns>
     public static Ir.JudgeLine ConvertLine(
         SerializedLine src,
@@ -118,7 +121,7 @@ public static class JudgeLineBuilder
     /// 展开所有 CurveNoteTrack 为普通音符。
     /// </summary>
     /// <param name="src">PhiChain 序列化线</param>
-    /// <param name="ct">取消令牌</param>
+    /// <param name="ct">用于响应取消请求的令牌。</param>
     /// <returns>展开后的音符列表</returns>
     private static List<Ir.Note> ExpandCurveNoteTracks(SerializedLine src, CancellationToken ct)
     {
@@ -145,6 +148,7 @@ public static class JudgeLineBuilder
     /// <param name="irLines">IR 判定线列表</param>
     /// <param name="options">转换选项</param>
     /// <param name="warn">警告回调</param>
+    /// <param name="ct">用于响应取消请求的令牌。</param>
     /// <returns>PhiChain 序列化线列表</returns>
     public static List<SerializedLine> BuildLineTree(
         List<Ir.JudgeLine> irLines,
@@ -279,6 +283,7 @@ public static class JudgeLineBuilder
     /// <param name="src">IR 判定线</param>
     /// <param name="options">转换选项</param>
     /// <param name="warn">警告回调</param>
+    /// <param name="ct">用于响应取消请求的令牌。</param>
     /// <returns>PhiChain 序列化线</returns>
     private static SerializedLine ConvertLineToPhiChain(
         Ir.JudgeLine src,

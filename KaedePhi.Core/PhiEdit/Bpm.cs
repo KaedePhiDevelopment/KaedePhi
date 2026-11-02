@@ -10,6 +10,9 @@ namespace KaedePhi.Core.PhiEdit
     {
         private float _bpm = 120f;
 
+        /// <summary>
+        /// 表示节拍速度。
+        /// </summary>
         public float Bpm
         {
             get => _bpm;
@@ -21,13 +24,24 @@ namespace KaedePhi.Core.PhiEdit
             }
         }
 
+        /// <summary>
+        /// 获取或设置开始拍。
+        /// </summary>
         public float StartBeat { get; set; }
 
+        /// <summary>
+        /// 返回当前对象的字符串表示。
+        /// </summary>
+        /// <returns>当前对象的字符串表示。</returns>
         public override string ToString()
         {
             return string.Format(CultureInfo.InvariantCulture, "{0} {1} {2}", "bp", StartBeat, Bpm);
         }
 
+        /// <summary>
+        /// 创建当前对象的深克隆副本。
+        /// </summary>
+        /// <returns>当前对象的深克隆副本。</returns>
         public BpmItem Clone()
         {
             return new BpmItem { Bpm = Bpm, StartBeat = StartBeat };

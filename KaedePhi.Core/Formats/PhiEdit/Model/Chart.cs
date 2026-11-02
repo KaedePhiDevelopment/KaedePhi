@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace KaedePhi.Core.Formats.PhiEdit.Model
 {
+    /// <summary>
+    /// 表示谱面数据。
+    /// </summary>
     public class Chart
     {
         /// <summary>
@@ -33,6 +36,10 @@ namespace KaedePhi.Core.Formats.PhiEdit.Model
         /// </summary>
         public List<BpmItem> BpmList { get; set; } = new();
 
+        /// <summary>
+        /// 创建当前对象的深克隆副本。
+        /// </summary>
+        /// <returns>当前对象的深克隆副本。</returns>
         public Chart Clone()
         {
             var clonedChart = new Chart

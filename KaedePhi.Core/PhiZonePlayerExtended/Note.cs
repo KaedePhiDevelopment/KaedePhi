@@ -3,6 +3,9 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.PhiZonePlayerExtended
 {
+    /// <summary>
+    /// 表示音符数据。
+    /// </summary>
     [System.Obsolete(
         "已弃用：请迁移至 KaedePhi.Core.Formats.PhiZonePlayerExtended.Model 命名空间下的同名类型。"
     )]

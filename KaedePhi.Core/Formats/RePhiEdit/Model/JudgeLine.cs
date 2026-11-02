@@ -6,6 +6,9 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Formats.RePhiEdit.Model
 {
+    /// <summary>
+    /// 表示判定线数据。
+    /// </summary>
     public class JudgeLine
     {
         /// <summary>

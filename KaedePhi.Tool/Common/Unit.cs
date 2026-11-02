@@ -5,5 +5,8 @@ namespace KaedePhi.Tool.Common;
 /// </summary>
 public struct Unit
 {
+    /// <summary>
+    /// 表示数值。
+    /// </summary>
     public static readonly Unit Value = new();
 }

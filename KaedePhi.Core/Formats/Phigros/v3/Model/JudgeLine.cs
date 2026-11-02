@@ -3,6 +3,9 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Formats.Phigros.v3.Model
 {
+    /// <summary>
+    /// 表示判定线数据。
+    /// </summary>
     public class JudgeLine
     {
         /// <summary>

@@ -16,6 +16,9 @@ public static class EasingConverter
             $"PhiChain easing {easingKind} is unsupported in IR and requires linear slicing"
         )
     {
+        /// <summary>
+        /// 获取缓动类型。
+        /// </summary>
         public PhiChainEasingKind EasingKind { get; } = easingKind;
     }
 

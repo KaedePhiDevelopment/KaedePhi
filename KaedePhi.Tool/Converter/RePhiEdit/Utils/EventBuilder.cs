@@ -4,12 +4,23 @@ using KaedePhi.Tool.Event.Intermediate;
 
 namespace KaedePhi.Tool.Converter.RePhiEdit.Utils;
 
+/// <summary>
+/// 提供谱面事件格式转换功能。
+/// </summary>
 public static class EventBuilder
 {
     private static readonly EventCutter<float> FloatCutter = new();
     private static readonly EventCutter<double> DoubleCutter = new();
     private static readonly EventCutter<int> IntCutter = new();
 
+    /// <summary>
+    /// 将源事件转换为目标格式的事件。
+    /// </summary>
+    /// <typeparam name="T">事件载荷类型</typeparam>
+    /// <param name="src">源对象</param>
+    /// <param name="valueCopier">复制输入值的函数</param>
+    /// <param name="valueTransformer">转换输入值的函数</param>
+    /// <returns>转换后的事件。</returns>
     public static IrEvents.Event<T> ConvertEvent<T>(
         RpeEvents.Event<T> src,
         Func<T, T>? valueCopier = null,
@@ -34,6 +45,14 @@ public static class EventBuilder
         };
     }
 
+    /// <summary>
+    /// 将源事件转换为目标格式的事件。
+    /// </summary>
+    /// <typeparam name="T">事件载荷类型</typeparam>
+    /// <param name="src">源对象</param>
+    /// <param name="valueCopier">复制输入值的函数</param>
+    /// <param name="valueTransformer">转换输入值的函数</param>
+    /// <returns>转换后的事件。</returns>
     public static RpeEvents.Event<T> ConvertEvent<T>(
         IrEvents.Event<T> src,
         Func<T, T>? valueCopier = null,
@@ -58,6 +77,12 @@ public static class EventBuilder
         };
     }
 
+    /// <summary>
+    /// 将单精度浮点事件转换为双精度浮点事件。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <param name="valueTransformer">转换输入值的函数</param>
+    /// <returns>转换后的事件。</returns>
     public static IrEvents.Event<double> ConvertFloatToDoubleEvent(
         RpeEvents.Event<float> src,
         Func<float, double> valueTransformer
@@ -78,36 +103,72 @@ public static class EventBuilder
         };
     }
 
+    /// <summary>
+    /// 将源事件转换为目标格式的事件。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换后的事件。</returns>
     public static IrEvents.Event<float> ConvertFloatEvent(RpeEvents.Event<float> src)
     {
         return ConvertEvent(src);
     }
 
+    /// <summary>
+    /// 将源事件转换为目标格式的事件。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换后的事件。</returns>
     public static IrEvents.Event<int> ConvertIntEvent(RpeEvents.Event<int> src)
     {
         return ConvertEvent(src);
     }
 
+    /// <summary>
+    /// 将源事件转换为目标格式的事件。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换后的事件。</returns>
     public static IrEvents.Event<string> ConvertStringEvent(RpeEvents.Event<string> src)
     {
         return ConvertEvent(src);
     }
 
+    /// <summary>
+    /// 将源事件转换为目标格式的事件。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换后的事件。</returns>
     public static RpeEvents.Event<string> ConvertStringEvent(IrEvents.Event<string> src)
     {
         return ConvertEvent(src);
     }
 
+    /// <summary>
+    /// 将源事件转换为目标格式的事件。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换后的事件。</returns>
     public static IrEvents.Event<byte[]> ConvertByteArrayEvent(RpeEvents.Event<byte[]> src)
     {
         return ConvertEvent(src, v => [.. v]);
     }
 
+    /// <summary>
+    /// 将源事件转换为目标格式的事件。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换后的事件。</returns>
     public static RpeEvents.Event<byte[]> ConvertByteArrayEvent(IrEvents.Event<byte[]> src)
     {
         return ConvertEvent(src, v => [.. v]);
     }
 
+    /// <summary>
+    /// 将输入事件转换并展开为目标事件列表。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <param name="options">处理配置</param>
+    /// <returns>转换并展开后的事件列表。</returns>
     public static List<RpeEvents.Event<float>> ConvertFloatEventExpanding(
         IrEvents.Event<float> src,
         ConvertOption.CuttingOptions options
@@ -132,6 +193,13 @@ public static class EventBuilder
         }
     }
 
+    /// <summary>
+    /// 将输入事件转换并展开为目标事件列表。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <param name="options">处理配置</param>
+    /// <param name="valueTransformer">转换输入值的函数</param>
+    /// <returns>转换并展开后的事件列表。</returns>
     public static List<RpeEvents.Event<float>> ConvertDoubleEventExpanding(
         IrEvents.Event<double> src,
         ConvertOption.CuttingOptions options,
@@ -173,6 +241,12 @@ public static class EventBuilder
         }
     }
 
+    /// <summary>
+    /// 将输入事件转换并展开为目标事件列表。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <param name="options">处理配置</param>
+    /// <returns>转换并展开后的事件列表。</returns>
     public static List<RpeEvents.Event<int>> ConvertIntEventExpanding(
         IrEvents.Event<int> src,
         ConvertOption.CuttingOptions options

@@ -1,5 +1,8 @@
 namespace KaedePhi.Tool.Converter.PhiEdit.Model;
 
+/// <summary>
+/// 提供谱面编辑目标中间表示转换相关的配置项。
+/// </summary>
 public class PhiEditToIrConvertOptions
 {
     /// <summary>

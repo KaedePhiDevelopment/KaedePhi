@@ -5,6 +5,9 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Formats.Phigros.v3.Model
 {
+    /// <summary>
+    /// 表示音符数据。
+    /// </summary>
     public class Note
     {
         private float _holdTime;
@@ -23,6 +26,9 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
         [JsonProperty("time")]
         public int Time { get; set; }
 
+        /// <summary>
+        /// 表示时间转换为拍。
+        /// </summary>
         [JsonIgnore]
         public float TimeAsBeat
         {
@@ -88,11 +94,26 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
         }
     }
 
+    /// <summary>
+    /// 定义谱面中音符的类型。
+    /// </summary>
     public enum NoteType
     {
+        /// <summary>
+        /// 表示点击音符。
+        /// </summary>
         Tap = 1,
+        /// <summary>
+        /// 表示拖动音符。
+        /// </summary>
         Drag = 2,
+        /// <summary>
+        /// 表示长按音符。
+        /// </summary>
         Hold = 3,
+        /// <summary>
+        /// 表示滑动音符。
+        /// </summary>
         Flick = 4,
     }
 }

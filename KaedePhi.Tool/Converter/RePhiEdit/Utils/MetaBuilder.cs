@@ -5,6 +5,11 @@ namespace KaedePhi.Tool.Converter.RePhiEdit.Utils;
 /// </summary>
 public static class MetaBuilder
 {
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static Ir.Meta ConvertMeta(Rpe.Meta src) =>
         new()
         {
@@ -18,6 +23,11 @@ public static class MetaBuilder
             Song = src.Song,
         };
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static Rpe.Meta ConvertMeta(Ir.Meta src) =>
         new()
         {

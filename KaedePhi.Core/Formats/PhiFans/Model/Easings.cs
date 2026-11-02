@@ -3,6 +3,9 @@ using static KaedePhi.Core.Primitives.Mathematics.Easings;
 
 namespace KaedePhi.Core.Formats.PhiFans.Model
 {
+    /// <summary>
+    /// 表示缓动函数数据。
+    /// </summary>
     public static class Easings
     {
         /// <summary>
@@ -58,10 +61,22 @@ namespace KaedePhi.Core.Formats.PhiFans.Model
             };
 
         // 在归一化时间 t 处评估缓动
+        /// <summary>
+        /// 计算缓动函数的结果。
+        /// </summary>
+        /// <param name="function">缓动值计算函数。</param>
+        /// <param name="t">输入进度值。</param>
+        /// <returns>计算得到的数值。</returns>
         [PublicAPI]
         public static double Evaluate(EasingFunction function, double t) => function(t);
 
         // 使用 int 指定对应的缓动函数
+        /// <summary>
+        /// 计算缓动函数的结果。
+        /// </summary>
+        /// <param name="easingType">缓动类型。</param>
+        /// <param name="t">输入进度值。</param>
+        /// <returns>计算得到的数值。</returns>
         public static double Evaluate(int easingType, double t) =>
             Evaluate(GetFunction(easingType), t);
     }

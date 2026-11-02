@@ -3,6 +3,9 @@ using KaedePhi.Tool.Converter.RePhiEdit.Model;
 
 namespace KaedePhi.Tool.Converter.RePhiEdit.Utils;
 
+/// <summary>
+/// 用于构建判定线数据的工具类。
+/// </summary>
 public static class JudgeLineBuilder
 {
     /// <summary>
@@ -34,6 +37,12 @@ public static class JudgeLineBuilder
             YControls = src.YControls.ConvertAll(ControlBuilder.ConvertYControl),
         };
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <param name="options">处理配置</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static Rpe.JudgeLine ConvertJudgeLine(
         Ir.JudgeLine src,
         ConvertOption.CuttingOptions options

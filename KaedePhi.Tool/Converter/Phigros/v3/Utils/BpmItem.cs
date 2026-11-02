@@ -8,6 +8,11 @@ namespace KaedePhi.Tool.Converter.Phigros.v3.Utils;
 /// </summary>
 public static class BpmItemBuilder
 {
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="judgeLines">待转换的判定线列表。</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static List<Ir.BpmItem> ConvertBpmList(List<PhigrosJudgeLine> judgeLines)
     {
         if (judgeLines is not { Count: > 0 })

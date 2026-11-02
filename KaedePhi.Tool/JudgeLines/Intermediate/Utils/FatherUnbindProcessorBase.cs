@@ -10,12 +10,35 @@ namespace KaedePhi.Tool.JudgeLines.Intermediate.Utils;
 /// </summary>
 public abstract class FatherUnbindProcessorBase
 {
+    /// <summary>
+    /// 表示缓存。
+    /// </summary>
     protected readonly ConcurrentDictionary<FatherUnbindHelpers.UnbindCacheKey, JudgeLine> Cache;
+    /// <summary>
+    /// 表示日志信息。
+    /// </summary>
     protected readonly Action<string>? LogInfo;
+    /// <summary>
+    /// 表示日志警告。
+    /// </summary>
     protected readonly Action<string>? LogWarning;
+    /// <summary>
+    /// 表示日志错误。
+    /// </summary>
     protected readonly Action<string>? LogError;
+    /// <summary>
+    /// 表示日志调试。
+    /// </summary>
     protected readonly Action<string>? LogDebug;
 
+    /// <summary>
+    /// 初始化父子线解绑处理器基类的新实例。
+    /// </summary>
+    /// <param name="cache">共享缓存</param>
+    /// <param name="logInfo">信息日志回调</param>
+    /// <param name="logWarning">警告日志回调</param>
+    /// <param name="logError">错误日志回调</param>
+    /// <param name="logDebug">调试日志回调</param>
     protected FatherUnbindProcessorBase(
         ConcurrentDictionary<FatherUnbindHelpers.UnbindCacheKey, JudgeLine> cache,
         Action<string>? logInfo = null,
@@ -31,12 +54,28 @@ public abstract class FatherUnbindProcessorBase
         LogDebug = logDebug;
     }
 
+    /// <summary>
+    /// 表示准备结果数据。
+    /// </summary>
+    /// <param name="JudgeLine">当前判定线数据</param>
+    /// <param name="FatherLine">父判定线数据</param>
+    /// <param name="ShouldReturn">是否应提前返回</param>
     protected readonly record struct PrepareResult(
         JudgeLine JudgeLine,
         JudgeLine? FatherLine,
         bool ShouldReturn
     );
 
+    /// <summary>
+    /// 准备解绑上下文所需的数据。
+    /// </summary>
+    /// <param name="targetJudgeLineIndex">目标判定线索引</param>
+    /// <param name="allJudgeLines">全部判定线列表</param>
+    /// <param name="logTag">日志标识</param>
+    /// <param name="startAction">开始处理时使用的说明文字</param>
+    /// <param name="cacheKeyFactory">生成缓存键的函数</param>
+    /// <param name="recursiveUnbind">递归解绑判定线的函数</param>
+    /// <returns>操作得到的结果。</returns>
     protected PrepareResult PrepareUnbindContext(
         int targetJudgeLineIndex,
         List<JudgeLine> allJudgeLines,

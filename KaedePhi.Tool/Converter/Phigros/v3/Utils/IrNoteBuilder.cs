@@ -12,6 +12,12 @@ public static class NoteBuilder
 {
     private const float NoteSegmentation = 32f;
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="notesAbove">位于判定线上方的音符列表。</param>
+    /// <param name="notesBelow">位于判定线下方的音符列表。</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static List<Ir.Note> ConvertNotes(
         List<PhigrosNote>? notesAbove,
         List<PhigrosNote>? notesBelow
@@ -29,6 +35,12 @@ public static class NoteBuilder
         return result;
     }
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <param name="above">音符是否位于判定线上方。</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static Ir.Note ConvertNote(PhigrosNote src, bool above)
     {
         if (

@@ -3,9 +3,16 @@ using KaedePhi.Tool.Common;
 
 namespace KaedePhi.Tool.Event.Intermediate;
 
+/// <summary>
+/// 表示事件列表相关数据。
+/// </summary>
+/// <typeparam name="TPayload">事件载荷类型</typeparam>
 public class EventListMerger<TPayload> : LoggableBase, IEventListMerger<IrEvents.Event<TPayload>>
     where TPayload : notnull
 {
+    /// <summary>
+    /// 表示切割器。
+    /// </summary>
     protected static readonly EventCutter<TPayload> Cutter = new();
 
     #region 入口

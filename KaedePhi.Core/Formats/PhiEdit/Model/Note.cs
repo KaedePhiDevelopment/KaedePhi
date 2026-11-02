@@ -3,15 +3,42 @@ using System.Globalization;
 
 namespace KaedePhi.Core.Formats.PhiEdit.Model
 {
+    /// <summary>
+    /// 表示音符数据。
+    /// </summary>
     public class Note
     {
+        /// <summary>
+        /// 获取或设置类型。
+        /// </summary>
         public NoteType Type { get; set; } = NoteType.Tap;
+        /// <summary>
+        /// 获取或设置开始拍。
+        /// </summary>
         public float StartBeat { get; set; }
+        /// <summary>
+        /// 获取或设置结束拍。
+        /// </summary>
         public float EndBeat { get; set; } // 仅 Hold 使用
+        /// <summary>
+        /// 获取或设置是否启用上方。
+        /// </summary>
         public bool Above { get; set; } = true;
+        /// <summary>
+        /// 获取或设置位置横坐标。
+        /// </summary>
         public float PositionX { get; set; }
+        /// <summary>
+        /// 获取或设置宽度比例。
+        /// </summary>
         public float WidthRatio { get; set; } = 1.0f;
+        /// <summary>
+        /// 获取或设置是否伪。
+        /// </summary>
         public bool IsFake { get; set; }
+        /// <summary>
+        /// 获取或设置速度倍率。
+        /// </summary>
         public float SpeedMultiplier { get; set; } = 1.0f;
 
         /// <summary>
@@ -83,6 +110,10 @@ namespace KaedePhi.Core.Formats.PhiEdit.Model
             );
         }
 
+        /// <summary>
+        /// 创建当前对象的深克隆副本。
+        /// </summary>
+        /// <returns>当前对象的深克隆副本。</returns>
         public Note Clone()
         {
             return new Note
@@ -99,11 +130,26 @@ namespace KaedePhi.Core.Formats.PhiEdit.Model
         }
     }
 
+    /// <summary>
+    /// 定义谱面中音符的类型。
+    /// </summary>
     public enum NoteType
     {
+        /// <summary>
+        /// 表示点击音符。
+        /// </summary>
         Tap = 1,
+        /// <summary>
+        /// 表示长按音符。
+        /// </summary>
         Hold = 2,
+        /// <summary>
+        /// 表示滑动音符。
+        /// </summary>
         Flick = 3,
+        /// <summary>
+        /// 表示拖动音符。
+        /// </summary>
         Drag = 4,
     }
 }

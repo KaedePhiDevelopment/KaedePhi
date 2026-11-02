@@ -17,6 +17,15 @@ public class FatherUnbindPlusProcessor : FatherUnbindProcessorBase
     private readonly double _mergeTolerance;
     private readonly EventListMergerPlus<double> _merger = new();
 
+    /// <summary>
+    /// 初始化父级解绑增强处理器的新实例。
+    /// </summary>
+    /// <param name="cache">共享缓存</param>
+    /// <param name="tolerance">容差</param>
+    /// <param name="logInfo">信息日志回调</param>
+    /// <param name="logWarning">警告日志回调</param>
+    /// <param name="logError">错误日志回调</param>
+    /// <param name="logDebug">调试日志回调</param>
     [Obsolete("请改用包含 mergeTolerance 参数的构造函数。")]
     public FatherUnbindPlusProcessor(
         ConcurrentDictionary<FatherUnbindHelpers.UnbindCacheKey, JudgeLine> cache,
@@ -28,6 +37,16 @@ public class FatherUnbindPlusProcessor : FatherUnbindProcessorBase
     )
         : this(cache, tolerance, tolerance, logInfo, logWarning, logError, logDebug) { }
 
+    /// <summary>
+    /// 初始化父级解绑增强处理器的新实例。
+    /// </summary>
+    /// <param name="cache">共享缓存</param>
+    /// <param name="tolerance">容差</param>
+    /// <param name="mergeTolerance">事件通道合并容差百分比。</param>
+    /// <param name="logInfo">信息日志回调</param>
+    /// <param name="logWarning">警告日志回调</param>
+    /// <param name="logError">错误日志回调</param>
+    /// <param name="logDebug">调试日志回调</param>
     public FatherUnbindPlusProcessor(
         ConcurrentDictionary<FatherUnbindHelpers.UnbindCacheKey, JudgeLine> cache,
         double tolerance,

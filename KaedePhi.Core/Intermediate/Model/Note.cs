@@ -4,6 +4,9 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Intermediate.Model
 {
+    /// <summary>
+    /// 表示音符数据。
+    /// </summary>
     public class Note
     {
         private Beat _endBeat = new(new[] { 1, 0, 1 });

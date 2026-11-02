@@ -68,8 +68,17 @@ namespace KaedePhi.Core.RePhiEdit
         [JsonProperty("id")]
         public string Id { get; set; } = "0";
 
+        /// <summary>
+        /// 返回当前对象的字符串表示。
+        /// </summary>
+        /// <returns>当前对象的字符串表示。</returns>
         public override string ToString() => ToString(Id + ".json");
 
+        /// <summary>
+        /// 返回当前对象的字符串表示。
+        /// </summary>
+        /// <param name="fileName">文件名称。</param>
+        /// <returns>当前对象的字符串表示。</returns>
         [PublicAPI]
         public string ToString(string fileName)
         {
@@ -84,6 +93,10 @@ namespace KaedePhi.Core.RePhiEdit
                 + $"Charter: {Charter}\n";
         }
 
+        /// <summary>
+        /// 创建当前对象的深克隆副本。
+        /// </summary>
+        /// <returns>当前对象的深克隆副本。</returns>
         public Meta Clone()
         {
             // 这个没必要自己实现，直接MemberwiseClone就行

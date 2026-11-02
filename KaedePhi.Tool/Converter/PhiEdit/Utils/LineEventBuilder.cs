@@ -22,6 +22,11 @@ public class LineEventBuilder
     private readonly LayerProcessor _layerProcessor = new();
     private readonly Dictionary<Type, object> _eventCutters = new();
 
+    /// <summary>
+    /// 初始化判定线事件构建器的新实例。
+    /// </summary>
+    /// <param name="options">处理配置</param>
+    /// <param name="warnLogger">警告日志回调。</param>
     public LineEventBuilder(IrToPhiEditConvertOptions options, Action<string>? warnLogger = null)
     {
         _options = options;

@@ -7,6 +7,10 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Formats.RePhiEdit.Model.Events
 {
+    /// <summary>
+    /// 表示事件数据。
+    /// </summary>
+    /// <typeparam name="T">事件载荷类型</typeparam>
     public class Event<T> : EventBase<T>
         where T : notnull
     {

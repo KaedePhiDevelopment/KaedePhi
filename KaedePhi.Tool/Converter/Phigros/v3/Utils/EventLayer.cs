@@ -8,6 +8,12 @@ namespace KaedePhi.Tool.Converter.Phigros.v3.Utils;
 /// </summary>
 public static class EventLayerBuilder
 {
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <param name="horizonBeat">范围结束拍位置</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static IrEvents.EventLayer ConvertEventLayer(PhigrosJudgeLine src, double horizonBeat)
     {
         var result = new IrEvents.EventLayer();

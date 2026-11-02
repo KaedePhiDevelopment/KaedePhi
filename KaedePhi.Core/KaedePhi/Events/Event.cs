@@ -5,6 +5,10 @@ using KaedePhi.Core.Utils;
 
 namespace KaedePhi.Core.KaedePhi.Events
 {
+    /// <summary>
+    /// 表示事件数据。
+    /// </summary>
+    /// <typeparam name="T">事件载荷类型</typeparam>
     public class Event<T> : EventBase<T>
         where T : notnull
     {

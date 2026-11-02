@@ -7,6 +7,13 @@ namespace KaedePhi.Tool.Common;
 /// </summary>
 public static class NumericHelper
 {
+    /// <summary>
+    /// 将两个数值相加，并返回计算结果。
+    /// </summary>
+    /// <typeparam name="T">事件载荷类型</typeparam>
+    /// <param name="left">左侧数值。</param>
+    /// <param name="right">右侧数值。</param>
+    /// <returns>相加得到的数值。</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Add<T>(T? left, T? right)
     {
@@ -23,6 +30,12 @@ public static class NumericHelper
         throw new NotSupportedException($"NumericHelper.Add does not support type {typeof(T)}.");
     }
 
+    /// <summary>
+    /// 将数值转换为双精度浮点数。
+    /// </summary>
+    /// <typeparam name="T">事件载荷类型</typeparam>
+    /// <param name="value">待转换的数值。</param>
+    /// <returns>转换后的双精度浮点数。</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static double ToDouble<T>(T? value)
     {

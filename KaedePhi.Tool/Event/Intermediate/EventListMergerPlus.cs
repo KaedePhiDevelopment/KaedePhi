@@ -413,6 +413,11 @@ public class EventListMergerPlus<TPayload> : EventListMerger<TPayload>
         return normalizedDist > Math.Max(0d, tolerance) / 100.0;
     }
 
+    /// <summary>
+    /// 将事件数值转换为双精度浮点数。
+    /// </summary>
+    /// <param name="value">待转换的事件数值。</param>
+    /// <returns>转换后的双精度浮点数。</returns>
     protected static double ToDouble(TPayload? value)
     {
         return value is null

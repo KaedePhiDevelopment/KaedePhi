@@ -2,9 +2,18 @@ using KaedePhi.Tool.Common;
 
 namespace KaedePhi.Tool.Converter.PhiEdit.Model;
 
+/// <summary>
+/// 提供中间表示目标谱面编辑转换相关的配置项。
+/// </summary>
 public class IrToPhiEditConvertOptions
 {
+    /// <summary>
+    /// 表示默认精度常量。
+    /// </summary>
     public const double DefaultPrecision = Constants.DefaultPrecision;
+    /// <summary>
+    /// 表示默认容差百分比常量。
+    /// </summary>
     public const double DefaultTolerancePercent = Constants.DefaultTolerancePercent;
 
     /// <summary>
@@ -42,6 +51,9 @@ public class IrToPhiEditConvertOptions
     /// </summary>
     public double TrailingBeatPadding { get; set; } = 1d / 64d;
 
+    /// <summary>
+    /// 提供切割相关的配置项。
+    /// </summary>
     public class CuttingOptions
     {
         /// <summary>
@@ -55,6 +67,9 @@ public class IrToPhiEditConvertOptions
         public double MisalignedXyEventPrecision { get; set; } = DefaultPrecision;
     }
 
+    /// <summary>
+    /// 提供不透明度相关的配置项。
+    /// </summary>
     public class AlphaOptions
     {
         /// <summary>
@@ -73,6 +88,9 @@ public class IrToPhiEditConvertOptions
         public double CutTolerance { get; set; } = DefaultTolerancePercent;
     }
 
+    /// <summary>
+    /// 提供速度相关的配置项。
+    /// </summary>
     public class SpeedOptions
     {
         /// <summary>
@@ -81,6 +99,9 @@ public class IrToPhiEditConvertOptions
         public double CutPrecision { get; set; } = DefaultPrecision;
     }
 
+    /// <summary>
+    /// 提供父级判定线解绑相关的配置项。
+    /// </summary>
     public class FatherLineUnbindOptions
     {
         private bool _classicMode;
@@ -137,6 +158,9 @@ public class IrToPhiEditConvertOptions
         }
     }
 
+    /// <summary>
+    /// 提供多层层合并相关的配置项。
+    /// </summary>
     public class MultiLayerMergeOptions
     {
         private bool _classicMode;
@@ -187,6 +211,9 @@ public class IrToPhiEditConvertOptions
         }
     }
 
+    /// <summary>
+    /// 提供判定线过滤相关的配置项。
+    /// </summary>
     public class LineFilterOptions
     {
         /// <summary>

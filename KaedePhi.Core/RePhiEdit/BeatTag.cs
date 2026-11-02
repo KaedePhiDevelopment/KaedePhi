@@ -3,6 +3,9 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.RePhiEdit
 {
+    /// <summary>
+    /// 表示拍标签数据。
+    /// </summary>
     public class BeatTag
     {
         /// <summary>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+            
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="illegal_beat_number_elements" xml:space="preserve">
+        <value>拍数组长度必须为“3”。</value>
+        <comment>拍初始化时传入非法元素个数。</comment>
+    </data>
+    <data name="illegal_beat_denominator" xml:space="preserve">
+        <value>拍分母（beat[2]）不得为{0}。</value>
+        <comment>拍分母数值异常</comment>
+    </data>
+    <data name="illegal_beat_denominator_negative" xml:space="preserve">
+        <value>拍分母（beat[2]）不得为负数。</value>
+    </data>
+    <data name="illegal_beat_infinity" xml:space="preserve">
+        <value>拍必须为有限数。</value>
+    </data>
+    <data name="illegal_beat_out_of_range" xml:space="preserve">
+        <value>拍必须符合支持的整数部分范围。</value>
+    </data>
+    <data name="illegal_beat_index_out_of_range" xml:space="preserve">
+        <value>拍的索引必须在“0”到“2”之间</value>
+    </data>
+    <data name="illegal_stream_readonly" xml:space="preserve">
+        <value>流必须可写。</value>
+    </data>
+    <data name="illegal_bpm_factor_infinity_or_negative" xml:space="preserve">
+        <value>BpmFactor必须是有限正数。</value>
+    </data>
+    <data name="illegal_progress_infinity" xml:space="preserve">
+        <value>进度必须是有限数值。</value>
+    </data>
+    <data name="illegal_ease_type_out_of_range" xml:space="preserve">
+        <value>缓动类型必须处于 {0} 到 {1} 之间。</value>
+    </data>
+    <data name="illegal_time_infinity" xml:space="preserve">
+        <value>时间必须是有限数值。</value>
+    </data>
+    <data name="illegal_bpm_infinity_or_negative" xml:space="preserve">
+        <value>BPM 必须是有限正数。</value>
+    </data>
+</root>

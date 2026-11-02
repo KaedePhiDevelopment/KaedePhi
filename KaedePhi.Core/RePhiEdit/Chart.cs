@@ -3,6 +3,9 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.RePhiEdit
 {
+    /// <summary>
+    /// 表示谱面数据。
+    /// </summary>
     [System.Obsolete(
         "已弃用：请迁移至 KaedePhi.Core.Formats.RePhiEdit.Model 命名空间下的同名类型。"
     )]
@@ -13,10 +16,25 @@ namespace KaedePhi.Core.RePhiEdit
         /// </summary>
         public static class CoordinateSystem
         {
+            /// <summary>
+            /// 表示最大横坐标常量。
+            /// </summary>
             public const float MaxX = 675f;
+            /// <summary>
+            /// 表示最小横坐标常量。
+            /// </summary>
             public const float MinX = -675f;
+            /// <summary>
+            /// 表示最大纵坐标常量。
+            /// </summary>
             public const float MaxY = 450f;
+            /// <summary>
+            /// 表示最小纵坐标常量。
+            /// </summary>
             public const float MinY = -450f;
+            /// <summary>
+            /// 表示顺时针旋转常量。
+            /// </summary>
             public const bool ClockwiseRotation = true;
         }
 

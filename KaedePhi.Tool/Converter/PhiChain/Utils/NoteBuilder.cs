@@ -109,6 +109,7 @@ public static class NoteBuilder
     /// <param name="track">曲线音符轨道</param>
     /// <param name="fromNote">起始音符</param>
     /// <param name="toNote">结束音符</param>
+    /// <param name="ct">用于响应取消请求的令牌。</param>
     /// <returns>展开后的音符列表</returns>
     public static List<Ir.Note> ExpandCurveNoteTrack(
         CurveNoteTrack track,

@@ -3,6 +3,9 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Formats.PhiFans.Model
 {
+    /// <summary>
+    /// 表示谱面数据。
+    /// </summary>
     public class Chart
     {
         /// <summary>

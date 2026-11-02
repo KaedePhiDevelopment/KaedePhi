@@ -2,6 +2,9 @@ using System;
 
 namespace KaedePhi.Core.Utils
 {
+    /// <summary>
+    /// 表示贝塞尔曲线数据。
+    /// </summary>
     public static class Bezier
     {
         /// <summary>

@@ -5,6 +5,9 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.RePhiEdit.Events
 {
+    /// <summary>
+    /// 表示事件层数据。
+    /// </summary>
     public class EventLayer
     {
         /// <summary>

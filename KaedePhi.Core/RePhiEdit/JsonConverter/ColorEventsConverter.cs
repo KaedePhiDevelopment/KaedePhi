@@ -5,8 +5,17 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.RePhiEdit.JsonConverter
 {
+    /// <summary>
+    /// 提供颜色事件列表转换功能。
+    /// </summary>
     public class ColorEventsConverter : JsonConverter<List<Events.Event<byte[]>>>
     {
+        /// <summary>
+        /// 将指定数据写入目标。
+        /// </summary>
+        /// <param name="writer">JSON 写入器</param>
+        /// <param name="value">待处理的数值</param>
+        /// <param name="serializer">序列化器</param>
         public override void WriteJson(
             JsonWriter writer,
             List<Events.Event<byte[]>>? value,
@@ -60,6 +69,15 @@ namespace KaedePhi.Core.RePhiEdit.JsonConverter
             writer.WriteEndArray();
         }
 
+        /// <summary>
+        /// 从输入源读取JSON。
+        /// </summary>
+        /// <param name="reader">JSON 读取器</param>
+        /// <param name="objectType">目标类型</param>
+        /// <param name="existingValue">现有对象值</param>
+        /// <param name="hasExistingValue">是否存在现有对象值</param>
+        /// <param name="serializer">序列化器</param>
+        /// <returns>包含处理结果的列表。</returns>
         public override List<Events.Event<byte[]>> ReadJson(
             JsonReader reader,
             Type objectType,

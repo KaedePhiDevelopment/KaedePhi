@@ -3,8 +3,14 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.RePhiEdit.Controls
 {
+    /// <summary>
+    /// 表示纵坐标控制数据。
+    /// </summary>
     public class YControl : ControlBase
     {
+        /// <summary>
+        /// 获取或设置纵坐标。
+        /// </summary>
         [JsonProperty("y")]
         public float Y { get; set; } = 1.0f;
 
@@ -24,10 +30,17 @@ namespace KaedePhi.Core.RePhiEdit.Controls
             },
         };
 
+        /// <summary>
+        /// 获取默认。
+        /// </summary>
         [JsonIgnore]
         public static List<YControl> Default =>
             DefaultInstance.ConvertAll(input => (YControl)input.Clone());
 
+        /// <summary>
+        /// 创建当前对象的深克隆副本。
+        /// </summary>
+        /// <returns>当前对象的深克隆副本。</returns>
         public override ControlBase Clone()
         {
             return new YControl

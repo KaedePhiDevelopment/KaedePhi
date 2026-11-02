@@ -14,6 +14,14 @@ public static class EventBuilder
 {
     private const double TrailingBeatPadding = 1d / 64d;
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <typeparam name="T">事件载荷类型</typeparam>
+    /// <param name="events">待处理的事件列表</param>
+    /// <param name="horizonBeat">范围结束拍位置</param>
+    /// <param name="valueTransformer">转换输入值的函数</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static List<IrEvents.Event<T>>? ConvertEvents<T>(
         List<PhigrosEvent>? events,
         double horizonBeat,
@@ -50,6 +58,15 @@ public static class EventBuilder
         return result;
     }
 
+    /// <summary>
+    /// 将移动事件转换为指定坐标轴的中间事件。
+    /// </summary>
+    /// <param name="events">待处理的事件列表。</param>
+    /// <param name="horizonBeat">范围结束拍位置。</param>
+    /// <param name="startSelector">选择事件起始值的函数。</param>
+    /// <param name="endSelector">选择事件结束值的函数。</param>
+    /// <param name="valueTransformer">转换事件数值的函数。</param>
+    /// <returns>转换后的移动事件列表；没有有效事件时返回<see langword="null"/>。</returns>
     public static List<IrEvents.Event<double>>? ConvertMoveAxisEvents(
         List<PhigrosEvent>? events,
         double horizonBeat,
@@ -87,6 +104,12 @@ public static class EventBuilder
         return result;
     }
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="events">待处理的事件列表</param>
+    /// <param name="horizonBeat">范围结束拍位置</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static List<IrEvents.Event<float>>? ConvertSpeedEvents(
         List<PhigrosSpeedEvent>? events,
         double horizonBeat
@@ -117,6 +140,11 @@ public static class EventBuilder
         return result;
     }
 
+    /// <summary>
+    /// 获取判定线水平拍。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>计算得到的数值。</returns>
     public static double GetJudgeLineHorizonBeat(PhigrosJudgeLine src)
     {
         var maxBeat = 0d;

@@ -3,11 +3,26 @@ using System.Globalization;
 
 namespace KaedePhi.Core.Formats.PhiEdit.Model
 {
+    /// <summary>
+    /// 表示事件数据。
+    /// </summary>
     public class Event
     {
+        /// <summary>
+        /// 获取或设置开始拍。
+        /// </summary>
         public float StartBeat { get; set; }
+        /// <summary>
+        /// 获取或设置结束拍。
+        /// </summary>
         public float EndBeat { get; set; }
+        /// <summary>
+        /// 获取或设置缓动类型。
+        /// </summary>
         public Easing EasingType { get; set; } = new(1);
+        /// <summary>
+        /// 获取或设置结束数值。
+        /// </summary>
         public float EndValue { get; set; }
 
         /// <summary>
@@ -63,6 +78,10 @@ namespace KaedePhi.Core.Formats.PhiEdit.Model
                 );
         }
 
+        /// <summary>
+        /// 创建当前对象的深克隆副本。
+        /// </summary>
+        /// <returns>当前对象的深克隆副本。</returns>
         public Event Clone()
         {
             return new Event

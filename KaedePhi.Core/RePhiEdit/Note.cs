@@ -6,6 +6,9 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.RePhiEdit
 {
+    /// <summary>
+    /// 表示音符数据。
+    /// </summary>
     public class Note
     {
         private Beat _endBeat = new(new[] { 1, 0, 1 });
@@ -139,6 +142,10 @@ namespace KaedePhi.Core.RePhiEdit
                 throw new JsonSerializationException("Hold 音符缺少有效的结束拍。");
         }
 
+        /// <summary>
+        /// 创建当前对象的深克隆副本。
+        /// </summary>
+        /// <returns>当前对象的深克隆副本。</returns>
         public Note Clone()
         {
             // 有Beat，不能使用MemberwiseClone

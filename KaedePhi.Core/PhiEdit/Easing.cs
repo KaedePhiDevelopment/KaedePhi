@@ -2,6 +2,9 @@ using JetBrains.Annotations;
 
 namespace KaedePhi.Core.PhiEdit
 {
+    /// <summary>
+    /// 表示事件使用的缓动参数。
+    /// </summary>
     public class Easing
     {
         private static readonly Easing?[] Cache = new Easing[30];
@@ -14,7 +17,9 @@ namespace KaedePhi.Core.PhiEdit
         private readonly int _easingNumber;
         private readonly Utils.Easings.EasingFunction _function;
 
-        /// <summary>获取缓存的 Easing 实例，避免重复创建。</summary>
+        /// <summary>获取指定编号对应的缓动配置。</summary>
+        /// <param name="easingNumber">缓动编号。</param>
+        /// <returns>对应的缓动配置。</returns>
         public static Easing Get(int easingNumber)
         {
             if (easingNumber is >= 1 and <= 29)
@@ -22,6 +27,10 @@ namespace KaedePhi.Core.PhiEdit
             return new Easing(easingNumber);
         }
 
+        /// <summary>
+        /// 根据编号初始化缓动配置。
+        /// </summary>
+        /// <param name="easingNumber">缓动编号。</param>
         public Easing(int easingNumber)
         {
             _easingNumber = easingNumber;
@@ -44,8 +53,18 @@ namespace KaedePhi.Core.PhiEdit
             return start + (end - start) * easedTime;
         }
 
+        /// <summary>
+        /// 将缓动配置转换为对应的编号。
+        /// </summary>
+        /// <param name="easing">缓动配置。</param>
+        /// <returns>缓动编号。</returns>
         public static implicit operator int(Easing easing) => easing._easingNumber;
 
+        /// <summary>
+        /// 根据编号获取缓动配置。
+        /// </summary>
+        /// <param name="easingNumber">缓动编号。</param>
+        /// <returns>对应的缓动配置。</returns>
         public static implicit operator Easing(int easingNumber) => Get(easingNumber);
     }
 }

@@ -11,6 +11,11 @@ public class IntermediateJudgeLineBuilder
     private readonly EventLayerBuilder _eventLayerConverter;
     private readonly CancellationToken _ct;
 
+    /// <summary>
+    /// 初始化 IR 判定线构建器。
+    /// </summary>
+    /// <param name="options">转换选项。</param>
+    /// <param name="ct">用于响应取消请求的令牌。</param>
     public IntermediateJudgeLineBuilder(
         PhiEditToIrConvertOptions options,
         CancellationToken ct = default

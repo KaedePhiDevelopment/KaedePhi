@@ -3,6 +3,9 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.PhiFans
 {
+    /// <summary>
+    /// 表示判定线数据。
+    /// </summary>
     public class Line
     {
         /// <summary>

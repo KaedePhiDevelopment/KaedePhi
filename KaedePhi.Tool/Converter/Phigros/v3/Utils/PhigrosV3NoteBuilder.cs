@@ -13,6 +13,14 @@ namespace KaedePhi.Tool.Converter.Phigros.v3.Utils;
 /// </summary>
 public static class PhigrosV3NoteBuilder
 {
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="notes">待转换的音符列表。</param>
+    /// <param name="speedEvents">速度事件列表。</param>
+    /// <param name="warnLogger">警告日志回调。</param>
+    /// <param name="filterFakeNotes">是否过滤伪音符。</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static (List<PhigrosNote> above, List<PhigrosNote> below) ConvertNotes(
         List<IrNote>? notes,
         List<IrSpeedEvent>? speedEvents,
@@ -50,6 +58,13 @@ public static class PhigrosV3NoteBuilder
         return (above, below);
     }
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <param name="speedEvents">速度事件列表。</param>
+    /// <param name="warnLogger">警告日志回调。</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static PhigrosNote ConvertNote(
         IrNote src,
         List<IrSpeedEvent>? speedEvents,
@@ -108,6 +123,11 @@ public static class PhigrosV3NoteBuilder
         return (float)(speed / Constants.SpeedValueRatio);
     }
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="type">音符类型。</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static PhigrosNoteType ConvertNoteType(NoteType type) =>
         type switch
         {

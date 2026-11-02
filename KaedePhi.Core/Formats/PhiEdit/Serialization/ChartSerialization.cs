@@ -122,7 +122,7 @@ namespace KaedePhi.Core.Formats.PhiEdit.Serialization
             if (stream is null)
                 throw new ArgumentNullException(nameof(stream));
             if (!stream.CanWrite)
-                throw new ArgumentException("Stream must be writable.", nameof(stream));
+                throw new ArgumentException(Resources.illegal_stream_readonly, nameof(stream));
 
             return new StreamWriter(stream, JsonDefaults.NoBomUtf8, 1024, leaveOpen: true);
         }
@@ -241,8 +241,7 @@ namespace KaedePhi.Core.Formats.PhiEdit.Serialization
             var firstLine = await reader.ReadLineAsync().ConfigureAwait(false);
             var (chart, judgeDict) = ChartParser.InitializeChart(firstLine);
 
-            string? line;
-            while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) is not null)
+            while (await reader.ReadLineAsync().ConfigureAwait(false) is { } line)
                 await ParseStreamLineAsync(line, reader, chart, judgeDict).ConfigureAwait(false);
 
             ChartParser.SortAndBuild(chart, judgeDict);
@@ -321,7 +320,7 @@ namespace KaedePhi.Core.Formats.PhiEdit.Serialization
             if (stream is null)
                 throw new ArgumentNullException(nameof(stream));
             if (!stream.CanRead)
-                throw new ArgumentException("Stream must be readable.", nameof(stream));
+                throw new ArgumentException(Resources.illegal_stream_readonly, nameof(stream));
 
             return new StreamReader(
                 stream,

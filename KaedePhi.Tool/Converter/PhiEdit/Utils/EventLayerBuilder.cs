@@ -9,6 +9,10 @@ public class EventLayerBuilder
 {
     private readonly PhiEditFrameEventBuilder _phiEditFrameEvent;
 
+    /// <summary>
+    /// 初始化事件层构建器的新实例。
+    /// </summary>
+    /// <param name="options">处理配置</param>
     public EventLayerBuilder(PhiEditToIrConvertOptions options)
     {
         _phiEditFrameEvent = new PhiEditFrameEventBuilder(options);

@@ -293,8 +293,8 @@ public class KpcCompatibilityShimTests
             },
             BpmList =
             [
-                new BpmItem { Bpm = 120f, StartBeat = new KaedePhi.Core.Primitives.Beat(0d) },
-                new BpmItem { Bpm = 180f, StartBeat = new KaedePhi.Core.Primitives.Beat(4d) },
+                new BpmItem { Bpm = 120f, StartBeat = new Core.Primitives.Beat(0d) },
+                new BpmItem { Bpm = 180f, StartBeat = new Core.Primitives.Beat(4d) },
             ],
             JudgeLineList =
             [
@@ -326,8 +326,8 @@ public class KpcCompatibilityShimTests
     private static IrEvents.Event<double> ToIrEvent(KpcEvents.Event<double> evt) =>
         new()
         {
-            StartBeat = new KaedePhi.Core.Primitives.Beat((int[])evt.StartBeat),
-            EndBeat = new KaedePhi.Core.Primitives.Beat((int[])evt.EndBeat),
+            StartBeat = new Core.Primitives.Beat((int[])evt.StartBeat),
+            EndBeat = new Core.Primitives.Beat((int[])evt.EndBeat),
             StartValue = evt.StartValue,
             EndValue = evt.EndValue,
             Easing = new Easing((int)evt.Easing),

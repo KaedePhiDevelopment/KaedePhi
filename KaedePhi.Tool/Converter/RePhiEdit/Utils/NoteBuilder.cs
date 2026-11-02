@@ -7,6 +7,11 @@ namespace KaedePhi.Tool.Converter.RePhiEdit.Utils;
 /// </summary>
 public static class NoteBuilder
 {
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static Ir.Note ConvertNote(Rpe.Note src)
     {
         if (src.Type == NoteType.Hold && (!src.HasExplicitEndBeat || src.EndBeat <= src.StartBeat))
@@ -32,6 +37,11 @@ public static class NoteBuilder
         };
     }
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static Rpe.Note ConvertNote(Ir.Note src) =>
         new()
         {

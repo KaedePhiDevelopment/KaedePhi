@@ -4,12 +4,21 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Formats.PhiChain.v6.Model
 {
+    /// <summary>
+    /// 表示序列化判定线数据。
+    /// </summary>
     public sealed class SerializedLine
     {
         // Rust uses serde(flatten) for line; v6 currently only contains name.
+        /// <summary>
+        /// 获取或设置名称。
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; } = "PhiChain Line";
 
+        /// <summary>
+        /// 表示判定线。
+        /// </summary>
         [JsonIgnore]
         public Line Line
         {
@@ -17,15 +26,27 @@ namespace KaedePhi.Core.Formats.PhiChain.v6.Model
             set => Name = value.Name;
         }
 
+        /// <summary>
+        /// 获取或设置音符列表。
+        /// </summary>
         [JsonProperty("notes")]
         public List<Note> Notes { get; set; } = new();
 
+        /// <summary>
+        /// 获取或设置事件列表。
+        /// </summary>
         [JsonProperty("events")]
         public List<LineEvent> Events { get; set; } = new();
 
+        /// <summary>
+        /// 获取或设置子项。
+        /// </summary>
         [JsonProperty("children")]
         public List<SerializedLine> Children { get; set; } = new();
 
+        /// <summary>
+        /// 获取或设置曲线音符轨道列表。
+        /// </summary>
         [JsonProperty("curve_note_tracks")]
         public List<CurveNoteTrack> CurveNoteTracks { get; set; } = new();
 

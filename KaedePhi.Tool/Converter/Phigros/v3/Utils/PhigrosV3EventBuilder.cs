@@ -27,6 +27,11 @@ public class PhigrosV3EventBuilder
     private readonly LayerProcessor _layerProcessor = new();
     private readonly PhigrosV3TimeMapper? _timeMapper;
 
+    /// <summary>
+    /// 初始化Phigros 谱面格式版本三事件构建器的新实例。
+    /// </summary>
+    /// <param name="options">处理配置</param>
+    /// <param name="warnLogger">警告日志回调。</param>
     public PhigrosV3EventBuilder(IrToPhigrosV3ConvertOptions options, Action<string>? warnLogger)
         : this(options, warnLogger, null) { }
 
@@ -41,6 +46,11 @@ public class PhigrosV3EventBuilder
         _timeMapper = timeMapper;
     }
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="target">目标对象</param>
+    /// <param name="layers">输入值。</param>
     public void ConvertLineEvents(PhigrosJudgeLine target, List<IrEventLayer> layers)
     {
         ConvertLineEvents(target, ResolvePrimaryLayer(layers), 1f);

@@ -4,6 +4,9 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Formats.PhiZonePlayerExtended.Model
 {
+    /// <summary>
+    /// 表示判定线数据。
+    /// </summary>
     public class JudgeLine : global::KaedePhi.Core.Formats.RePhiEdit.Model.JudgeLine
     {
         /// <summary>

@@ -4,6 +4,9 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.PhiFans
 {
+    /// <summary>
+    /// 表示谱面数据。
+    /// </summary>
     [Obsolete("已弃用：请迁移至 KaedePhi.Core.Formats.PhiFans.Model 命名空间下的同名类型。")]
     public partial class Chart
     {

@@ -16,10 +16,25 @@ public static class EasingConverter
         return isBezier ? new Rpe.Easing(1) : new Rpe.Easing(MapToPe((int)src));
     }
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static Ir.Easing ConvertEasing(Rpe.Easing src) => new(MapToIr((int)src));
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static Rpe.Easing ConvertEasing(Ir.Easing src) => new(MapToPe((int)src));
 
+    /// <summary>
+    /// 将输入数据映射为目标数据。
+    /// </summary>
+    /// <param name="rpeEasingNum">RePhiEdit 缓动编号。</param>
+    /// <returns>计算得到的数值。</returns>
     public static int MapToIr(int rpeEasingNum) =>
         rpeEasingNum switch
         {
@@ -55,6 +70,11 @@ public static class EasingConverter
             _ => 1,
         };
 
+    /// <summary>
+    /// 将输入数据映射为目标数据。
+    /// </summary>
+    /// <param name="irEasingNum">中间表示缓动编号。</param>
+    /// <returns>计算得到的数值。</returns>
     public static int MapToPe(int irEasingNum) =>
         PhiEdit.Utils.EasingConverter.MapToPe(irEasingNum);
 }

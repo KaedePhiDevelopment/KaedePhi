@@ -15,6 +15,14 @@ public class FatherUnbindProcessor : FatherUnbindProcessorBase
     private readonly EventListMerger<double> _merger = new();
     private readonly EventCutter<double> _cutter = new();
 
+    /// <summary>
+    /// 初始化父级解绑处理器的新实例。
+    /// </summary>
+    /// <param name="cache">共享缓存</param>
+    /// <param name="logInfo">信息日志回调</param>
+    /// <param name="logWarning">警告日志回调</param>
+    /// <param name="logError">错误日志回调</param>
+    /// <param name="logDebug">调试日志回调</param>
     public FatherUnbindProcessor(
         ConcurrentDictionary<FatherUnbindHelpers.UnbindCacheKey, JudgeLine> cache,
         Action<string>? logInfo = null,

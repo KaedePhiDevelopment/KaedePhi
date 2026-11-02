@@ -5,6 +5,11 @@ namespace KaedePhi.Tool.Converter.RePhiEdit.Utils;
 /// </summary>
 public static class ControlBuilder
 {
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static IrControls.XControl ConvertXControl(RpeControls.XControl src) =>
         new()
         {
@@ -13,6 +18,11 @@ public static class ControlBuilder
             Pos = src.Pos,
         };
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static RpeControls.XControl ConvertXControl(IrControls.XControl src) =>
         new()
         {
@@ -21,6 +31,11 @@ public static class ControlBuilder
             Pos = src.Pos,
         };
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static IrControls.AlphaControl ConvertAlphaControl(RpeControls.AlphaControl src) =>
         new()
         {
@@ -29,6 +44,11 @@ public static class ControlBuilder
             Alpha = src.Alpha,
         };
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static RpeControls.AlphaControl ConvertAlphaControl(IrControls.AlphaControl src) =>
         new()
         {
@@ -37,6 +57,11 @@ public static class ControlBuilder
             Alpha = src.Alpha,
         };
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static IrControls.SizeControl ConvertSizeControl(RpeControls.SizeControl src) =>
         new()
         {
@@ -45,6 +70,11 @@ public static class ControlBuilder
             Size = src.Size,
         };
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static RpeControls.SizeControl ConvertSizeControl(IrControls.SizeControl src) =>
         new()
         {
@@ -53,6 +83,11 @@ public static class ControlBuilder
             Size = src.Size,
         };
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static IrControls.SkewControl ConvertSkewControl(RpeControls.SkewControl src) =>
         new()
         {
@@ -61,6 +96,11 @@ public static class ControlBuilder
             Skew = src.Skew,
         };
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static RpeControls.SkewControl ConvertSkewControl(IrControls.SkewControl src) =>
         new()
         {
@@ -69,6 +109,11 @@ public static class ControlBuilder
             Skew = src.Skew,
         };
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static IrControls.YControl ConvertYControl(RpeControls.YControl src) =>
         new()
         {
@@ -77,6 +122,11 @@ public static class ControlBuilder
             Y = src.Y,
         };
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static RpeControls.YControl ConvertYControl(IrControls.YControl src) =>
         new()
         {

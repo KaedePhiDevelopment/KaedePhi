@@ -32,6 +32,11 @@
     <PackageReference Include="CAPCOM.REDox" Version="1.0.3" />
     <PackageReference Include="CAPCOM.REDox.Serialization.NewtonsoftJson" Version="1.0.1-preview" />
     <Compile Remove="Primitives\Serialization\JsonCodec.Newtonsoft.cs" />
+    <Compile Update="Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' != 'net10.0'">
@@ -53,5 +58,12 @@
   <ItemGroup>
     <None Include="../KaedePhiIcon.png" Pack="true" PackagePath="\" />
     <None Include="../README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

@@ -7,8 +7,17 @@ using NoteType = KaedePhi.Core.Formats.PhiChain.v6.Model.NoteType;
 
 namespace KaedePhi.Core.Formats.PhiChain.v6.Serialization.JsonConverter
 {
+    /// <summary>
+    /// 提供音符JSON转换功能。
+    /// </summary>
     public sealed class NoteJsonConverter : JsonConverter<Note>
     {
+        /// <summary>
+        /// 将指定数据写入目标。
+        /// </summary>
+        /// <param name="writer">JSON 写入器</param>
+        /// <param name="value">待处理的数值</param>
+        /// <param name="serializer">序列化器</param>
         public override void WriteJson(JsonWriter writer, Note? value, JsonSerializer serializer)
         {
             var obj = new JObject
@@ -31,6 +40,15 @@ namespace KaedePhi.Core.Formats.PhiChain.v6.Serialization.JsonConverter
             obj.WriteTo(writer);
         }
 
+        /// <summary>
+        /// 从输入源读取JSON。
+        /// </summary>
+        /// <param name="reader">JSON 读取器</param>
+        /// <param name="objectType">目标类型</param>
+        /// <param name="existingValue">现有对象值</param>
+        /// <param name="hasExistingValue">是否存在现有对象值</param>
+        /// <param name="serializer">序列化器</param>
+        /// <returns>操作得到的结果。</returns>
         public override Note ReadJson(
             JsonReader reader,
             Type objectType,

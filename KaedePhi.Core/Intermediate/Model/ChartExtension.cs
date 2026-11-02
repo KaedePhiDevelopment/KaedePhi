@@ -2,6 +2,10 @@ namespace KaedePhi.Core.Intermediate.Model
 {
     public partial class Chart
     {
+        /// <summary>
+        /// 创建当前对象的深克隆副本。
+        /// </summary>
+        /// <returns>当前对象的深克隆副本。</returns>
         public Chart Clone()
         {
             return new Chart

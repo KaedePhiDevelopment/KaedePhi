@@ -26,6 +26,13 @@ public class PhigrosV3JudgeLineBuilder
     private readonly PhigrosV3TimeMapper? _timeMapper;
     private readonly Action<string>? _warnLogger;
 
+    /// <summary>
+    /// 初始化 Phigros V3 判定线构建器。
+    /// </summary>
+    /// <param name="options">处理配置</param>
+    /// <param name="globalBpm">谱面使用的全局节拍速度。</param>
+    /// <param name="chartEndTime">谱面结束时间。</param>
+    /// <param name="warnLogger">警告日志回调。</param>
     public PhigrosV3JudgeLineBuilder(
         IrToPhigrosV3ConvertOptions options,
         float globalBpm,

@@ -18,6 +18,11 @@ public class PhiEditJudgeLineBuilder
     private readonly LayerProcessor _layerProcessor = new();
     private readonly Action<string>? _warnLogger;
 
+    /// <summary>
+    /// 初始化 PhiEdit 判定线构建器。
+    /// </summary>
+    /// <param name="options">处理配置</param>
+    /// <param name="warnLogger">警告日志回调。</param>
     public PhiEditJudgeLineBuilder(IrToPhiEditConvertOptions options, Action<string>? warnLogger)
     {
         _options = options;

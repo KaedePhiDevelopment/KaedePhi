@@ -2,6 +2,9 @@ using System.Collections.Generic;
 
 namespace KaedePhi.Core.KaedePhi
 {
+    /// <summary>
+    /// 表示谱面数据。
+    /// </summary>
     [System.Obsolete("已弃用：请迁移至 KaedePhi.Core.Intermediate.Model 命名空间下的同名类型。")]
     public partial class Chart
     {

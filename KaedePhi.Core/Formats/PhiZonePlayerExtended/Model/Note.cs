@@ -3,6 +3,9 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Formats.PhiZonePlayerExtended.Model
 {
+    /// <summary>
+    /// 表示音符数据。
+    /// </summary>
     public class Note : global::KaedePhi.Core.Formats.RePhiEdit.Model.Note
     {
         /// <summary>

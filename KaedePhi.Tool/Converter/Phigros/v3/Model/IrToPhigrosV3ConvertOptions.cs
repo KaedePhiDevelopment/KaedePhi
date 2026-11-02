@@ -2,10 +2,22 @@ using KaedePhi.Tool.Common;
 
 namespace KaedePhi.Tool.Converter.Phigros.v3.Model;
 
+/// <summary>
+/// 提供中间表示目标Phigros 谱面格式版本三转换相关的配置项。
+/// </summary>
 public class IrToPhigrosV3ConvertOptions
 {
+    /// <summary>
+    /// 表示默认精度常量。
+    /// </summary>
     public const double DefaultPrecision = Constants.DefaultPrecision;
+    /// <summary>
+    /// 表示默认容差百分比常量。
+    /// </summary>
     public const double DefaultTolerancePercent = Constants.DefaultTolerancePercent;
+    /// <summary>
+    /// 表示默认全局节拍速度常量。
+    /// </summary>
     public const float DefaultGlobalBpm = 120f;
 
     /// <summary>
@@ -53,6 +65,9 @@ public class IrToPhigrosV3ConvertOptions
     /// </summary>
     public NegativeAlphaOptions NegativeAlpha { get; set; } = new();
 
+    /// <summary>
+    /// 提供切割相关的配置项。
+    /// </summary>
     public class CuttingOptions
     {
         /// <summary>
@@ -66,6 +81,9 @@ public class IrToPhigrosV3ConvertOptions
         public double MisalignedXyEventPrecision { get; set; } = DefaultPrecision;
     }
 
+    /// <summary>
+    /// 提供不透明度相关的配置项。
+    /// </summary>
     public class AlphaOptions
     {
         /// <summary>
@@ -74,6 +92,9 @@ public class IrToPhigrosV3ConvertOptions
         public double CutPrecision { get; set; } = DefaultPrecision;
     }
 
+    /// <summary>
+    /// 提供速度相关的配置项。
+    /// </summary>
     public class SpeedOptions
     {
         /// <summary>
@@ -82,6 +103,9 @@ public class IrToPhigrosV3ConvertOptions
         public double CutPrecision { get; set; } = DefaultPrecision;
     }
 
+    /// <summary>
+    /// 提供父级判定线解绑相关的配置项。
+    /// </summary>
     public class FatherLineUnbindOptions
     {
         private bool _classicMode;
@@ -138,6 +162,9 @@ public class IrToPhigrosV3ConvertOptions
         }
     }
 
+    /// <summary>
+    /// 提供多层层合并相关的配置项。
+    /// </summary>
     public class MultiLayerMergeOptions
     {
         private bool _classicMode;
@@ -188,6 +215,9 @@ public class IrToPhigrosV3ConvertOptions
         }
     }
 
+    /// <summary>
+    /// 提供判定线过滤相关的配置项。
+    /// </summary>
     public class LineFilterOptions
     {
         /// <summary>
@@ -201,6 +231,9 @@ public class IrToPhigrosV3ConvertOptions
         public bool RemoveTextureLine { get; set; }
     }
 
+    /// <summary>
+    /// 提供音符过滤相关的配置项。
+    /// </summary>
     public class NoteFilterOptions
     {
         /// <summary>
@@ -209,8 +242,14 @@ public class IrToPhigrosV3ConvertOptions
         public bool FilterFakeNotes { get; set; }
     }
 
+    /// <summary>
+    /// 提供负值不透明度相关的配置项。
+    /// </summary>
     public class NegativeAlphaOptions
     {
+        /// <summary>
+        /// 表示默认抬高步长常量。
+        /// </summary>
         public const double DefaultElevationStep = 4.0;
 
         /// <summary>

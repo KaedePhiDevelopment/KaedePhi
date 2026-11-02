@@ -4,6 +4,9 @@ using KaedePhi.Core.Primitives;
 
 namespace KaedePhi.Core.Intermediate.Model
 {
+    /// <summary>
+    /// 表示判定线数据。
+    /// </summary>
     public class JudgeLine
     {
         private float _bpmFactor = 1f;
@@ -74,7 +77,7 @@ namespace KaedePhi.Core.Intermediate.Model
                 if (!float.IsFinite(value) || value <= 0)
                     throw new ArgumentOutOfRangeException(
                         nameof(BpmFactor),
-                        "BPM 因子必须是有限正数。"
+                        Resources.illegal_bpm_factor_infinity_or_negative
                     );
                 _bpmFactor = value;
             }

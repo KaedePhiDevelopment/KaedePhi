@@ -8,7 +8,7 @@ public static class EasingConverter
     /// <summary>
     /// IR 缓动在 PE 中无对应项时抛出，用于触发切段拟合。
     /// </summary>
-    /// <param name="irEasing">IR 缓动编号；贝塞尔事件传 -1。</param>
+    /// <param name="irEasing">中间表示缓动编号。</param>
     /// <param name="isBezier">是否为贝塞尔事件（贝塞尔曲线无法映射为单一缓动类型）。</param>
     public sealed class EasingNotSupportedException(int irEasing, bool isBezier = false)
         : Exception(
@@ -24,6 +24,11 @@ public static class EasingConverter
         public bool IsBezier { get; } = isBezier;
     }
 
+    /// <summary>
+    /// 将输入数据映射为目标数据。
+    /// </summary>
+    /// <param name="pe">PhiEdit 缓动编号。</param>
+    /// <returns>计算得到的数值。</returns>
     public static int MapToIr(int pe) =>
         pe switch
         {
@@ -59,6 +64,11 @@ public static class EasingConverter
             _ => 1,
         };
 
+    /// <summary>
+    /// 将输入数据映射为目标数据。
+    /// </summary>
+    /// <param name="irEasing">中间表示缓动编号。</param>
+    /// <returns>计算得到的数值。</returns>
     public static int MapToPe(int irEasing)
     {
         var mapped = irEasing switch
@@ -99,8 +109,19 @@ public static class EasingConverter
         return mapped;
     }
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static Ir.Easing ConvertEasing(Pe.Easing src) => new(MapToIr((int)src));
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <param name="isBezier">是否贝塞尔曲线</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static Pe.Easing ConvertEasing(Ir.Easing src, bool isBezier = false) =>
         isBezier ? new Pe.Easing(1) : new Pe.Easing(MapToPe((int)src));
 }

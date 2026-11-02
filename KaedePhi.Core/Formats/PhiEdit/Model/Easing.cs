@@ -2,6 +2,9 @@ using JetBrains.Annotations;
 
 namespace KaedePhi.Core.Formats.PhiEdit.Model
 {
+    /// <summary>
+    /// 表示事件使用的缓动参数。
+    /// </summary>
     public class Easing
     {
         private static readonly Easing?[] Cache = new Easing[30];
@@ -22,6 +25,10 @@ namespace KaedePhi.Core.Formats.PhiEdit.Model
             return new Easing(easingNumber);
         }
 
+        /// <summary>
+        /// 初始化缓动的新实例。
+        /// </summary>
+        /// <param name="easingNumber">缓动编号。</param>
         public Easing(int easingNumber)
         {
             _easingNumber = easingNumber;
@@ -44,8 +51,18 @@ namespace KaedePhi.Core.Formats.PhiEdit.Model
             return start + (end - start) * easedTime;
         }
 
+        /// <summary>
+        /// 将缓动配置转换为对应的编号。
+        /// </summary>
+        /// <param name="easing">缓动配置。</param>
+        /// <returns>操作得到的结果。</returns>
         public static implicit operator int(Easing easing) => easing._easingNumber;
 
+        /// <summary>
+        /// 根据缓动编号获取缓动配置。
+        /// </summary>
+        /// <param name="easingNumber">缓动编号。</param>
+        /// <returns>操作得到的结果。</returns>
         public static implicit operator Easing(int easingNumber) => Get(easingNumber);
     }
 }

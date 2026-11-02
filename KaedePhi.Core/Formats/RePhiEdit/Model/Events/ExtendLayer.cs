@@ -5,6 +5,9 @@ using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Formats.RePhiEdit.Model.Events
 {
+    /// <summary>
+    /// 表示扩展层数据。
+    /// </summary>
     public class ExtendLayer
     {
         /// <summary>

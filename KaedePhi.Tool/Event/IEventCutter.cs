@@ -2,6 +2,11 @@ using KaedePhi.Tool.Common;
 
 namespace KaedePhi.Tool.Event;
 
+/// <summary>
+/// 定义事件切割器需要实现的行为。
+/// </summary>
+/// <typeparam name="TEvent">事件类型</typeparam>
+/// <typeparam name="TBeat">拍位置类型</typeparam>
 public interface IEventCutter<TEvent, in TBeat> : ILoggable
 {
     /// <summary>

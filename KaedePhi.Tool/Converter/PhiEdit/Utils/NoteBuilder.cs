@@ -7,6 +7,11 @@ namespace KaedePhi.Tool.Converter.PhiEdit.Utils;
 /// </summary>
 public static class NoteBuilder
 {
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static Ir.Note ConvertNote(Pe.Note src)
     {
         if (
@@ -28,6 +33,12 @@ public static class NoteBuilder
         };
     }
 
+    /// <summary>
+    /// 将源数据转换为目标格式的数据。
+    /// </summary>
+    /// <param name="src">源对象</param>
+    /// <param name="warnLogger">警告日志回调。</param>
+    /// <returns>转换或构建得到的结果。</returns>
     public static Pe.Note ConvertNote(Ir.Note src, Action<string>? warnLogger)
     {
         WarnIfUnsupportedNoteFields(src, warnLogger);

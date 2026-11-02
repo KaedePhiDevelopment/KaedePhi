@@ -62,6 +62,13 @@ namespace KaedePhi.Core.Primitives
         /// </summary>
         public string? Font { get; set; }
 
+        /// <summary>
+        /// 将值转换为指定的目标类型。
+        /// </summary>
+        /// <typeparam name="TFrom">源数据类型</typeparam>
+        /// <typeparam name="TTo">目标数据类型</typeparam>
+        /// <param name="value">待处理的数值</param>
+        /// <returns>操作得到的结果。</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static TTo Cast<TFrom, TTo>(TFrom value) => Unsafe.As<TFrom, TTo>(ref value);
 
