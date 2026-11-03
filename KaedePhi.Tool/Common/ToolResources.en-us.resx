@@ -1,0 +1,38 @@
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ir_chart_bpm_list_null" xml:space="preserve">
+    <value>Chart BPM list cannot be null.</value>
+  </data>
+  <data name="ir_chart_judge_line_list_null" xml:space="preserve">
+    <value>Chart judge line list cannot be null.</value>
+  </data>
+  <data name="ir_chart_block_area_list_null" xml:space="preserve">
+    <value>Chart block area list cannot be null.</value>
+  </data>
+  <data name="ir_chart_bpm_item_invalid" xml:space="preserve">
+    <value>Chart BPM item {0} must be a finite positive number.</value>
+  </data>
+  <data name="ir_chart_bpm_factor_invalid" xml:space="preserve">
+    <value>Judge line {0} BPM factor must be a finite positive number.</value>
+  </data>
+  <data name="ir_chart_father_index_invalid" xml:space="preserve">
+    <value>Judge line {0} parent index {1} is out of range.</value>
+  </data>
+  <data name="ir_chart_hierarchy_cycle" xml:space="preserve">
+    <value>Judge-line hierarchy contains a cycle starting at index {0}.</value>
+  </data>
+  <data name="phigros_tail_event_sentinel_conflict" xml:space="preserve">
+    <value>Phigros mapped time conflicts with the tail-event sentinel.</value>
+  </data>
+</root>

@@ -32,6 +32,24 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Update="Common\ToolResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ToolResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Common\ToolResources.en-us.resx">
+      <DependentUpon>ToolResources.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Common\ToolResources.zh-hant.resx">
+      <DependentUpon>ToolResources.resx</DependentUpon>
+    </EmbeddedResource>
+    <Compile Update="Common\ToolResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ToolResources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\KaedePhi.Core\KaedePhi.Core.csproj" />
     <ProjectReference
       Include="..\KaedePhi.Tool.Analyzers\KaedePhi.Tool.Analyzers\KaedePhi.Tool.Analyzers.csproj"

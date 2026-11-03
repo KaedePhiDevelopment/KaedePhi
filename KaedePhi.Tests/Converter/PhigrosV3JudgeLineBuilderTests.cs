@@ -598,7 +598,7 @@ public class PhigrosV3JudgeLineBuilderTests
                 new IrToPhigrosV3ConvertOptions()
             );
 
-        act.Should().Throw<FormatException>().WithMessage("*尾事件*哨兵*");
+        act.Should().Throw<FormatException>().WithMessage("*Phigros mapped time conflicts with the tail-event sentinel*");
     }
 
     [Fact]

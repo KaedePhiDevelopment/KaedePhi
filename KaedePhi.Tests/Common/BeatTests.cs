@@ -55,7 +55,7 @@ public class BeatTests
 #pragma warning disable KPCE0002, KPCE0003, KPCE0004
         var act = () => new Beat(new[] { 1, 2 });
 
-        act.Should().Throw<ArgumentException>().WithMessage("*3 elements*");
+        act.Should().Throw<ArgumentException>().WithMessage("*Beat array must have exactly 3 elements*");
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public class BeatTests
     {
         var act = () => new Beat(new[] { 1, 0, 0 });
 
-        act.Should().Throw<ArgumentException>().WithMessage("*denominator*cannot be zero*");
+        act.Should().Throw<ArgumentException>().WithMessage("*Beat denominator (beat[2]) cannot be 0*");
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public class BeatTests
     {
         var act = () => new Beat(new[] { 1, 1, -2 });
 
-        act.Should().Throw<ArgumentException>().WithMessage("*denominator*positive*");
+        act.Should().Throw<ArgumentException>().WithMessage("*Beat denominator (beat[2]) must be positive*");
 #pragma warning restore KPCE0002, KPCE0003, KPCE0004
     }
 

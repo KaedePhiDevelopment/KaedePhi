@@ -1,3 +1,4 @@
+using KaedePhi.Core;
 using KaedePhi.Core.Intermediate.Model;
 
 namespace KaedePhi.Tool.Common;
@@ -40,11 +41,11 @@ public static class IrChartValidator
     private static void ValidateChartCollections(Chart chart)
     {
         if (chart.BpmList is null)
-            throw new FormatException("谱面 BPM 列表不能为 null。");
+            throw new FormatException(ToolResources.ir_chart_bpm_list_null);
         if (chart.JudgeLineList is null)
-            throw new FormatException("谱面判定线列表不能为 null。");
+            throw new FormatException(ToolResources.ir_chart_judge_line_list_null);
         if (chart.BlockAreaList is null)
-            throw new FormatException("谱面噪域列表不能为 null。");
+            throw new FormatException(ToolResources.ir_chart_block_area_list_null);
     }
 
     private static void ValidateBpmItems(IReadOnlyList<BpmItem> bpmItems)
@@ -53,7 +54,9 @@ public static class IrChartValidator
         {
             var bpm = bpmItems[index];
             if (bpm is null || !float.IsFinite(bpm.Bpm) || bpm.Bpm <= 0)
-                throw new FormatException($"谱面 BPM 节点 {index} 必须是有限正数。");
+                throw new FormatException(
+                    string.Format(ToolResources.ir_chart_bpm_item_invalid, index)
+                );
         }
     }
 
@@ -63,7 +66,9 @@ public static class IrChartValidator
         {
             var line = judgeLines[index];
             if (line is null || !float.IsFinite(line.BpmFactor) || line.BpmFactor <= 0)
-                throw new FormatException($"判定线 {index} 的 BPM 因子必须是有限正数。");
+                throw new FormatException(
+                    string.Format(ToolResources.ir_chart_bpm_factor_invalid, index)
+                );
         }
     }
 
@@ -73,7 +78,9 @@ public static class IrChartValidator
         {
             var father = judgeLines[index].Father;
             if (father < RootFatherIndex || father >= judgeLines.Count)
-                throw new FormatException($"判定线 {index} 的父线索引 {father} 超出范围。");
+                throw new FormatException(
+                    string.Format(ToolResources.ir_chart_father_index_invalid, index, father)
+                );
         }
     }
 
@@ -98,7 +105,9 @@ public static class IrChartValidator
         }
 
         if (current >= 0 && states[current] == Visiting)
-            throw new FormatException($"判定线父子关系包含循环，循环起点为 {current}。");
+            throw new FormatException(
+                string.Format(ToolResources.ir_chart_hierarchy_cycle, current)
+            );
 
         current = start;
         while (current >= 0 && states[current] == Visiting)

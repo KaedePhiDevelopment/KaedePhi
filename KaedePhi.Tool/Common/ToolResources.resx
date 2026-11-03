@@ -1,0 +1,38 @@
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ir_chart_bpm_list_null" xml:space="preserve">
+    <value>谱面 BPM 列表不能为 null。</value>
+  </data>
+  <data name="ir_chart_judge_line_list_null" xml:space="preserve">
+    <value>谱面判定线列表不能为 null。</value>
+  </data>
+  <data name="ir_chart_block_area_list_null" xml:space="preserve">
+    <value>谱面噪域列表不能为 null。</value>
+  </data>
+  <data name="ir_chart_bpm_item_invalid" xml:space="preserve">
+    <value>谱面 BPM 节点 {0} 必须是有限正数。</value>
+  </data>
+  <data name="ir_chart_bpm_factor_invalid" xml:space="preserve">
+    <value>判定线 {0} 的 BPM 因子必须是有限正数。</value>
+  </data>
+  <data name="ir_chart_father_index_invalid" xml:space="preserve">
+    <value>判定线 {0} 的父线索引 {1} 超出范围。</value>
+  </data>
+  <data name="ir_chart_hierarchy_cycle" xml:space="preserve">
+    <value>判定线父子关系包含循环，循环起点为 {0}。</value>
+  </data>
+  <data name="phigros_tail_event_sentinel_conflict" xml:space="preserve">
+    <value>Phigros 映射时间与尾事件哨兵冲突。</value>
+  </data>
+</root>
