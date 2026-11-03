@@ -1,4 +1,5 @@
 using KaedePhi.Core.Intermediate.Model;
+using KaedePhi.Core.Intermediate.Model.Controls;
 using KaedePhi.Core.Intermediate.Model.Events;
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Converter.Phigros.v3.Model;
@@ -9,6 +10,201 @@ namespace KaedePhi.Tests.Converter;
 
 public class PhigrosV3JudgeLineBuilderTests
 {
+    [Fact]
+    public void RotateWithFather_WithoutFather_DoesNotWarn()
+    {
+        var line = new JudgeLine { Name = "Untitled", RotateWithFather = true };
+        var warnings = new List<string>();
+
+        var converted = new PhigrosV3JudgeLineBuilder(
+            new IrToPhigrosV3ConvertOptions(),
+            120f,
+            64f,
+            warnings.Add
+        ).ConvertJudgeLine(line, [line]);
+
+        converted.Should().NotBeNull();
+        warnings.Should().BeEmpty();
+        line.Father.Should().Be(-1);
+        line.RotateWithFather.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void FatherLine_AutomaticallyUnbindsWithoutWarning(
+        bool classicMode,
+        bool rotateWithFather
+    )
+    {
+        var father = new JudgeLine
+        {
+            Name = "Untitled",
+            EventLayers =
+            [
+                new EventLayer
+                {
+                    MoveXEvents = [DoubleEvent(0, 1, 0.2d, 0.2d)],
+                    MoveYEvents = [DoubleEvent(0, 1, 0.1d, 0.1d)],
+                    RotateEvents = [DoubleEvent(0, 1, 30d, 30d)],
+                },
+            ],
+        };
+        var line = new JudgeLine
+        {
+            Name = "Untitled",
+            Father = 0,
+            RotateWithFather = rotateWithFather,
+            EventLayers =
+            [
+                new EventLayer
+                {
+                    MoveXEvents = [DoubleEvent(0, 1, 0d, 0d)],
+                    MoveYEvents = [DoubleEvent(0, 1, 0d, 0d)],
+                    RotateEvents = [DoubleEvent(0, 1, 10d, 10d)],
+                },
+            ],
+        };
+        var expectedLine = new JudgeLine
+        {
+            Name = "Untitled",
+            EventLayers =
+            [
+                new EventLayer
+                {
+                    MoveXEvents = [DoubleEvent(0, 1, 0.2d, 0.2d)],
+                    MoveYEvents = [DoubleEvent(0, 1, 0.1d, 0.1d)],
+                    RotateEvents =
+                    [
+                        DoubleEvent(0, 1, rotateWithFather ? 40d : 10d, rotateWithFather ? 40d : 10d),
+                    ],
+                },
+            ],
+        };
+        var originalLine = line.Clone();
+        var originalFather = father.Clone();
+        var options = new IrToPhigrosV3ConvertOptions();
+        options.FatherLineUnbind.ClassicMode = classicMode;
+        options.FatherLineUnbind.Precision = 4d;
+        var warnings = new List<string>();
+        var builder = new PhigrosV3JudgeLineBuilder(options, 120f, 64f, warnings.Add);
+
+        var converted = builder.ConvertJudgeLine(line, [father, line]);
+        var expected = builder.ConvertJudgeLine(expectedLine, [expectedLine]);
+
+        converted.Should().NotBeNull();
+        expected.Should().NotBeNull();
+        converted!.JudgeLineMoveEvents[0].Start.Should().Be(expected!.JudgeLineMoveEvents[0].Start);
+        converted.JudgeLineMoveEvents[0].Start2.Should().Be(expected.JudgeLineMoveEvents[0].Start2);
+        converted.JudgeLineRotateEvents[0].Start.Should().Be(expected.JudgeLineRotateEvents[0].Start);
+        warnings.Should().BeEmpty();
+        line.Should().BeEquivalentTo(originalLine);
+        father.Should().BeEquivalentTo(originalFather);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DefaultControls_DoNotWarnWhenRepresentationDiffers(bool changeRepresentation)
+    {
+        var line = new JudgeLine { Name = "Untitled" };
+        if (changeRepresentation)
+        {
+            line.PositionControls.Reverse();
+            line.AlphaControls.Reverse();
+            line.SizeControls.Reverse();
+            line.SkewControls.Reverse();
+            line.YControls.Reverse();
+            List<ControlBase> controls =
+            [
+                .. line.PositionControls,
+                .. line.AlphaControls,
+                .. line.SizeControls,
+                .. line.SkewControls,
+                .. line.YControls,
+            ];
+            foreach (var control in controls)
+            {
+                control.X += 10f;
+                control.Easing = new Easing(3);
+            }
+        }
+        var originalLine = line.Clone();
+        var warnings = new List<string>();
+
+        var converted = new PhigrosV3JudgeLineBuilder(
+            new IrToPhigrosV3ConvertOptions(),
+            120f,
+            64f,
+            warnings.Add
+        ).ConvertJudgeLine(line, [line]);
+
+        converted.Should().NotBeNull();
+        warnings.Should().BeEmpty();
+        line.Should().BeEquivalentTo(originalLine);
+    }
+
+    [Fact]
+    public void RePhiEdit_DefaultControlsAndInactiveFatherRotation_DoNotWarn()
+    {
+        var source = new KaedePhi.Core.Formats.RePhiEdit.Model.JudgeLine
+        {
+            Name = "Untitled",
+            RotateWithFather = true,
+        };
+        source.PositionControls.Reverse();
+        source.AlphaControls.Reverse();
+        source.SizeControls.Reverse();
+        source.SkewControls.Reverse();
+        source.YControls.Reverse();
+        var line = KaedePhi.Tool.Converter.RePhiEdit.Utils.JudgeLineBuilder.ConvertJudgeLine(source);
+        var warnings = new List<string>();
+        var converter = new global::KaedePhi.Tool.Converter.Phigros.v3.PhigrosV3Converter
+        {
+            OnWarning = warnings.Add,
+        };
+
+        var converted = converter.FromIr(
+            new Chart { JudgeLineList = [line] },
+            new IrToPhigrosV3ConvertOptions()
+        );
+
+        converted.JudgeLineList.Should().ContainSingle();
+        warnings.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void NonDefaultControls_StillWarnForEachControlType()
+    {
+        var line = new JudgeLine { Name = "Untitled" };
+        line.PositionControls[1].Pos = 2f;
+        line.AlphaControls[1].Alpha = 0.5f;
+        line.SizeControls[1].Size = 2f;
+        line.SkewControls[1].Skew = 1f;
+        line.YControls[1].Y = 2f;
+        var warnings = new List<string>();
+
+        var converted = new PhigrosV3JudgeLineBuilder(
+            new IrToPhigrosV3ConvertOptions(),
+            120f,
+            64f,
+            warnings.Add
+        ).ConvertJudgeLine(line, [line]);
+
+        converted.Should().NotBeNull();
+        warnings
+            .Should()
+            .BeEquivalentTo(
+                "PhigrosV3 不支持 JudgeLine.PositionControls（包含非默认数据）",
+                "PhigrosV3 不支持 JudgeLine.AlphaControls（包含非默认数据）",
+                "PhigrosV3 不支持 JudgeLine.SizeControls（包含非默认数据）",
+                "PhigrosV3 不支持 JudgeLine.SkewControls（包含非默认数据）",
+                "PhigrosV3 不支持 JudgeLine.YControls（包含非默认数据）"
+            );
+    }
+
     [Fact]
     public void NegativeAlpha_UsesEventInterpolationForZeroCrossing()
     {
@@ -307,7 +503,7 @@ public class PhigrosV3JudgeLineBuilderTests
     }
 
     [Fact]
-    public void FromIr_WithBpmList_ReparameterizesNotesAndAllEventChannels()
+    public void FromIr_WithMultipleBpms_ReparameterizesNotesAndAllEventChannels()
     {
         var firstLine = new JudgeLine
         {
@@ -500,7 +696,91 @@ public class PhigrosV3JudgeLineBuilderTests
     }
 
     [Fact]
-    public void FromIr_WithBpmList_DerivesHoldTimeFromQuantizedEndpoints()
+    public void FromIr_WithSingleBpm_DoesNotApplyMappedTimeSentinel()
+    {
+        var chart = new Chart
+        {
+            BpmList = [new BpmItem { StartBeat = Beat(0), Bpm = 120f }],
+            JudgeLineList =
+            [
+                new JudgeLine
+                {
+                    Notes = [new Note { StartBeat = Beat(3_750_000), EndBeat = Beat(3_750_000) }],
+                },
+            ],
+        };
+
+        var converted = new global::KaedePhi.Tool.Converter.Phigros.v3.PhigrosV3Converter()
+            .FromIr(chart, new IrToPhigrosV3ConvertOptions())
+            .JudgeLineList.Single();
+
+        converted.Bpm.Should().Be(120f);
+        converted.NotesAbove.Single().Time.Should().Be(120_000_000);
+    }
+
+    [Theory]
+    [InlineData(150f, 1f, 0d)]
+    [InlineData(180f, 2f, 0d)]
+    [InlineData(172.5f, 0.5f, 3.5d)]
+    public void FromIr_WithSingleBpm_PreservesSourceBpmAndBeatTime(
+        float sourceBpm,
+        float bpmFactor,
+        double bpmStartBeat
+    )
+    {
+        var source = new JudgeLine
+        {
+            BpmFactor = bpmFactor,
+            Notes =
+            [
+                new Note { StartBeat = Beat(0.5), EndBeat = Beat(0.5) },
+                new Note
+                {
+                    Type = NoteType.Hold,
+                    StartBeat = Beat(1.25),
+                    EndBeat = Beat(2.5),
+                },
+            ],
+            EventLayers =
+            [
+                new EventLayer
+                {
+                    MoveXEvents = [DoubleEvent(0.5, 2.5, 0d, 1d)],
+                    MoveYEvents = [DoubleEvent(0.5, 2.5, 0d, 1d)],
+                    RotateEvents = [DoubleEvent(0.5, 2.5, 10d, 20d)],
+                    AlphaEvents = [IntEvent(0.5, 2.5, 255, 255)],
+                    SpeedEvents = [SpeedEvent(0.5, 2.5, 4.5f, 9f)],
+                },
+            ],
+        };
+        var chart = new Chart
+        {
+            BpmList = [new BpmItem { StartBeat = Beat(bpmStartBeat), Bpm = sourceBpm }],
+            JudgeLineList = [source, new JudgeLine()],
+        };
+        var originalChart = chart.Clone();
+        var converter = new global::KaedePhi.Tool.Converter.Phigros.v3.PhigrosV3Converter();
+
+        var converted = converter.FromIr(
+            chart,
+            new IrToPhigrosV3ConvertOptions { DefaultBpm = 60f }
+        );
+        var expected = converter.FromIr(
+            new Chart { JudgeLineList = chart.JudgeLineList },
+            new IrToPhigrosV3ConvertOptions { DefaultBpm = sourceBpm }
+        );
+
+        converted.JudgeLineList[0].Bpm.Should().Be(sourceBpm / bpmFactor);
+        converted.JudgeLineList[1].Bpm.Should().Be(sourceBpm);
+        converted.JudgeLineList[0].NotesAbove.Select(note => note.Time).Should().Equal(16, 40);
+        converted.JudgeLineList[0].NotesAbove[1].HoldTime.Should().Be(40f);
+        converted.JudgeLineList[1].JudgeLineDisappearEvents.Single().EndTime.Should().Be(81f);
+        converted.Should().BeEquivalentTo(expected);
+        chart.Should().BeEquivalentTo(originalChart);
+    }
+
+    [Fact]
+    public void FromIr_WithMultipleBpms_DerivesHoldTimeFromQuantizedEndpoints()
     {
         var source = new JudgeLine
         {
@@ -519,7 +799,11 @@ public class PhigrosV3JudgeLineBuilderTests
             .FromIr(
                 new Chart
                 {
-                    BpmList = [new BpmItem { StartBeat = Beat(0), Bpm = 120f }],
+                    BpmList =
+                    [
+                        new BpmItem { StartBeat = Beat(0), Bpm = 120f },
+                        new BpmItem { StartBeat = Beat(3), Bpm = 240f },
+                    ],
                     JudgeLineList = [source],
                 },
                 new IrToPhigrosV3ConvertOptions()
@@ -534,7 +818,7 @@ public class PhigrosV3JudgeLineBuilderTests
     }
 
     [Fact]
-    public void FromIr_WithBpmListAndAncestorFactorMismatch_AllowsParentUnbind()
+    public void FromIr_WithSingleBpmAndAncestorFactorMismatch_AllowsParentUnbind()
     {
         var chart = new Chart
         {
@@ -570,11 +854,15 @@ public class PhigrosV3JudgeLineBuilderTests
     }
 
     [Fact]
-    public void FromIr_WithBpmList_RejectsTimeAtTailEventSentinel()
+    public void FromIr_WithMultipleBpms_RejectsTimeAtTailEventSentinel()
     {
         var chart = new Chart
         {
-            BpmList = [new BpmItem { StartBeat = Beat(0), Bpm = 120f }],
+            BpmList =
+            [
+                new BpmItem { StartBeat = Beat(0), Bpm = 120f },
+                new BpmItem { StartBeat = Beat(1), Bpm = 240f },
+            ],
             JudgeLineList =
             [
                 new JudgeLine
@@ -584,8 +872,8 @@ public class PhigrosV3JudgeLineBuilderTests
                         new Note
                         {
                             Type = NoteType.Tap,
-                            StartBeat = Beat(3_750_000),
-                            EndBeat = Beat(3_750_000),
+                            StartBeat = Beat(7_499_999),
+                            EndBeat = Beat(7_499_999),
                         },
                     ],
                 },

@@ -7,8 +7,6 @@ namespace KaedePhi.Tool.Common;
 /// </summary>
 public static class ControlDefaultChecker
 {
-    // 使用 Constants.FloatEpsilon
-
     /// <summary>
     /// 检查 Control 列表是否与默认值完全一致。
     /// </summary>
@@ -29,6 +27,30 @@ public static class ControlDefaultChecker
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// 检查 Control 列表是否仅包含默认取值，未设置控制点时视为默认效果。
+    /// </summary>
+    /// <typeparam name="T">Control 类型</typeparam>
+    /// <param name="controls">要检查的 Control 列表</param>
+    /// <returns>没有控制点或所有控制点的取值均为默认值时返回 true</returns>
+    public static bool HasDefaultEffect<T>(List<T>? controls)
+        where T : IrControls.ControlBase
+    {
+        var defaultControls = GetDefaultControls<T>();
+        if (controls is not { Count: > 0 })
+            return true;
+        if (defaultControls.Count == 0)
+            return false;
+
+        // 默认取值不随控制点位置、排列或缓动变化。
+        var defaultControl = defaultControls[0];
+        return controls.All(control =>
+            control is not null
+            && float.IsFinite(control.X)
+            && AreDerivedPropertiesEqual(control, defaultControl)
+        );
     }
 
     /// <summary>

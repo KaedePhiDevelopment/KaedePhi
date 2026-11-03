@@ -85,8 +85,12 @@ public class PhigrosV3Converter
 
         WarnIfUnsupportedMeta(normalized.Meta);
 
-        var hasBpmList = normalized.BpmList is { Count: > 0 };
-        var timeMapper = hasBpmList ? new PhigrosV3TimeMapper(normalized.BpmList) : null;
+        var timeMapper = normalized.BpmList is { Count: > 1 }
+            ? new PhigrosV3TimeMapper(normalized.BpmList)
+            : null;
+        var globalBpm = normalized.BpmList is { Count: 1 }
+            ? normalized.BpmList[0].Bpm
+            : options.DefaultBpm;
         PhigrosV3JudgeLineBuilder judgeLineConverter;
         if (timeMapper is not null)
         {
@@ -101,7 +105,7 @@ public class PhigrosV3Converter
         {
             judgeLineConverter = new PhigrosV3JudgeLineBuilder(
                 options,
-                options.DefaultBpm,
+                globalBpm,
                 CalculateChartEndTime(normalized),
                 OnWarning
             );
@@ -119,7 +123,7 @@ public class PhigrosV3Converter
         var blockAreaTimeMapper =
             timeMapper
             ?? new PhigrosV3TimeMapper([
-                new Ir.BpmItem { Bpm = options.DefaultBpm, StartBeat = new Beat(0) },
+                new Ir.BpmItem { Bpm = globalBpm, StartBeat = new Beat(0) },
             ]);
         var blockAreas = PhigrosV3BlockAreaBuilder.ConvertBlockAreas(
             normalized.BlockAreaList,

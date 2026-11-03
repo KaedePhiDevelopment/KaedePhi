@@ -419,6 +419,50 @@ public class PhigrosV3BlockAreaConversionTests
     }
 
     [Fact]
+    public void FromIrWithSingleBpmKeepsAreaMusicTimesIndependentOfDefaultBpm()
+    {
+        var source = new IrChart
+        {
+            BpmList = [new() { Bpm = 150f, StartBeat = new Beat(0) }],
+            BlockAreaList =
+            [
+                new IrBlockArea
+                {
+                    TopRightX = 1d,
+                    BottomLeftX = -1d,
+                    AppearBeat = new Beat(2.5),
+                    EnableBeat = new Beat(3),
+                    DisableBeat = new Beat(4),
+                    DisappearBeat = new Beat(5),
+                    MoveXEvents =
+                    [
+                        new IrEvent
+                        {
+                            StartBeat = new Beat(0),
+                            EndBeat = new Beat(2.5),
+                            StartValue = 0d,
+                            EndValue = 1d,
+                        },
+                    ],
+                },
+            ],
+        };
+        var options = new IrToPhigrosV3ConvertOptions { DefaultBpm = 60f };
+
+        var converted = new PhigrosV3Converter().FromIr(source, options);
+        var area = Assert.Single(converted.BlockAreaList);
+
+        Assert.Empty(converted.JudgeLineList);
+        Assert.Equal(1f, area.AppearTime);
+        Assert.Equal(1.2f, area.EnableTime);
+        Assert.Equal(1.6f, area.DisableTime);
+        Assert.Equal(2f, area.DisappearTime);
+        Assert.Equal(2, area.MoveEvents.Count);
+        Assert.Equal(0f, area.MoveEvents[0].Time);
+        Assert.Equal(1f, area.MoveEvents[^1].Time);
+    }
+
+    [Fact]
     public void FromIrMapsAreaTimesAcrossTempoChanges()
     {
         var source = new IrChart

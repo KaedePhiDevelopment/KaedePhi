@@ -101,7 +101,6 @@ public class PhigrosV3JudgeLineBuilder
         var preprocessedSrc = src.Clone();
         if (preprocessedSrc.Father != -1)
         {
-            Warn($"PhigrosV3 不支持 JudgeLine.Father（值={src.Father}），将自动解除父子绑定");
             var srcIndex = allLine.FindIndex(l => ReferenceEquals(l, src));
             var unbinder = new JudgeLineUnbinder();
             if (_options.FatherLineUnbind.ClassicMode)
@@ -724,8 +723,6 @@ public class PhigrosV3JudgeLineBuilder
             Warn($"PhigrosV3 不支持 JudgeLine.Texture（值='{src.Texture}'），{textureRemoveHint}");
         if (!IsDefaultAnchor(src.Anchor))
             Warn($"PhigrosV3 不支持 JudgeLine.Anchor（值='[{string.Join(", ", src.Anchor)}]'）");
-        if (src.Father != -1)
-            Warn($"PhigrosV3 不支持 JudgeLine.Father（值={src.Father}），将自动解除父子绑定");
         if (!src.IsCover)
             Warn($"PhigrosV3 不支持 JudgeLine.IsCover（值={src.IsCover}）");
         if (src.ZOrder != 0)
@@ -736,9 +733,6 @@ public class PhigrosV3JudgeLineBuilder
             );
         if (src.IsGif)
             Warn($"PhigrosV3 不支持 JudgeLine.IsGif（值={src.IsGif}）");
-        if (src.RotateWithFather)
-            Warn($"PhigrosV3 不支持 JudgeLine.RotateWithFather（值={src.RotateWithFather}）");
-
         WarnIfUnsupportedControlFields(src);
     }
 
@@ -749,15 +743,15 @@ public class PhigrosV3JudgeLineBuilder
     {
         if (HasNonDefaultExtendLayer(src.Extended))
             Warn("PhigrosV3 不支持 JudgeLine.Extended（包含非默认数据）");
-        if (!ControlDefaultChecker.IsDefaultControls(src.PositionControls))
+        if (!ControlDefaultChecker.HasDefaultEffect(src.PositionControls))
             Warn("PhigrosV3 不支持 JudgeLine.PositionControls（包含非默认数据）");
-        if (!ControlDefaultChecker.IsDefaultControls(src.AlphaControls))
+        if (!ControlDefaultChecker.HasDefaultEffect(src.AlphaControls))
             Warn("PhigrosV3 不支持 JudgeLine.AlphaControls（包含非默认数据）");
-        if (!ControlDefaultChecker.IsDefaultControls(src.SizeControls))
+        if (!ControlDefaultChecker.HasDefaultEffect(src.SizeControls))
             Warn("PhigrosV3 不支持 JudgeLine.SizeControls（包含非默认数据）");
-        if (!ControlDefaultChecker.IsDefaultControls(src.SkewControls))
+        if (!ControlDefaultChecker.HasDefaultEffect(src.SkewControls))
             Warn("PhigrosV3 不支持 JudgeLine.SkewControls（包含非默认数据）");
-        if (!ControlDefaultChecker.IsDefaultControls(src.YControls))
+        if (!ControlDefaultChecker.HasDefaultEffect(src.YControls))
             Warn("PhigrosV3 不支持 JudgeLine.YControls（包含非默认数据）");
     }
 
