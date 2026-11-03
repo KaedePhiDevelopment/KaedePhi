@@ -385,9 +385,6 @@
   <data name="convert_speed_precision" xml:space="preserve">
     <value>Speed Cut Precision</value>
   </data>
-  <data name="convert_default_bpm" xml:space="preserve">
-    <value>Default BPM</value>
-  </data>
   <data name="convert_filter_fake_notes" xml:space="preserve">
     <value>Filter Fake Notes (remove IsFake notes)</value>
   </data>
@@ -627,7 +624,6 @@
   <data name="ui_export_pe_title" xml:space="preserve"><value>PhiEdit conversion</value></data>
   <data name="ui_export_pe_desc" xml:space="preserve"><value>Control cutting for easing, alpha, and speed events.</value></data>
   <data name="ui_export_phigros_title" xml:space="preserve"><value>Phigros V3 conversion</value></data>
-  <data name="ui_export_phigros_desc" xml:space="preserve"><value>Uses the fallback value when the target format has no BPM.</value></data>
   <data name="ui_export_rephiedit_title" xml:space="preserve"><value>RePhiEdit conversion</value></data>
   <data name="ui_export_phichain_title" xml:space="preserve"><value>PhiChain conversion</value></data>
   <data name="ui_export_phichain_desc" xml:space="preserve"><value>Control parent-child unbinding, multi-layer merging, and easing cutting by stage.</value></data>
@@ -641,7 +637,6 @@
   <data name="ui_export_alpha_precision" xml:space="preserve"><value>Alpha event cut precision</value></data>
   <data name="ui_export_alpha_tolerance" xml:space="preserve"><value>Alpha tolerance (%)</value></data>
   <data name="ui_export_speed_precision" xml:space="preserve"><value>Speed event cut precision</value></data>
-  <data name="ui_export_fallback_bpm" xml:space="preserve"><value>Fallback BPM</value></data>
   <data name="ui_export_negative_step" xml:space="preserve"><value>Negative alpha elevation step</value></data>
   <data name="ui_export_discontinuity_precision" xml:space="preserve"><value>Discontinuous node beat precision</value></data>
   <data name="ui_export_multi_merge" xml:space="preserve"><value>Multi-layer merge</value></data>

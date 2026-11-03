@@ -510,15 +510,6 @@ namespace KaedePhi.Tool.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Phigros 输出时的默认 BPM（用于变节拍谱面）.
-        /// </summary>
-        public static string convert_opt_phigros_bpm {
-            get {
-                return ResourceManager.GetString("convert_opt_phigros_bpm", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Phigros 不支持缓动类型的近似采样精度.
         /// </summary>
         public static string convert_opt_phigros_easing_precision {

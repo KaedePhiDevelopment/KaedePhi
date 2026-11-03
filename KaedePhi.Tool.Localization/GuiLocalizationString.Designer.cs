@@ -231,15 +231,6 @@ namespace KaedePhi.Tool.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 回退BPM.
-        /// </summary>
-        public static string convert_default_bpm {
-            get {
-                return ResourceManager.GetString("convert_default_bpm", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to 缓动截取切割后压缩.
         /// </summary>
         public static string convert_easing_cut_compress {
@@ -1743,15 +1734,6 @@ namespace KaedePhi.Tool.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 回退 BPM.
-        /// </summary>
-        public static string ui_export_fallback_bpm {
-            get {
-                return ResourceManager.GetString("ui_export_fallback_bpm", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to 合并容差.
         /// </summary>
         public static string ui_export_merge_tolerance {
@@ -1820,15 +1802,6 @@ namespace KaedePhi.Tool.Localization {
         public static string ui_export_phifans_title {
             get {
                 return ResourceManager.GetString("ui_export_phifans_title", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 目标格式没有 BPM 时使用回退值。.
-        /// </summary>
-        public static string ui_export_phigros_desc {
-            get {
-                return ResourceManager.GetString("ui_export_phigros_desc", resourceCulture);
             }
         }
         

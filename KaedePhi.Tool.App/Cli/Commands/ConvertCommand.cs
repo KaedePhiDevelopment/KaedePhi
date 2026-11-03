@@ -79,12 +79,6 @@ public static partial class ConvertCommand
         Arity = ArgumentArity.ExactlyOne,
     };
 
-    private static readonly Option<float> PhigrosBpmOpt = new("--phigros-bpm")
-    {
-        Description = CliLocalizationString.convert_opt_phigros_bpm,
-        Arity = ArgumentArity.ExactlyOne,
-    };
-
     private static readonly Option<double> PhigrosEasingPrecisionOpt = new(
         "--phigros-easing-precision"
     )
@@ -323,7 +317,6 @@ public static partial class ConvertCommand
 
         var phigrosOptions = new IrToPhigrosV3ConvertOptions
         {
-            DefaultBpm = SharedOptions.GetIfSpecified(result, PhigrosBpmOpt) ?? c.PhigrosDefaultBpm,
             Cutting = new IrToPhigrosV3ConvertOptions.CuttingOptions
             {
                 EasingPrecision =

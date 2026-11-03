@@ -301,9 +301,6 @@
     <data name="convert_opt_pe_speed_precision" xml:space="preserve">
         <value>PE 输出时速度通道的切割精度</value>
     </data>
-    <data name="convert_opt_phigros_bpm" xml:space="preserve">
-        <value>Phigros 输出时的默认 BPM（用于变节拍谱面）</value>
-    </data>
     <data name="convert_opt_phigros_easing_precision" xml:space="preserve">
         <value>Phigros 不支持缓动类型的近似采样精度</value>
     </data>

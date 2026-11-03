@@ -123,7 +123,7 @@ public double PeTrailingBeatPadding { get; set; } = 1d / 64d;
 
 #region PhigrosV3 转换选项
 
-public float PhigrosDefaultBpm { get; set; } = 120f;
+public double PhigrosEasingPrecision { get; set; } = 64d;
 
 #endregion
 ```

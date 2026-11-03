@@ -212,7 +212,6 @@ internal sealed class ExportController
     private static IrToPhigrosV3ConvertOptions BuildPhigrosV3Options(ExportViewModel vm) =>
         new()
         {
-            DefaultBpm = vm.PhigrosDefaultBpm,
             Cutting = new IrToPhigrosV3ConvertOptions.CuttingOptions
             {
                 EasingPrecision = vm.PhigrosEasingPrecision,

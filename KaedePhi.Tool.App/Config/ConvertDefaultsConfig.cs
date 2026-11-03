@@ -51,7 +51,6 @@ public sealed class ConvertDefaultsConfig
     public double PeSpeedCutPrecision { get; set; } = 64d;
 
     // PhigrosV3 转换选项
-    public float PhigrosDefaultBpm { get; set; } = 120f;
     public double PhigrosEasingPrecision { get; set; } = 64d;
     public double PhigrosMisalignedXyEventPrecision { get; set; } = 64d;
     public double PhigrosAlphaCutPrecision { get; set; } = 64d;

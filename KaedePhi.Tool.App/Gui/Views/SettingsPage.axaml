@@ -239,13 +239,6 @@
                                        FontSize="11" FontWeight="SemiBold" Margin="0,4,0,0" />
                             <StackPanel Spacing="6">
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="{x:Static loc:GuiLocalizationString.convert_default_bpm}"
-                                               FontSize="12" Opacity="0.7" />
-                                    <NumericUpDown Value="{Binding ConvertPhigrosDefaultBpm}" Minimum="1" Maximum="999"
-                                                   Increment="1" FormatString="F0" Width="200"
-                                                   HorizontalAlignment="Left" />
-                                </StackPanel>
-                                <StackPanel Spacing="4">
                                     <TextBlock Text="{x:Static loc:GuiLocalizationString.convert_easing_precision}"
                                                FontSize="12" Opacity="0.7" />
                                     <TextBox Text="{Binding ConvertPhigrosEasingPrecision}" Width="200"

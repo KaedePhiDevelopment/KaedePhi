@@ -84,21 +84,14 @@
                             <Border IsVisible="{Binding ShowPhigrosOptions}" Background="{DynamicResource SurfaceStrongBrush}"
                                      CornerRadius="0" Padding="16">
                                 <StackPanel Spacing="12">
-                                    <StackPanel Spacing="3">
-                                        <TextBlock Text="{x:Static loc:GuiLocalizationString.ui_export_phigros_title}" Classes="section-title" />
-                                        <TextBlock Text="{x:Static loc:GuiLocalizationString.ui_export_phigros_desc}"
-                                                   Classes="muted" FontSize="11" />
-                                    </StackPanel>
-                                    <Grid ColumnDefinitions="*,150" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="10">
-                                        <TextBlock Text="{x:Static loc:GuiLocalizationString.ui_export_fallback_bpm}" VerticalAlignment="Center" />
-                                        <NumericUpDown Grid.Column="1" Value="{Binding PhigrosDefaultBpm}"
-                                                       Increment="1" FormatString="F0" />
-                                        <TextBlock Grid.Row="1" Text="{x:Static loc:GuiLocalizationString.convert_easing_precision}" VerticalAlignment="Center" />
-                                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding PhigrosEasingPrecision}" />
-                                        <TextBlock Grid.Row="2" Text="{x:Static loc:GuiLocalizationString.ui_export_xy_precision}" VerticalAlignment="Center" />
-                                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding PhigrosMisalignedXyEventPrecision}" />
-                                        <TextBlock Grid.Row="3" Text="{x:Static loc:GuiLocalizationString.ui_export_alpha_precision}" VerticalAlignment="Center" />
-                                        <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding PhigrosAlphaCutPrecision}" />
+                                    <TextBlock Text="{x:Static loc:GuiLocalizationString.ui_export_phigros_title}" Classes="section-title" />
+                                    <Grid ColumnDefinitions="*,150" RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
+                                        <TextBlock Text="{x:Static loc:GuiLocalizationString.convert_easing_precision}" VerticalAlignment="Center" />
+                                        <TextBox Grid.Column="1" Text="{Binding PhigrosEasingPrecision}" />
+                                        <TextBlock Grid.Row="1" Text="{x:Static loc:GuiLocalizationString.ui_export_xy_precision}" VerticalAlignment="Center" />
+                                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding PhigrosMisalignedXyEventPrecision}" />
+                                        <TextBlock Grid.Row="2" Text="{x:Static loc:GuiLocalizationString.ui_export_alpha_precision}" VerticalAlignment="Center" />
+                                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding PhigrosAlphaCutPrecision}" />
                                     </Grid>
                                     <Grid ColumnDefinitions="*,150">
                                         <TextBlock Text="{x:Static loc:GuiLocalizationString.ui_export_speed_precision}" VerticalAlignment="Center" />

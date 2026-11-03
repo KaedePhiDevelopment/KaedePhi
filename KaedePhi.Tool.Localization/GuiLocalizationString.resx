@@ -390,9 +390,6 @@
     <data name="convert_speed_precision" xml:space="preserve">
     <value>速度事件切割精度</value>
   </data>
-    <data name="convert_default_bpm" xml:space="preserve">
-    <value>回退BPM</value>
-  </data>
     <data name="convert_filter_fake_notes" xml:space="preserve">
     <value>过滤假音符（删除假音符）</value>
   </data>
@@ -632,7 +629,6 @@
     <data name="ui_export_pe_title" xml:space="preserve"><value>PhiEdit 转换</value></data>
     <data name="ui_export_pe_desc" xml:space="preserve"><value>控制缓动、透明度和速度事件的切割方式。</value></data>
     <data name="ui_export_phigros_title" xml:space="preserve"><value>Phigros V3 转换</value></data>
-    <data name="ui_export_phigros_desc" xml:space="preserve"><value>目标格式没有 BPM 时使用回退值。</value></data>
     <data name="ui_export_rephiedit_title" xml:space="preserve"><value>RePhiEdit 转换</value></data>
     <data name="ui_export_phichain_title" xml:space="preserve"><value>PhiChain 转换</value></data>
     <data name="ui_export_phichain_desc" xml:space="preserve"><value>按阶段控制父子线解绑、多层合并和缓动切割。</value></data>
@@ -646,7 +642,6 @@
     <data name="ui_export_alpha_precision" xml:space="preserve"><value>Alpha 事件切割精度</value></data>
     <data name="ui_export_alpha_tolerance" xml:space="preserve"><value>Alpha 容差（百分比）</value></data>
     <data name="ui_export_speed_precision" xml:space="preserve"><value>速度事件切割精度</value></data>
-    <data name="ui_export_fallback_bpm" xml:space="preserve"><value>回退 BPM</value></data>
     <data name="ui_export_negative_step" xml:space="preserve"><value>负透明度抬高步长</value></data>
     <data name="ui_export_discontinuity_precision" xml:space="preserve"><value>不连续节点拍数精分</value></data>
     <data name="ui_export_multi_merge" xml:space="preserve"><value>多层级合并</value></data>

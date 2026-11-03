@@ -13,11 +13,14 @@ public sealed class AppConfigService
 {
     private readonly ISerializer _serializer;
     private readonly IDeserializer _deserializer;
+    private static readonly Lazy<AppConfigService> SharedInstance = new(
+        () => new AppConfigService()
+    );
 
     /// <summary>
     /// 进程内共享实例。
     /// </summary>
-    public static AppConfigService Instance { get; } = new();
+    public static AppConfigService Instance => SharedInstance.Value;
 
     /// <summary>
     /// 当前配置。
@@ -30,12 +33,18 @@ public sealed class AppConfigService
     public string ConfigPath { get; }
 
     private AppConfigService()
+        : this(
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "KaedePhi",
+                "config"
+            )
+        ) { }
+
+    internal AppConfigService(string configDir)
     {
-        var configDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "KaedePhi",
-            "config"
-        );
+        ArgumentException.ThrowIfNullOrWhiteSpace(configDir);
+        configDir = Path.GetFullPath(configDir);
         Directory.CreateDirectory(configDir);
         ConfigPath = Path.Combine(configDir, "config.yaml");
 
@@ -55,11 +64,19 @@ public sealed class AppConfigService
         {
             if (File.Exists(ConfigPath))
             {
-                var yaml = RemoveObsoleteConvertOptions(File.ReadAllText(ConfigPath));
+                var originalYaml = File.ReadAllText(ConfigPath);
+                var yaml = RemoveObsoleteConvertOptions(originalYaml);
                 var config = _deserializer.Deserialize<AppConfig>(yaml);
                 if (config is null)
                     throw new FormatException("配置文件为空。");
                 Validate(config);
+                if (
+                    !string.Equals(originalYaml, yaml, StringComparison.Ordinal)
+                    && !Save(config)
+                )
+                    Debug.WriteLine(
+                        "[AppConfigService] 无法写回迁移后的配置，继续使用已读取的有效配置。"
+                    );
                 return config;
             }
         }
@@ -191,8 +208,6 @@ public sealed class AppConfigService
         if (
             !double.IsFinite(config.PeTrailingBeatPadding)
             || config.PeTrailingBeatPadding < 0
-            || !float.IsFinite(config.PhigrosDefaultBpm)
-            || config.PhigrosDefaultBpm <= 0
             || !double.IsFinite(config.PhigrosNegativeAlphaStep)
             || config.PhigrosNegativeAlphaStep <= 0
         )
@@ -214,7 +229,9 @@ public sealed class AppConfigService
 
         var obsoleteKeys = convert
             .Children.Keys.OfType<YamlScalarNode>()
-            .Where(key => key.Value is "peSpeedCutCompress" or "peSpeedCutTolerance")
+            .Where(key =>
+                key.Value is "peSpeedCutCompress" or "peSpeedCutTolerance" or "phigrosDefaultBpm"
+            )
             .ToList();
         if (obsoleteKeys.Count == 0)
             return yaml;

@@ -15,6 +15,51 @@ namespace KaedePhi.Tests.App;
 public sealed class AppFormatTests
 {
     [Fact]
+    public void ConvertCommand_RemovesObsoletePhigrosBpmOption()
+    {
+        var command = ConvertCommand.Create();
+
+        command
+            .Parse(
+                ["--input", "input.json", "--target", ChartFormatIds.PhigrosV3, "--phigros-bpm", "180"]
+            )
+            .Errors.Should().NotBeEmpty();
+        command
+            .Parse(
+                [
+                    "--input",
+                    "input.json",
+                    "--target",
+                    ChartFormatIds.PhigrosV3,
+                    "--phigros-easing-precision",
+                    "32",
+                ]
+            )
+            .Errors.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ExportViewModel_PreservesRemainingPhigrosDefaults()
+    {
+        var config = new ConvertDefaultsConfig
+        {
+            PhigrosEasingPrecision = 16d,
+            PhigrosMisalignedXyEventPrecision = 32d,
+            PhigrosAlphaCutPrecision = 48d,
+            PhigrosSpeedCutPrecision = 96d,
+        };
+        var vm = new ExportViewModel { SelectedFormat = ChartFormatIds.PhigrosV3 };
+
+        vm.ApplyConversionDefaults(config);
+
+        vm.ShowPhigrosOptions.Should().BeTrue();
+        vm.PhigrosEasingPrecision.Should().Be(16d);
+        vm.PhigrosMisalignedXyEventPrecision.Should().Be(32d);
+        vm.PhigrosAlphaCutPrecision.Should().Be(48d);
+        vm.PhigrosSpeedCutPrecision.Should().Be(96d);
+    }
+
+    [Fact]
     public void ConvertCommand_AcceptsAndCompletesRegisteredFormatIds()
     {
         const string id = "tests.app-cli";
