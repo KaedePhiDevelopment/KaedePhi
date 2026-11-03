@@ -22,13 +22,13 @@ public sealed record SaveAsOptions
     /// <summary>演习模式：不实际写文件，仅返回目标路径。</summary>
     public bool DryRun { get; init; }
 
-    /// <summary>PhiEdit 转换选项（仅 <see cref="ChartType.PhiEdit"/> 时生效）。</summary>
+    /// <summary>PhiEdit 转换选项。</summary>
     public IrToPhiEditConvertOptions? PhiEditOptions { get; init; }
 
-    /// <summary>Phigros v3 转换选项（仅 <see cref="ChartType.PhigrosV3"/> 时生效）。</summary>
+    /// <summary>Phigros v3 转换选项。</summary>
     public IrToPhigrosV3ConvertOptions? PhigrosOptions { get; init; }
 
-    /// <summary>PhiFans 转换选项（仅 <see cref="ChartType.PhiFans"/> 时生效）。</summary>
+    /// <summary>PhiFans 转换选项。</summary>
     public IrToPhiFansConvertOptions? PhiFansOptions { get; init; }
 
     /// <summary>其他格式的转换选项，按目标格式自行匹配类型。</summary>
@@ -39,12 +39,12 @@ public sealed record SaveAsOptions
     /// </summary>
     /// <param name="target">目标格式</param>
     /// <returns>选项实例，无匹配时返回 <see langword="null"/> 以使用格式默认值</returns>
-    internal object? ResolveFor(ChartType target) =>
+    internal object? ResolveFor(string target) =>
         target switch
         {
-            ChartType.PhiEdit => PhiEditOptions ?? ExportOptions,
-            ChartType.PhigrosV3 => PhigrosOptions ?? ExportOptions,
-            ChartType.PhiFans => PhiFansOptions ?? ExportOptions,
+            ChartFormatIds.PhiEdit => PhiEditOptions ?? ExportOptions,
+            ChartFormatIds.PhigrosV3 => PhigrosOptions ?? ExportOptions,
+            ChartFormatIds.PhiFans => PhiFansOptions ?? ExportOptions,
             _ => ExportOptions,
         };
 }
@@ -78,7 +78,7 @@ public sealed class ChartService
         var path = ResolveInputPath(input, workspace);
         InputFileValidator.Validate(path);
 
-        ChartType detectedType;
+        ChartFormatDescriptor descriptor;
         await using (
             var detectStream = new FileStream(
                 path,
@@ -90,11 +90,10 @@ public sealed class ChartService
             )
         )
         {
-            detectedType = await ChartGetType.GetTypeAsync(detectStream, ct);
+            descriptor = await ChartGetType.DetectFormatAsync(detectStream, ct);
         }
 
-        var descriptor = ChartFormatRegistry.Find(detectedType);
-        if (descriptor is not { CanImport: true })
+        if (!descriptor.CanImport)
             return null;
 
         if (descriptor.CanStreamImport)
@@ -176,7 +175,7 @@ public sealed class ChartService
     )
     {
         await ChartFormatRegistry
-            .Get(ChartType.RePhiEdit)
+            .Get(ChartFormatIds.RePhiEdit)
             .ExportAsync(
                 chart,
                 outputPath,
@@ -191,7 +190,7 @@ public sealed class ChartService
     public static async Task<string?> SaveAsAsync(
         Chart chart,
         string outputPath,
-        ChartType target,
+        string target,
         SaveAsOptions options,
         CancellationToken ct = default
     )
@@ -209,7 +208,7 @@ public sealed class ChartService
                 Indented = options.Format,
                 DryRun = options.DryRun,
             },
-            options.ResolveFor(target),
+            options.ResolveFor(descriptor.FormatId),
             ct: ct
         );
         return outputPath;

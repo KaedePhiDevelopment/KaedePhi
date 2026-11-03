@@ -13,7 +13,7 @@ public sealed class GuiChartService
 {
     private readonly ILogger _log;
     private string? _detectedFilePath;
-    private ChartType? _detectedType;
+    private ChartFormatDescriptor? _detectedFormat;
 
     public GuiChartService(LogService logService)
     {
@@ -28,7 +28,7 @@ public sealed class GuiChartService
     /// <summary>
     /// 源文件的格式类型
     /// </summary>
-    public ChartType SourceFormat { get; private set; }
+    public string SourceFormat { get; private set; } = string.Empty;
 
     /// <summary>
     /// 源文件路径
@@ -46,47 +46,30 @@ public sealed class GuiChartService
     public bool HasUnclearContent { get; private set; }
 
     /// <summary>
-    /// 检测文件的图表格式类型
-    /// </summary>
-    public ChartType DetectChartType(string filePath, bool stream)
-    {
-        InputFileValidator.Validate(filePath);
-        using var inputStream = File.OpenRead(filePath);
-        var detectedType = ChartGetType.GetType(inputStream);
-        _detectedFilePath = filePath;
-        _detectedType = detectedType;
-        _log.Information(log_step_detected, detectedType);
-        return detectedType;
-    }
-
-    /// <summary>
     /// 异步检测文件格式，避免在界面线程同步读取大型文件。
     /// </summary>
     /// <param name="filePath">输入文件路径。</param>
-    /// <param name="stream">是否使用流式导入兼容模式。</param>
     /// <param name="ct">取消令牌。</param>
     /// <returns>检测到的谱面格式。</returns>
-    public Task<ChartType> DetectChartTypeAsync(
+    public Task<ChartFormatDescriptor> DetectChartFormatAsync(
         string filePath,
-        bool stream,
         CancellationToken ct = default
-    ) => DetectChartTypeAsync(filePath, stream, ct, null);
+    ) => DetectChartFormatAsync(filePath, ct, null);
 
-    internal async Task<ChartType> DetectChartTypeAsync(
+    internal async Task<ChartFormatDescriptor> DetectChartFormatAsync(
         string filePath,
-        bool stream,
         CancellationToken ct,
         IProgress<double?>? progress
     )
     {
         InputFileValidator.Validate(filePath);
         await using var inputStream = OpenProgressReadStream(filePath, progress);
-        var detectedType = await ChartGetType.GetTypeAsync(inputStream, ct);
+        var format = await ChartGetType.DetectFormatAsync(inputStream, ct);
         progress?.Report(null);
         _detectedFilePath = filePath;
-        _detectedType = detectedType;
-        _log.Information(log_step_detected, detectedType);
-        return detectedType;
+        _detectedFormat = format;
+        _log.Information(log_step_detected, format.FormatId);
+        return format;
     }
 
     /// <summary>
@@ -110,11 +93,11 @@ public sealed class GuiChartService
         _log.Information(log_file_selected, filePath, stream);
 
         InputFileValidator.Validate(filePath);
-        var hasDetectedType = _detectedFilePath == filePath && _detectedType is not null;
-        ChartType detectedType;
-        if (hasDetectedType)
+        var hasDetectedFormat = _detectedFilePath == filePath && _detectedFormat is not null;
+        ChartFormatDescriptor descriptor;
+        if (hasDetectedFormat)
         {
-            detectedType = _detectedType!.Value;
+            descriptor = _detectedFormat!;
         }
         else
         {
@@ -126,17 +109,18 @@ public sealed class GuiChartService
                 65536,
                 useAsync: true
             );
-            detectedType = await ChartGetType.GetTypeAsync(detectStream, ct);
+            descriptor = await ChartGetType.DetectFormatAsync(detectStream, ct);
         }
 
         _detectedFilePath = null;
-        _detectedType = null;
-        if (!hasDetectedType)
-            _log.Information(log_step_detected, detectedType);
+        _detectedFormat = null;
+        if (!hasDetectedFormat)
+            _log.Information(log_step_detected, descriptor.FormatId);
 
-        var descriptor = ChartFormatRegistry.Get(detectedType);
+        if (!descriptor.CanImport)
+            throw new NotSupportedException($"{descriptor.FormatId} 不支持作为导入源。");
         Chart kpcChart;
-        if (stream && descriptor.CanStreamImport)
+        if (descriptor.CanStreamImport && (stream || !descriptor.CanTextImport))
         {
             await using var inputStream = OpenProgressReadStream(filePath, progress);
             kpcChart = await descriptor.ImportStreamIrAsync(
@@ -162,10 +146,10 @@ public sealed class GuiChartService
         }
 
         var hasUnclearContent =
-            detectedType == ChartType.PhigrosV3 && kpcChart.BlockAreaList.Count > 0;
+            descriptor.FormatId == ChartFormatIds.PhigrosV3 && kpcChart.BlockAreaList.Count > 0;
 
         CurrentChart = kpcChart;
-        SourceFormat = detectedType;
+        SourceFormat = descriptor.FormatId;
         SourceFilePath = filePath;
         HasUnclearContent = hasUnclearContent;
         progress?.Report(1.0);
@@ -175,7 +159,7 @@ public sealed class GuiChartService
     /// 将当前 KPC 图表导出到指定格式和路径
     /// </summary>
     public async Task ExportChartAsync(
-        ChartType targetType,
+        string targetFormatId,
         string outputPath,
         bool stream,
         bool indented,
@@ -186,9 +170,9 @@ public sealed class GuiChartService
         if (CurrentChart == null)
             throw new InvalidOperationException("No chart loaded");
 
-        _log.Information(log_exporting_to, outputPath, targetType);
+        _log.Information(log_exporting_to, outputPath, targetFormatId);
         await ChartFormatRegistry
-            .Get(targetType)
+            .Get(targetFormatId)
             .ExportAsync(
                 CurrentChart,
                 outputPath,
@@ -206,11 +190,11 @@ public sealed class GuiChartService
     public void Clear()
     {
         CurrentChart = null;
-        SourceFormat = default;
+        SourceFormat = string.Empty;
         SourceFilePath = null;
         HasUnclearContent = false;
         _detectedFilePath = null;
-        _detectedType = null;
+        _detectedFormat = null;
     }
 
     /// <summary>

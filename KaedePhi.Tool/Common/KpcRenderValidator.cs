@@ -1,5 +1,3 @@
-#pragma warning disable CS0618
-
 using KaedePhi.Tool.Compatibility;
 using KaedePhi.Tool.Render.KaedePhi;
 using Kpc = KaedePhi.Core.KaedePhi;

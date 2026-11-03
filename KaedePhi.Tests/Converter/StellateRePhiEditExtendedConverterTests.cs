@@ -57,7 +57,7 @@ public class StellateRePhiEditExtendedConverterTests
         var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         try
         {
-            var descriptor = ChartFormatRegistry.Get(ChartType.StellateRePhiEditExtended);
+            var descriptor = ChartFormatRegistry.Get(ChartFormatIds.StellateRePhiEditExtended);
             Assert.True(descriptor.CanExport);
             await descriptor.ExportAsync(
                 source,
@@ -79,12 +79,12 @@ public class StellateRePhiEditExtendedConverterTests
                 alphaEvents.Select(evt => evt.StartBeat)
             );
 
-            var (detectedType, converted) = await ChartFormatRegistry.ImportIrAsync(
+            var (detectedFormat, converted) = await ChartFormatRegistry.ImportDetectedIrAsync(
                 json,
                 ct: TestContext.Current.CancellationToken
             );
 
-            Assert.Equal(ChartType.StellateRePhiEditExtended, detectedType);
+            Assert.Equal(ChartFormatIds.StellateRePhiEditExtended, detectedFormat.FormatId);
             Assert.Single(converted.JudgeLineList);
             var area = Assert.Single(converted.BlockAreaList);
             Assert.True(area.IsSubtract);
@@ -136,7 +136,7 @@ public class StellateRePhiEditExtendedConverterTests
         try
         {
             await ChartFormatRegistry
-                .Get(ChartType.StellateRePhiEditExtended)
+                .Get(ChartFormatIds.StellateRePhiEditExtended)
                 .ExportAsync(source, path, ct: TestContext.Current.CancellationToken);
             var json = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
             var exported = await ChartSerialization.LoadFromJsonAsync(json);
@@ -188,10 +188,10 @@ public class StellateRePhiEditExtendedConverterTests
         try
         {
             await ChartFormatRegistry
-                .Get(ChartType.StellateRePhiEditExtended)
+                .Get(ChartFormatIds.StellateRePhiEditExtended)
                 .ExportAsync(source, path, ct: TestContext.Current.CancellationToken);
             var json = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
-            var (_, converted) = await ChartFormatRegistry.ImportIrAsync(
+            var (_, converted) = await ChartFormatRegistry.ImportDetectedIrAsync(
                 json,
                 ct: TestContext.Current.CancellationToken
             );
@@ -245,10 +245,10 @@ public class StellateRePhiEditExtendedConverterTests
         try
         {
             await ChartFormatRegistry
-                .Get(ChartType.StellateRePhiEditExtended)
+                .Get(ChartFormatIds.StellateRePhiEditExtended)
                 .ExportAsync(source, path, ct: TestContext.Current.CancellationToken);
             var json = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
-            var (_, converted) = await ChartFormatRegistry.ImportIrAsync(
+            var (_, converted) = await ChartFormatRegistry.ImportDetectedIrAsync(
                 json,
                 ct: TestContext.Current.CancellationToken
             );
@@ -300,10 +300,10 @@ public class StellateRePhiEditExtendedConverterTests
         try
         {
             await ChartFormatRegistry
-                .Get(ChartType.StellateRePhiEditExtended)
+                .Get(ChartFormatIds.StellateRePhiEditExtended)
                 .ExportAsync(source, path, ct: TestContext.Current.CancellationToken);
             var json = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
-            var (_, converted) = await ChartFormatRegistry.ImportIrAsync(
+            var (_, converted) = await ChartFormatRegistry.ImportDetectedIrAsync(
                 json,
                 ct: TestContext.Current.CancellationToken
             );
@@ -382,10 +382,10 @@ public class StellateRePhiEditExtendedConverterTests
         try
         {
             await ChartFormatRegistry
-                .Get(ChartType.StellateRePhiEditExtended)
+                .Get(ChartFormatIds.StellateRePhiEditExtended)
                 .ExportAsync(intermediate, path, ct: TestContext.Current.CancellationToken);
             var json = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
-            var (_, converted) = await ChartFormatRegistry.ImportIrAsync(
+            var (_, converted) = await ChartFormatRegistry.ImportDetectedIrAsync(
                 json,
                 ct: TestContext.Current.CancellationToken
             );
@@ -430,10 +430,10 @@ public class StellateRePhiEditExtendedConverterTests
         try
         {
             await ChartFormatRegistry
-                .Get(ChartType.StellateRePhiEditExtended)
+                .Get(ChartFormatIds.StellateRePhiEditExtended)
                 .ExportAsync(source, path, ct: TestContext.Current.CancellationToken);
             var json = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
-            var (_, converted) = await ChartFormatRegistry.ImportIrAsync(
+            var (_, converted) = await ChartFormatRegistry.ImportDetectedIrAsync(
                 json,
                 ct: TestContext.Current.CancellationToken
             );
@@ -479,12 +479,12 @@ public class StellateRePhiEditExtendedConverterTests
         SetFullLifecycleMarkers(source.JudgeLineList[1]);
         SetFullLifecycleMarkers(source.JudgeLineList[2]);
 
-        var (detectedType, converted) = await ChartFormatRegistry.ImportIrAsync(
+        var (detectedFormat, converted) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
 
-        Assert.Equal(ChartType.StellateRePhiEditExtended, detectedType);
+        Assert.Equal(ChartFormatIds.StellateRePhiEditExtended, detectedFormat.FormatId);
         Assert.Equal(
             new[] { "line.png", "other.png" },
             converted.JudgeLineList.Select(line => line.Texture)
@@ -526,7 +526,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [new RpeJudgeLine { Texture = "isSubtract1.png" }],
         };
         var imported = await ChartFormatRegistry
-            .Get(ChartType.RePhiEdit)
+            .Get(ChartFormatIds.RePhiEdit)
             .ImportIrAsync(source.ExportToJson(false), ct: TestContext.Current.CancellationToken);
 
         Assert.Single(imported.JudgeLineList);
@@ -545,7 +545,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [line],
         };
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
@@ -571,7 +571,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [line],
         };
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
@@ -611,7 +611,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [line],
         };
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
@@ -657,7 +657,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [parent, marker],
         };
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
@@ -686,7 +686,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [parent, marker],
         };
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
@@ -748,7 +748,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [parent, marker],
         };
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
@@ -808,7 +808,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [parent, marker],
         };
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
@@ -835,7 +835,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [line],
         };
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
@@ -868,7 +868,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [line],
         };
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
@@ -894,7 +894,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [line],
         };
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
@@ -924,7 +924,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [line],
         };
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
@@ -958,7 +958,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [line],
         };
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
@@ -988,7 +988,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [line],
         };
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
@@ -1016,7 +1016,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [line],
         };
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
@@ -1058,7 +1058,7 @@ public class StellateRePhiEditExtendedConverterTests
             }
             """;
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source,
             ct: TestContext.Current.CancellationToken
         );
@@ -1085,7 +1085,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [line],
         };
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
@@ -1112,7 +1112,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [line],
         };
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );
@@ -1149,7 +1149,7 @@ public class StellateRePhiEditExtendedConverterTests
             JudgeLineList = [line],
         };
 
-        var (_, imported) = await ChartFormatRegistry.ImportIrAsync(
+        var (_, imported) = await ChartFormatRegistry.ImportDetectedIrAsync(
             source.ExportToJson(false),
             ct: TestContext.Current.CancellationToken
         );

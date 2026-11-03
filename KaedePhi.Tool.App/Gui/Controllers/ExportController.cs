@@ -4,6 +4,7 @@ using KaedePhi.Tool.App.Gui.Services;
 using KaedePhi.Tool.App.Gui.ViewModels;
 using KaedePhi.Tool.App.Gui.Views;
 using KaedePhi.Tool.Common;
+using KaedePhi.Tool.Converter;
 using KaedePhi.Tool.Converter.PhiChain.Model;
 using KaedePhi.Tool.Converter.PhiEdit.Model;
 using KaedePhi.Tool.Converter.PhiFans.Model;
@@ -49,17 +50,20 @@ internal sealed class ExportController
             _cts.Cancel();
     }
 
-    private static (string Extension, string TypeLabel) GetFormatFileInfo(ChartType format) =>
-        format switch
+    private static (string Extension, string TypeLabel) GetFormatFileInfo(string formatId)
+    {
+        var format = ChartFormatRegistry.Get(formatId);
+        var label = format.FormatId switch
         {
-            ChartType.PhiEdit => ("pec", file_type_pe_chart),
-            ChartType.RePhiEdit => ("json", file_type_rpe_json),
-            ChartType.StellateRePhiEditExtended => ("json", file_type_rpe_json),
-            ChartType.PhigrosV3 => ("json", file_type_phigros_json),
-            ChartType.PhiFans => ("json", file_type_phifans_json),
-            ChartType.PhiChain => ("json", file_type_phichain_json),
-            _ => ("json", file_type_json),
+            ChartFormatIds.PhiEdit => file_type_pe_chart,
+            ChartFormatIds.RePhiEdit or ChartFormatIds.StellateRePhiEditExtended => file_type_rpe_json,
+            ChartFormatIds.PhigrosV3 => file_type_phigros_json,
+            ChartFormatIds.PhiFans => file_type_phifans_json,
+            ChartFormatIds.PhiChain => file_type_phichain_json,
+            _ => format.FormatId,
         };
+        return (format.FileExtension, label);
+    }
 
     private async void OnExportExecute()
     {
@@ -76,8 +80,9 @@ internal sealed class ExportController
                 return;
             }
 
-            var targetFormat = exportVm.SelectedFormat;
-            var formatName = targetFormat.ToString();
+            var targetFormat = exportVm.SelectedFormat
+                ?? throw new InvalidOperationException("未选择导出格式。");
+            var formatName = targetFormat;
             var (ext, typeLabel) = GetFormatFileInfo(targetFormat);
 
             var file = await topLevel.StorageProvider.SaveFilePickerAsync(
@@ -190,16 +195,16 @@ internal sealed class ExportController
         _log.Information(log_export_cancelled);
     }
 
-    private static object? BuildExportOptions(ChartType targetFormat, ExportViewModel vm)
+    private static object? BuildExportOptions(string targetFormat, ExportViewModel vm)
     {
         return targetFormat switch
         {
-            ChartType.PhiEdit => BuildPhiEditOptions(vm),
-            ChartType.PhigrosV3 => BuildPhigrosV3Options(vm),
-            ChartType.PhiChain => BuildPhiChainOptions(vm),
-            ChartType.RePhiEdit => BuildRePhiEditOptions(vm),
-            ChartType.StellateRePhiEditExtended => BuildRePhiEditOptions(vm),
-            ChartType.PhiFans => BuildPhiFansOptions(vm),
+            ChartFormatIds.PhiEdit => BuildPhiEditOptions(vm),
+            ChartFormatIds.PhigrosV3 => BuildPhigrosV3Options(vm),
+            ChartFormatIds.PhiChain => BuildPhiChainOptions(vm),
+            ChartFormatIds.RePhiEdit => BuildRePhiEditOptions(vm),
+            ChartFormatIds.StellateRePhiEditExtended => BuildRePhiEditOptions(vm),
+            ChartFormatIds.PhiFans => BuildPhiFansOptions(vm),
             _ => null,
         };
     }

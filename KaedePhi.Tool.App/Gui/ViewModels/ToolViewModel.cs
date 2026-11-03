@@ -30,19 +30,6 @@ public sealed class ToolViewModel : INotifyPropertyChanged
         }
     } = string.Empty;
 
-    /// <summary>
-    /// 导入文件的原始格式（ChartType 枚举值）
-    /// </summary>
-    public ChartType SourceChartType
-    {
-        get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
-    }
-
     public List<ToolOption> Tools { get; } =
     [
         new()

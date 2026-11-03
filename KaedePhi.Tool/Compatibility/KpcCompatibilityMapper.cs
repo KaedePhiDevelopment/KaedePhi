@@ -1,5 +1,3 @@
-#pragma warning disable CS0618
-
 using Kpc = KaedePhi.Core.KaedePhi;
 using KpcCommon = KaedePhi.Core.Common;
 using KpcControls = KaedePhi.Core.KaedePhi.Controls;
@@ -13,6 +11,7 @@ namespace KaedePhi.Tool.Compatibility;
 /// </summary>
 internal static class KpcCompatibilityMapper
 {
+    [Obsolete("仅供 KPC 兼容入口使用；内部处理应直接使用 IR 谱面。")]
     internal static Ir.Chart ToIntermediate(Kpc.Chart chart)
     {
         ArgumentNullException.ThrowIfNull(chart);
@@ -24,6 +23,7 @@ internal static class KpcCompatibilityMapper
         };
     }
 
+    [Obsolete("仅供 KPC 兼容入口使用；内部处理应直接使用 IR 谱面。")]
     internal static Kpc.Chart ToKpc(Ir.Chart chart)
     {
         ArgumentNullException.ThrowIfNull(chart);

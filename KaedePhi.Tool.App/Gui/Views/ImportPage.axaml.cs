@@ -3,6 +3,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using KaedePhi.Tool.App.Gui.ViewModels;
+using KaedePhi.Tool.Converter;
 using static KaedePhi.Tool.Localization.GuiLocalizationString;
 
 namespace KaedePhi.Tool.App.Gui.Views;
@@ -108,12 +109,20 @@ public partial class ImportPage : UserControl
                 {
                     Title = import_file_picker_title,
                     AllowMultiple = false,
-                    FileTypeFilter = new[]
-                    {
-                        new FilePickerFileType(file_type_json) { Patterns = new[] { "*.json" } },
-                        new FilePickerFileType(file_type_pe_chart) { Patterns = new[] { "*.pec" } },
-                        new FilePickerFileType(file_type_all) { Patterns = new[] { "*.*" } },
-                    },
+                    FileTypeFilter = ChartFormatRegistry.ImportableFormats
+                        .GroupBy(format => format.FileExtension, StringComparer.OrdinalIgnoreCase)
+                        .Select(group => new FilePickerFileType(
+                            group.Key.ToLowerInvariant() switch
+                            {
+                                "json" => file_type_json,
+                                "pec" => file_type_pe_chart,
+                                _ => string.Join(" / ", group.Select(format => format.FormatId)),
+                            })
+                        {
+                            Patterns = [$"*.{group.Key}"],
+                        })
+                        .Append(new FilePickerFileType(file_type_all) { Patterns = ["*.*"] })
+                        .ToArray(),
                 }
             );
 

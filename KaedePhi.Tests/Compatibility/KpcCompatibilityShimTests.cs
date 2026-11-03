@@ -1,16 +1,12 @@
-#pragma warning disable CS0618
-
 using KaedePhi.Core.Intermediate.Model;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter;
 using KaedePhi.Tool.Converter.RePhiEdit.Model;
-using KaedePhi.Tool.Render.KaedePhi;
+using KaedePhi.Tool.Render.Intermediate;
+using KaedePhi.Core.Primitives;
 using IrChart = KaedePhi.Core.Intermediate.Model.Chart;
 using IrEvents = KaedePhi.Core.Intermediate.Model.Events;
-using Kpc = KaedePhi.Core.KaedePhi;
-using KpcCommon = KaedePhi.Core.Common;
-using KpcControls = KaedePhi.Core.KaedePhi.Controls;
-using KpcEvents = KaedePhi.Core.KaedePhi.Events;
+using IrControls = KaedePhi.Core.Intermediate.Model.Controls;
 
 namespace KaedePhi.Tests.Compatibility;
 
@@ -20,13 +16,20 @@ namespace KaedePhi.Tests.Compatibility;
 public class KpcCompatibilityShimTests
 {
     private const double Tolerance = 0.5;
+    private static readonly Type Mapper = LegacyApi.ToolType("KaedePhi.Tool.Compatibility.KpcCompatibilityMapper");
 
     [Fact]
     public void KpcChartNormalizer_RoundTrip_PreservesChartData()
     {
-        var chart = CreateLegacyChart();
+        var chart = CreateChart();
+        var legacyChart = ToLegacyChart(chart);
 
-        var normalized = KpcChartNormalizer.NormalizeAndValidateNoteEndBeats(chart);
+        var result = LegacyApi.Invoke(
+            LegacyApi.ToolType("KaedePhi.Tool.Common.KpcChartNormalizer"),
+            "NormalizeAndValidateNoteEndBeats", null, legacyChart
+        )!;
+        result.Should().NotBeSameAs(legacyChart);
+        var normalized = (IrChart)LegacyApi.Invoke(Mapper, "ToIntermediate", null, result)!;
 
         normalized.Should().NotBeSameAs(chart);
         normalized.Meta.Name.Should().Be("compat-chart");
@@ -39,7 +42,7 @@ public class KpcCompatibilityShimTests
         var line = normalized.JudgeLineList[0];
         line.Name.Should().Be("line-0");
         line.Father.Should().Be(-1);
-        line.AttachUi.Should().Be(KpcCommon.AttachUi.Pause);
+        line.AttachUi.Should().Be(AttachUi.Pause);
         line.BpmFactor.Should().Be(2f);
         line.Anchor.Should().Equal(0.25f, 0.75f);
         line.EventLayers.Should().HaveCount(1);
@@ -48,10 +51,10 @@ public class KpcCompatibilityShimTests
         line.PositionControls.Should().HaveCount(1);
 
         // 非 Hold 音符的结束拍被规范为起始拍
-        line.Notes[0].Type.Should().Be(KpcCommon.NoteType.Tap);
+        line.Notes[0].Type.Should().Be(NoteType.Tap);
         line.Notes[0].EndBeat.Should().Be(line.Notes[0].StartBeat);
         // Hold 音符的结束拍保持不变
-        line.Notes[1].Type.Should().Be(KpcCommon.NoteType.Hold);
+        line.Notes[1].Type.Should().Be(NoteType.Hold);
         ((double)line.Notes[1].EndBeat).Should().Be(6d);
 
         var speed = line.EventLayers[0].SpeedEvents![0];
@@ -77,13 +80,19 @@ public class KpcCompatibilityShimTests
     [Fact]
     public void KpcChartValidator_MappedHierarchy_DetectsCycle()
     {
-        var lines = new List<Kpc.JudgeLine>
+        var lines = new List<JudgeLine>
         {
             new() { Father = 1 },
             new() { Father = 0 },
         };
+        var legacyLines = LegacyApi.ConvertTo(
+            lines, typeof(List<>).MakeGenericType(LegacyApi.CoreType("KaedePhi.Core.KaedePhi.JudgeLine"))
+        );
 
-        var act = () => KpcChartValidator.ValidateJudgeLineHierarchy(lines);
+        var act = () => LegacyApi.Invoke(
+            LegacyApi.ToolType("KaedePhi.Tool.Common.KpcChartValidator"),
+            "ValidateJudgeLineHierarchy", null, legacyLines
+        );
 
         act.Should().Throw<FormatException>();
     }
@@ -91,13 +100,17 @@ public class KpcCompatibilityShimTests
     [Fact]
     public void KpcRenderValidator_MappedChart_ValidatesLikeIrImplementation()
     {
-        var chart = CreateLegacyChart();
-        var options = new KpcRenderOptions();
+        var chart = CreateChart();
+        var options = (IrRenderOptions)Activator.CreateInstance(
+            LegacyApi.ToolType("KaedePhi.Tool.Render.KaedePhi.KpcRenderOptions")
+        )!;
 
-        var legacyAct = () => KpcRenderValidator.Validate(chart, options);
+        var legacyAct = () => LegacyApi.Invoke(
+            LegacyApi.ToolType("KaedePhi.Tool.Common.KpcRenderValidator"),
+            "Validate", null, ToLegacyChart(chart), options, null, null
+        );
 
-        var irChart = ToIrChartForValidation(chart);
-        var irAct = () => IrRenderValidator.Validate(irChart, options);
+        var irAct = () => IrRenderValidator.Validate(chart, options);
 
         legacyAct.Should().NotThrow();
         irAct.Should().NotThrow();
@@ -106,18 +119,22 @@ public class KpcCompatibilityShimTests
     [Fact]
     public void EventFit_LegacyOverload_MatchesIrImplementation()
     {
-        var legacyEvents = new List<KpcEvents.Event<double>>
+        var irEvents = new List<IrEvents.Event<double>>
         {
-            CreateLegacyEvent(0, 1, 0, 100),
-            CreateLegacyEvent(1, 2, 100, 200),
-            CreateLegacyEvent(2, 3, 200, 300),
+            CreateEvent(0, 1, 0, 100),
+            CreateEvent(1, 2, 100, 200),
+            CreateEvent(2, 3, 200, 300),
         };
-        var irEvents = legacyEvents.Select(ToIrEvent).ToList();
+        var legacyEvents = LegacyApi.InvokeGeneric(Mapper, "ToKpc", [typeof(double)], null, irEvents)!;
 
-        var legacyResult = new KaedePhi.Tool.Event.KaedePhi.EventFit<double>().FitEvents(
-            legacyEvents,
-            Tolerance
-        );
+        var legacyType = LegacyApi.ToolType("KaedePhi.Tool.Event.KaedePhi.EventFit`1")
+            .MakeGenericType(typeof(double));
+        var result = LegacyApi.Invoke(
+            legacyType, "FitEvents", Activator.CreateInstance(legacyType), legacyEvents, Tolerance
+        )!;
+        var legacyResult = (List<IrEvents.Event<double>>)LegacyApi.InvokeGeneric(
+            Mapper, "ToIntermediate", [typeof(double)], null, result
+        )!;
         var irResult = new KaedePhi.Tool.Event.Intermediate.EventFit<double>().FitEvents(
             irEvents,
             Tolerance
@@ -137,24 +154,23 @@ public class KpcCompatibilityShimTests
     [Fact]
     public async Task ChartFormatDescriptor_LegacyImportExport_RoundTrips()
     {
-        var chart = CreateLegacyChart();
-        var descriptor = ChartFormatRegistry.Get(ChartType.RePhiEdit);
+        var chart = CreateChart();
+        var descriptor = ChartFormatRegistry.Get(ChartFormatIds.RePhiEdit);
         var path = Path.Combine(Path.GetTempPath(), $"kpc-compat-{Guid.NewGuid():N}.json");
 
         try
         {
-            await descriptor.ExportAsync(
-                chart,
-                path,
-                exportOptions: new ConvertOption(),
-                ct: TestContext.Current.CancellationToken
-            );
+            await LegacyApi.AwaitResult(LegacyApi.Invoke(
+                typeof(ChartFormatDescriptor), "ExportAsync", descriptor,
+                ToLegacyChart(chart), path, null, new ConvertOption(), null, TestContext.Current.CancellationToken
+            ));
 
             var text = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
-            var imported = await descriptor.ImportAsync(
-                text,
-                ct: TestContext.Current.CancellationToken
-            );
+            var result = (await LegacyApi.AwaitResult(LegacyApi.Invoke(
+                typeof(ChartFormatDescriptor), "ImportAsync", descriptor,
+                text, null, null, TestContext.Current.CancellationToken
+            )))!;
+            var imported = (IrChart)LegacyApi.Invoke(Mapper, "ToIntermediate", null, result)!;
 
             imported.Meta.Name.Should().Be(chart.Meta.Name);
             imported.BpmList.Should().HaveCount(chart.BpmList.Count);
@@ -171,37 +187,43 @@ public class KpcCompatibilityShimTests
     [Fact]
     public async Task ChartFormatDescriptor_LegacyOptions_AreAccepted()
     {
-        var chart = CreateLegacyChart();
-        var descriptor = ChartFormatRegistry.Get(ChartType.PhiEdit);
+        var chart = CreateChart();
+        var descriptor = ChartFormatRegistry.Get(ChartFormatIds.PhiEdit);
 
-        var export = async () =>
-            await descriptor.ExportAsync(
-                chart,
+        var export = () =>
+            LegacyApi.AwaitResult(LegacyApi.Invoke(
+                typeof(ChartFormatDescriptor), "ExportAsync", descriptor,
+                ToLegacyChart(chart),
                 "unused.pec",
                 new ChartWriteSettings { DryRun = true },
-                new KaedePhi.Tool.Converter.PhiEdit.Model.KpcToPhiEditConvertOptions()
-            );
+                Activator.CreateInstance(LegacyApi.ToolType("KaedePhi.Tool.Converter.PhiEdit.Model.KpcToPhiEditConvertOptions")),
+                null,
+                TestContext.Current.CancellationToken
+            ));
 
         await export.Should().NotThrowAsync();
     }
 
-    private static Kpc.Chart CreateLegacyChart()
+    private static object ToLegacyChart(IrChart chart) =>
+        LegacyApi.Invoke(Mapper, "ToKpc", null, chart)!;
+
+    private static IrChart CreateChart()
     {
-        var line = new Kpc.JudgeLine
+        var line = new JudgeLine
         {
             Name = "line-0",
             Father = -1,
-            AttachUi = KpcCommon.AttachUi.Pause,
+            AttachUi = AttachUi.Pause,
             BpmFactor = 2f,
             Anchor = [0.25f, 0.75f],
-            Extended = new KpcEvents.ExtendLayer
+            Extended = new IrEvents.ExtendLayer
             {
                 TextEvents =
                 [
-                    new KpcEvents.Event<string>
+                    new IrEvents.Event<string>
                     {
-                        StartBeat = new KpcCommon.Beat(0d),
-                        EndBeat = new KpcCommon.Beat(1d),
+                        StartBeat = new Beat(0d),
+                        EndBeat = new Beat(1d),
                         StartValue = "start",
                         EndValue = "end",
                         Font = "font.ttf",
@@ -209,10 +231,10 @@ public class KpcCompatibilityShimTests
                 ],
                 ColorEvents =
                 [
-                    new KpcEvents.Event<byte[]>
+                    new IrEvents.Event<byte[]>
                     {
-                        StartBeat = new KpcCommon.Beat(0d),
-                        EndBeat = new KpcCommon.Beat(1d),
+                        StartBeat = new Beat(0d),
+                        EndBeat = new Beat(1d),
                         StartValue = [1, 2, 3],
                         EndValue = [4, 5, 6],
                     },
@@ -220,53 +242,53 @@ public class KpcCompatibilityShimTests
             },
             EventLayers =
             [
-                new KpcEvents.EventLayer
+                new IrEvents.EventLayer
                 {
                     SpeedEvents =
                     [
-                        new KpcEvents.Event<float>
+                        new IrEvents.Event<float>
                         {
-                            StartBeat = new KpcCommon.Beat(0d),
-                            EndBeat = new KpcCommon.Beat(2d),
+                            StartBeat = new Beat(0d),
+                            EndBeat = new Beat(2d),
                             StartValue = 1.5f,
                             EndValue = 2.5f,
-                            Easing = new Kpc.Easing(5),
+                            Easing = new Easing(5),
                         },
                     ],
                 },
             ],
             Notes =
             [
-                new Kpc.Note
+                new Note
                 {
-                    Type = KpcCommon.NoteType.Tap,
-                    StartBeat = new KpcCommon.Beat(1d),
-                    EndBeat = new KpcCommon.Beat(2d),
+                    Type = NoteType.Tap,
+                    StartBeat = new Beat(1d),
+                    EndBeat = new Beat(2d),
                     PositionX = 0.5,
                     Tint = [10, 20, 30],
                 },
-                new Kpc.Note
+                new Note
                 {
-                    Type = KpcCommon.NoteType.Hold,
-                    StartBeat = new KpcCommon.Beat(3d),
-                    EndBeat = new KpcCommon.Beat(6d),
+                    Type = NoteType.Hold,
+                    StartBeat = new Beat(3d),
+                    EndBeat = new Beat(6d),
                     PositionX = -0.5,
                 },
             ],
             PositionControls =
             [
-                new KpcControls.XControl
+                new IrControls.XControl
                 {
                     Pos = 0.5f,
                     X = 1.25f,
-                    Easing = new Kpc.Easing(7),
+                    Easing = new Easing(7),
                 },
             ],
         };
 
-        return new Kpc.Chart
+        return new IrChart
         {
-            Meta = new Kpc.Meta
+            Meta = new Meta
             {
                 Name = "compat-chart",
                 Author = "compat-author",
@@ -274,42 +296,14 @@ public class KpcCompatibilityShimTests
             },
             BpmList =
             [
-                new Kpc.BpmItem { Bpm = 120f, StartBeat = new KpcCommon.Beat(0d) },
-                new Kpc.BpmItem { Bpm = 180f, StartBeat = new KpcCommon.Beat(4d) },
+                new BpmItem { Bpm = 120f, StartBeat = new Beat(0d) },
+                new BpmItem { Bpm = 180f, StartBeat = new Beat(4d) },
             ],
             JudgeLineList = [line],
         };
     }
 
-    private static IrChart ToIrChartForValidation(Kpc.Chart chart)
-    {
-        return new IrChart
-        {
-            Meta = new Meta
-            {
-                Name = chart.Meta.Name,
-                Author = chart.Meta.Author,
-                Offset = chart.Meta.Offset,
-            },
-            BpmList =
-            [
-                new BpmItem { Bpm = 120f, StartBeat = new Core.Primitives.Beat(0d) },
-                new BpmItem { Bpm = 180f, StartBeat = new Core.Primitives.Beat(4d) },
-            ],
-            JudgeLineList =
-            [
-                new JudgeLine
-                {
-                    Name = "line-0",
-                    Father = -1,
-                    BpmFactor = 2f,
-                    Anchor = [0.25f, 0.75f],
-                },
-            ],
-        };
-    }
-
-    private static KpcEvents.Event<double> CreateLegacyEvent(
+    private static IrEvents.Event<double> CreateEvent(
         double startBeat,
         double endBeat,
         double startValue,
@@ -317,19 +311,10 @@ public class KpcCompatibilityShimTests
     ) =>
         new()
         {
-            StartBeat = new KpcCommon.Beat(startBeat),
-            EndBeat = new KpcCommon.Beat(endBeat),
+            StartBeat = new Beat(startBeat),
+            EndBeat = new Beat(endBeat),
             StartValue = startValue,
             EndValue = endValue,
         };
 
-    private static IrEvents.Event<double> ToIrEvent(KpcEvents.Event<double> evt) =>
-        new()
-        {
-            StartBeat = new Core.Primitives.Beat((int[])evt.StartBeat),
-            EndBeat = new Core.Primitives.Beat((int[])evt.EndBeat),
-            StartValue = evt.StartValue,
-            EndValue = evt.EndValue,
-            Easing = new Easing((int)evt.Easing),
-        };
 }

@@ -1,5 +1,3 @@
-#pragma warning disable CS0618
-
 using KaedePhi.Tool.Compatibility;
 using SkiaSharp;
 using KpcEvents = KaedePhi.Core.KaedePhi.Events;

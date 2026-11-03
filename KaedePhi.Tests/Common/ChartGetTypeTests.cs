@@ -1,20 +1,21 @@
 using System.Text;
 using KaedePhi.Tool.Common;
+using KaedePhi.Tool.Converter;
 
 namespace KaedePhi.Tests.Common;
 
 public class ChartGetTypeTests
 {
     [Theory]
-    [InlineData("{\"formatVersion\":1}", ChartType.PhigrosV1)]
-    [InlineData("{\"formatVersion\":3}", ChartType.PhigrosV3)]
-    public void GetType_WithIntegerFormatVersion_ReturnsPhigrosType(
+    [InlineData("{\"formatVersion\":1}", ChartFormatIds.PhigrosV1)]
+    [InlineData("{\"formatVersion\":3}", ChartFormatIds.PhigrosV3)]
+    public async Task DetectFormat_WithIntegerFormatVersion_ReturnsPhigrosFormat(
         string chartText,
-        ChartType expected
+        string expected
     )
     {
-        using var reader = new StringReader(chartText);
-        ChartGetType.GetType(reader).Should().Be(expected);
+        var format = await new ChartFormatCatalog().DetectFormatAsync(chartText, TestContext.Current.CancellationToken);
+        format.FormatId.Should().Be(expected);
     }
 
     [Theory]
@@ -22,100 +23,106 @@ public class ChartGetTypeTests
     [InlineData("{\"formatVersion\":\"3\"}")]
     [InlineData("{\"formatVersion\":null}")]
     [InlineData("{\"formatVersion\":2}")]
-    public void GetType_WithInvalidFormatVersion_ThrowsNotSupportedException(string chartText)
+    public async Task DetectFormat_WithInvalidFormatVersion_ThrowsNotSupportedException(string chartText)
     {
-        var act = () => ChartGetType.GetType(new StringReader(chartText));
+        var act = () => new ChartFormatCatalog().DetectFormatAsync(chartText, TestContext.Current.CancellationToken);
 
-        act.Should().Throw<NotSupportedException>();
+        await act.Should().ThrowAsync<NotSupportedException>();
     }
 
     [Theory]
     [InlineData(
         "{\"META\":{},\"judgeLineList\":[{\"Texture\":\"Pictures\\\\isSubtract0.png\"}]}",
-        ChartType.StellateRePhiEditExtended
+        ChartFormatIds.StellateRePhiEditExtended
     )]
     [InlineData(
         "{\"judgeLineList\":[{\"Texture\":\"isSubtract1.png\"}],\"META\":{}}",
-        ChartType.StellateRePhiEditExtended
+        ChartFormatIds.StellateRePhiEditExtended
     )]
     [InlineData(
         "{\"META\":{},\"judgeLineList\":[{\"Texture\":\"line.png\"}]}",
-        ChartType.RePhiEdit
+        ChartFormatIds.RePhiEdit
     )]
-    public void GetType_WithRePhiEditTextureMarker_ReturnsExpectedType(
+    public async Task DetectFormat_WithRePhiEditTextureMarker_ReturnsExpectedFormat(
         string chartText,
-        ChartType expected
+        string expected
     )
     {
-        using var reader = new StringReader(chartText);
-
-        ChartGetType.GetType(reader).Should().Be(expected);
+        var format = await new ChartFormatCatalog().DetectFormatAsync(chartText, TestContext.Current.CancellationToken);
+        format.FormatId.Should().Be(expected);
     }
 
     [Fact]
-    public async Task GetTypeAsync_WithRePhiEditTextureMarker_ReturnsExtendedType()
+    public async Task DetectFormat_WithRePhiEditTextureMarker_ReturnsExtendedFormat()
     {
         const string chartText =
             "{\"META\":{},\"judgeLineList\":[{\"Texture\":\"Pictures\\\\isSubtract1.png\"}]}";
         await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(chartText));
 
-        var detected = await ChartGetType.GetTypeAsync(
+        var detected = await new ChartFormatCatalog().DetectFormatAsync(
             stream,
             TestContext.Current.CancellationToken
         );
 
-        detected.Should().Be(ChartType.StellateRePhiEditExtended);
+        detected.FormatId.Should().Be(ChartFormatIds.StellateRePhiEditExtended);
     }
 
     [Fact]
-    public void GetType_WithPhiFansSignature_StopsBeforeReadingChartBody()
+    public async Task DetectFormat_WithPhiFansSignature_StopsBeforeReadingChartBody()
     {
         var largePayload = new string('x', 100_000);
         var chartText = $"{{\"info\":{{}},\"lines\":[\"{largePayload}\"]}}";
-        using var reader = new StringReader(chartText);
+        await using var stream = new ReadTrackingStream(Encoding.UTF8.GetBytes(chartText));
 
-        ChartGetType.GetType(reader).Should().Be(ChartType.PhiFans);
-        reader.ReadToEnd().Should().NotBeEmpty();
+        var format = await new ChartFormatCatalog().DetectFormatAsync(stream, TestContext.Current.CancellationToken);
+        format.FormatId.Should().Be(ChartFormatIds.PhiFans);
+        stream.FarthestReadPosition.Should().BeInRange(1, stream.Length - 1);
+        stream.Position.Should().Be(0);
     }
 
     [Fact]
-    public void GetType_WithPhiChainSignature_StopsBeforeReadingChartBody()
+    public async Task DetectFormat_WithPhiChainSignature_StopsBeforeReadingChartBody()
     {
         var largePayload = new string('x', 100_000);
         var chartText = $"{{\"format\":6,\"bpm_list\":[\"{largePayload}\"]}}";
-        using var reader = new StringReader(chartText);
+        await using var stream = new ReadTrackingStream(Encoding.UTF8.GetBytes(chartText));
 
-        ChartGetType.GetType(reader).Should().Be(ChartType.PhiChain);
-        reader.ReadToEnd().Should().NotBeEmpty();
+        var format = await new ChartFormatCatalog().DetectFormatAsync(stream, TestContext.Current.CancellationToken);
+        format.FormatId.Should().Be(ChartFormatIds.PhiChain);
+        stream.FarthestReadPosition.Should().BeInRange(1, stream.Length - 1);
+        stream.Position.Should().Be(0);
     }
 
     [Fact]
-    public void GetType_WithRePhiEditTextureMarker_StopsAfterFindingMarker()
+    public async Task DetectFormat_WithRePhiEditTextureMarker_StopsAfterFindingMarker()
     {
         var largePayload = new string('x', 100_000);
         var chartText =
             "{\"META\":{},\"judgeLineList\":[{\"Texture\":\"Pictures\\\\isSubtract0.png\",\"payload\":\""
             + largePayload
             + "\"}]}";
-        using var reader = new StringReader(chartText);
+        await using var stream = new ReadTrackingStream(Encoding.UTF8.GetBytes(chartText));
 
-        ChartGetType.GetType(reader).Should().Be(ChartType.StellateRePhiEditExtended);
-        reader.ReadToEnd().Should().NotBeEmpty();
+        var format = await new ChartFormatCatalog().DetectFormatAsync(stream, TestContext.Current.CancellationToken);
+        format.FormatId.Should().Be(ChartFormatIds.StellateRePhiEditExtended);
+        stream.FarthestReadPosition.Should().BeInRange(1, stream.Length - 1);
+        stream.Position.Should().Be(0);
     }
 
     [Fact]
-    public async Task GetTypeAsync_WithFormatVersion_StopsBeforeReadingChartBody()
+    public async Task DetectFormat_WithFormatVersion_StopsBeforeReadingChartBody()
     {
         var largePayload = new string('x', 100_000);
         var chartText = $"{{\"formatVersion\":3,\"judgeLineList\":[\"{largePayload}\"]}}";
-        await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(chartText));
+        await using var stream = new ReadTrackingStream(Encoding.UTF8.GetBytes(chartText));
 
-        var detected = await ChartGetType.GetTypeAsync(
+        var detected = await new ChartFormatCatalog().DetectFormatAsync(
             stream,
             TestContext.Current.CancellationToken
         );
 
-        detected.Should().Be(ChartType.PhigrosV3);
-        stream.Position.Should().BeLessThan(stream.Length);
+        detected.FormatId.Should().Be(ChartFormatIds.PhigrosV3);
+        stream.FarthestReadPosition.Should().BeInRange(1, stream.Length - 1);
+        stream.Position.Should().Be(0);
     }
 }

@@ -6,14 +6,14 @@ namespace KaedePhi.Tool.App.Gui.ViewModels;
 
 public sealed class ImportOptionsViewModel : INotifyPropertyChanged
 {
-    private ChartType _detectedFormat;
+    private string _detectedFormat = string.Empty;
 
     public ImportProgressViewModel Progress { get; } = new();
 
     /// <summary>
     /// 检测到的源文件格式
     /// </summary>
-    public ChartType DetectedFormat
+    public string DetectedFormat
     {
         get => _detectedFormat;
         set
@@ -55,17 +55,17 @@ public sealed class ImportOptionsViewModel : INotifyPropertyChanged
     /// <summary>
     /// 格式名称（用于显示）
     /// </summary>
-    public string FormatName => _detectedFormat.ToString();
+    public string FormatName => _detectedFormat;
 
     /// <summary>
     /// 是否显示 PhiEdit 导入选项
     /// </summary>
-    public bool ShowPeOptions => _detectedFormat == ChartType.PhiEdit;
+    public bool ShowPeOptions => _detectedFormat == ChartFormatIds.PhiEdit;
 
     /// <summary>
     /// 是否显示 PhiChain 导入选项
     /// </summary>
-    public bool ShowPhiChainOptions => _detectedFormat == ChartType.PhiChain;
+    public bool ShowPhiChainOptions => _detectedFormat == ChartFormatIds.PhiChain;
 
     #region PhiEdit 导入选项
 

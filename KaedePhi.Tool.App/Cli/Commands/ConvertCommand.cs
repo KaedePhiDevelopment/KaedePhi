@@ -1,3 +1,4 @@
+using System.CommandLine.Completions;
 using KaedePhi.Tool.App.Cli.Infrastructure;
 using KaedePhi.Tool.App.Config;
 using KaedePhi.Tool.Common;
@@ -12,6 +13,13 @@ namespace KaedePhi.Tool.App.Cli.Commands;
 public static partial class ConvertCommand
 {
     private static string Description => CliLocalizationString.convert_command_desc;
+
+    static ConvertCommand()
+    {
+        TargetTypeOpt.CompletionSources.Add(_ =>
+            ChartFormatRegistry.ExportableFormats.Select(format => new CompletionItem(format.FormatId))
+        );
+    }
 
     #region 共享选项
 
@@ -29,7 +37,7 @@ public static partial class ConvertCommand
 
     #region 专属选项
 
-    private static readonly Option<ChartType?> TargetTypeOpt = new("--target")
+    private static readonly Option<string?> TargetTypeOpt = new("--target")
     {
         Description = CliLocalizationString.convert_command_opt_target,
         Arity = ArgumentArity.ZeroOrOne,
@@ -215,6 +223,12 @@ public static partial class ConvertCommand
         }
 
         var c = AppConfigService.Instance.Config.Convert;
+        var target = ChartFormatRegistry.Get(result.GetValue(TargetTypeOpt) ?? c.TargetType);
+        if (!target.CanExport)
+        {
+            ConsoleWriter.Error(CliLocalizationString.err_unimplemented);
+            return 1;
+        }
 
         var svc = new ChartService();
         var kpc = await svc.LoadKpcAsync(input, workspace, ct);
@@ -224,8 +238,8 @@ public static partial class ConvertCommand
             return 1;
         }
 
-        var targetType = result.GetValue(TargetTypeOpt) ?? c.TargetType;
-        var targetExtension = "." + (ChartFormatRegistry.Find(targetType)?.FileExtension ?? "json");
+        var targetType = target.FormatId;
+        var targetExtension = "." + target.FileExtension;
         var output = svc.ResolveOutputPath(
             input,
             result.GetValue(OutputOpt),

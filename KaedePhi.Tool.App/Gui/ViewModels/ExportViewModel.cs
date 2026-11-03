@@ -2,24 +2,18 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using KaedePhi.Tool.App.Config;
 using KaedePhi.Tool.Common;
+using KaedePhi.Tool.Converter;
 
 namespace KaedePhi.Tool.App.Gui.ViewModels;
 
 public sealed class ExportViewModel : INotifyPropertyChanged
 {
-    private ChartType _selectedFormat;
+    private string? _selectedFormat = ChartFormatIds.RePhiEdit;
 
-    public List<ChartType> AvailableFormats { get; } =
-    [
-        ChartType.RePhiEdit,
-        ChartType.StellateRePhiEditExtended,
-        ChartType.PhiEdit,
-        ChartType.PhigrosV3,
-        ChartType.PhiChain,
-        ChartType.PhiFans,
-    ];
+    public List<string> AvailableFormats { get; private set; } =
+        ChartFormatRegistry.ExportableFormats.Select(format => format.FormatId).ToList();
 
-    public ChartType SourceFormat
+    public string SourceFormat
     {
         get;
         set
@@ -31,9 +25,9 @@ public sealed class ExportViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(ShowPhigrosOptions));
             OnPropertyChanged(nameof(ShowGenericOptions));
         }
-    }
+    } = string.Empty;
 
-    public ChartType SelectedFormat
+    public string? SelectedFormat
     {
         get => _selectedFormat;
         set
@@ -41,6 +35,7 @@ public sealed class ExportViewModel : INotifyPropertyChanged
             _selectedFormat = value;
             OnPropertyChanged();
             OnPropertyChanged(nameof(IsJsonFormat));
+            OnPropertyChanged(nameof(CanExport));
             OnPropertyChanged(nameof(ShowConversionOptions));
             OnPropertyChanged(nameof(ShowPeOptions));
             OnPropertyChanged(nameof(ShowPhigrosOptions));
@@ -56,59 +51,68 @@ public sealed class ExportViewModel : INotifyPropertyChanged
     /// <summary>
     /// 当前选择的导出格式是否为 JSON 格式（true 时才显示格式化输出选项）
     /// </summary>
-    public bool IsJsonFormat =>
-        _selectedFormat switch
-        {
-            ChartType.PhiEdit => false,
-            _ => true,
-        };
+    public bool IsJsonFormat => !string.IsNullOrWhiteSpace(_selectedFormat)
+        && string.Equals(ChartFormatRegistry.Find(_selectedFormat)?.FileExtension, "json", StringComparison.OrdinalIgnoreCase);
+
+    public bool CanExport => !IsExporting
+        && !string.IsNullOrWhiteSpace(_selectedFormat)
+        && ChartFormatRegistry.Find(_selectedFormat) is { CanExport: true };
+
+    public void RefreshAvailableFormats()
+    {
+        AvailableFormats = ChartFormatRegistry.ExportableFormats.Select(format => format.FormatId).ToList();
+        OnPropertyChanged(nameof(AvailableFormats));
+        SelectedFormat = _selectedFormat is not null && AvailableFormats.Contains(_selectedFormat)
+            ? _selectedFormat
+            : AvailableFormats.FirstOrDefault();
+    }
 
     /// <summary>
     /// 是否需要显示转换选项面板（目标格式存在可用选项时显示）
     /// </summary>
     public bool ShowConversionOptions =>
         _selectedFormat
-            is ChartType.PhiEdit
-                or ChartType.PhigrosV3
-                or ChartType.RePhiEdit
-                or ChartType.StellateRePhiEditExtended
-                or ChartType.PhiChain
-                or ChartType.PhiFans;
+            is ChartFormatIds.PhiEdit
+                or ChartFormatIds.PhigrosV3
+                or ChartFormatIds.RePhiEdit
+                or ChartFormatIds.StellateRePhiEditExtended
+                or ChartFormatIds.PhiChain
+                or ChartFormatIds.PhiFans;
 
     /// <summary>
     /// 是否显示 PhiEdit 专属转换选项（目标为 PhiEdit）
     /// </summary>
-    public bool ShowPeOptions => ShowConversionOptions && _selectedFormat == ChartType.PhiEdit;
+    public bool ShowPeOptions => ShowConversionOptions && _selectedFormat == ChartFormatIds.PhiEdit;
 
     /// <summary>
     /// 是否显示 PhigrosV3 专属转换选项（目标为 PhigrosV3）
     /// </summary>
     public bool ShowPhigrosOptions =>
-        ShowConversionOptions && _selectedFormat == ChartType.PhigrosV3;
+        ShowConversionOptions && _selectedFormat == ChartFormatIds.PhigrosV3;
 
     /// <summary>
     /// 是否显示 RePhiEdit 专属转换选项（目标为 RePhiEdit 或其噪域扩展格式）
     /// </summary>
     public bool ShowRePhiEditOptions =>
         ShowConversionOptions
-        && _selectedFormat is ChartType.RePhiEdit or ChartType.StellateRePhiEditExtended;
+        && _selectedFormat is ChartFormatIds.RePhiEdit or ChartFormatIds.StellateRePhiEditExtended;
 
     /// <summary>
     /// 是否显示 PhiChain 专属转换选项（目标为 PhiChain）
     /// </summary>
     public bool ShowPhiChainOptions =>
-        ShowConversionOptions && _selectedFormat == ChartType.PhiChain;
+        ShowConversionOptions && _selectedFormat == ChartFormatIds.PhiChain;
 
     /// <summary>
     /// 是否显示 PhiFans 专属转换选项（目标为 PhiFans）
     /// </summary>
-    public bool ShowPhiFansOptions => ShowConversionOptions && _selectedFormat == ChartType.PhiFans;
+    public bool ShowPhiFansOptions => ShowConversionOptions && _selectedFormat == ChartFormatIds.PhiFans;
 
     /// <summary>
     /// 是否显示通用转换选项（目标格式支持解绑/合并/线过滤）
     /// </summary>
     public bool ShowGenericOptions =>
-        ShowConversionOptions && _selectedFormat is ChartType.PhiEdit or ChartType.PhigrosV3;
+        ShowConversionOptions && _selectedFormat is ChartFormatIds.PhiEdit or ChartFormatIds.PhigrosV3;
 
     public bool UseStream
     {
@@ -140,6 +144,7 @@ public sealed class ExportViewModel : INotifyPropertyChanged
         {
             field = value;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(CanExport));
         }
     }
 
@@ -590,7 +595,11 @@ public sealed class ExportViewModel : INotifyPropertyChanged
     public event Action? RequestReturnToImport;
     public event Action? RequestCancelExport;
 
-    public void OnExportClicked() => RequestExport?.Invoke();
+    public void OnExportClicked()
+    {
+        if (CanExport)
+            RequestExport?.Invoke();
+    }
 
     public void OnReturnClicked() => RequestReturnToImport?.Invoke();
 

@@ -7,6 +7,7 @@ namespace KaedePhi.Tests.Converter;
 /// <summary>
 /// 验证外部格式注册接口不影响内置格式，并可通过字符串标识调用。
 /// </summary>
+[Collection("共享格式注册表")]
 public sealed class ChartFormatRegistryExtensionTests
 {
     [Fact]
@@ -60,14 +61,14 @@ public sealed class ChartFormatRegistryExtensionTests
         }
         finally
         {
-            ChartFormatRegistry.Unregister(formatId);
+            ChartFormatRegistry.UnregisterFormat(formatId);
         }
     }
 
     [Fact]
-    public void BuiltInFormatLookupByChartType_RemainsAvailable()
+    public void BuiltInFormatLookupByFormatId_RemainsAvailable()
     {
-        ChartFormatRegistry.Get(ChartType.RePhiEdit).CanImport.Should().BeTrue();
+        ChartFormatRegistry.Get(ChartFormatIds.RePhiEdit).CanImport.Should().BeTrue();
     }
 
     [Fact]
@@ -93,7 +94,7 @@ public sealed class ChartFormatRegistryExtensionTests
         }
         finally
         {
-            ChartFormatRegistry.Unregister(formatId).Should().BeTrue();
+            ChartFormatRegistry.UnregisterFormat(formatId).Should().BeTrue();
         }
     }
 
@@ -127,7 +128,7 @@ public sealed class ChartFormatRegistryExtensionTests
         }
         finally
         {
-            ChartFormatRegistry.Unregister(formatId);
+            ChartFormatRegistry.UnregisterFormat(formatId);
         }
         ChartFormatRegistry.Find(formatId).Should().BeNull();
     }
@@ -135,12 +136,12 @@ public sealed class ChartFormatRegistryExtensionTests
     [Fact]
     public void ExternalFormat_CannotReplaceBuiltInFormat()
     {
-        var builtIn = ChartFormatRegistry.Get(ChartType.RePhiEdit);
+        var builtIn = ChartFormatRegistry.Get(ChartFormatIds.RePhiEdit);
         var descriptor = ChartFormatDescriptor.Create(
             "rephiedit", "txt", importer: (_, _, _, _) => Task.FromResult(new Ir.Chart()));
         var register = () => ChartFormatRegistry.Register(descriptor);
         register.Should().Throw<InvalidOperationException>();
-        ChartFormatRegistry.Get(ChartType.RePhiEdit).Should().BeSameAs(builtIn);
+        ChartFormatRegistry.Get(ChartFormatIds.RePhiEdit).Should().BeSameAs(builtIn);
         ChartFormatRegistry.Get("RePhiEdit").Should().BeSameAs(builtIn);
     }
 

@@ -1,4 +1,3 @@
-using System.Reflection;
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter;
@@ -545,16 +544,12 @@ public class NoteEndBeatInvariantTests
     }
 
     [Fact]
-    public async Task ChartFormatDescriptor_ImportAsyncNormalizesIndependentCopy()
+    public async Task ChartFormatDescriptor_ImportIrAsyncNormalizesIndependentCopy()
     {
         var importedChart = CreateIrChart(NoteType.Tap, 3, 9);
-        var descriptor = CreateDescriptor();
-        SetDescriptorDelegate(
-            descriptor,
-            "Importer",
-            (Func<string, object?, ChartLogSink, CancellationToken, Task<Ir.Chart>>)(
-                (_, _, _, _) => Task.FromResult(importedChart)
-            )
+        var descriptor = ChartFormatDescriptor.Create(
+            "tests.note-end-beat", "test",
+            importer: (_, _, _, _) => Task.FromResult(importedChart)
         );
 
         var imported = await descriptor.ImportIrAsync(
@@ -568,16 +563,12 @@ public class NoteEndBeatInvariantTests
     }
 
     [Fact]
-    public async Task ChartFormatDescriptor_ImportStreamAsyncNormalizesIndependentCopy()
+    public async Task ChartFormatDescriptor_ImportStreamIrAsyncNormalizesIndependentCopy()
     {
         var importedChart = CreateIrChart(NoteType.Drag, 3, 9);
-        var descriptor = CreateDescriptor();
-        SetDescriptorDelegate(
-            descriptor,
-            "StreamImporter",
-            (Func<Stream, object?, ChartLogSink, CancellationToken, Task<Ir.Chart>>)(
-                (_, _, _, _) => Task.FromResult(importedChart)
-            )
+        var descriptor = ChartFormatDescriptor.Create(
+            "tests.note-end-beat-stream", "test",
+            streamImporter: (_, _, _, _) => Task.FromResult(importedChart)
         );
         await using var stream = new MemoryStream();
 
@@ -596,25 +587,13 @@ public class NoteEndBeatInvariantTests
     {
         var sourceChart = CreateIrChart(NoteType.Flick, 3, 9);
         Ir.Chart? exportedChart = null;
-        var descriptor = CreateDescriptor();
-        SetDescriptorDelegate(
-            descriptor,
-            "Exporter",
-            (Func<
-                Ir.Chart,
-                string,
-                ChartWriteSettings,
-                object?,
-                ChartLogSink,
-                CancellationToken,
-                Task
-            >)(
-                (chart, _, _, _, _, _) =>
-                {
-                    exportedChart = chart;
-                    return Task.CompletedTask;
-                }
-            )
+        var descriptor = ChartFormatDescriptor.Create(
+            "tests.note-end-beat-export", "test",
+            exporter: (chart, _, _, _, _, _) =>
+            {
+                exportedChart = chart;
+                return Task.CompletedTask;
+            }
         );
 
         await descriptor.ExportAsync(
@@ -633,25 +612,13 @@ public class NoteEndBeatInvariantTests
     public async Task ChartFormatDescriptor_ExportAsyncPassesInvalidHoldToExporter()
     {
         var exporterStarted = false;
-        var descriptor = CreateDescriptor();
-        SetDescriptorDelegate(
-            descriptor,
-            "Exporter",
-            (Func<
-                Ir.Chart,
-                string,
-                ChartWriteSettings,
-                object?,
-                ChartLogSink,
-                CancellationToken,
-                Task
-            >)(
-                (_, _, _, _, _, _) =>
-                {
-                    exporterStarted = true;
-                    return Task.CompletedTask;
-                }
-            )
+        var descriptor = ChartFormatDescriptor.Create(
+            "tests.note-end-beat-hold", "test",
+            exporter: (_, _, _, _, _, _) =>
+            {
+                exporterStarted = true;
+                return Task.CompletedTask;
+            }
         );
         var sourceChart = CreateIrChartWithNote(
             new Ir.Note { Type = NoteType.Hold, StartBeat = Beat(3) }
@@ -666,23 +633,6 @@ public class NoteEndBeatInvariantTests
 
         await act.Should().NotThrowAsync();
         exporterStarted.Should().BeTrue();
-    }
-
-    private static ChartFormatDescriptor CreateDescriptor() =>
-        new() { Type = ChartType.PhiEdit, FileExtension = "test" };
-
-    private static void SetDescriptorDelegate(
-        ChartFormatDescriptor descriptor,
-        string propertyName,
-        object value
-    )
-    {
-        var property = typeof(ChartFormatDescriptor).GetProperty(
-            propertyName,
-            BindingFlags.Instance | BindingFlags.NonPublic
-        );
-        property.Should().NotBeNull();
-        property!.SetValue(descriptor, value);
     }
 
     private static Ir.Chart CreateIrChart(NoteType type, double startBeat, double endBeat) =>

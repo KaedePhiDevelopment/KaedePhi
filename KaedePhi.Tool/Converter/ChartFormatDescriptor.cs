@@ -1,4 +1,7 @@
+using System.Diagnostics.CodeAnalysis;
+using KaedePhi.Core.Formats;
 using KaedePhi.Tool.Common;
+using KaedePhi.Tool.Compatibility;
 using KpcChart = KaedePhi.Core.KaedePhi.Chart;
 
 namespace KaedePhi.Tool.Converter;
@@ -8,13 +11,39 @@ namespace KaedePhi.Tool.Converter;
 /// </summary>
 public sealed class ChartFormatDescriptor
 {
+    private readonly string? _formatId;
+    private int _legacyType;
+
+    /// <summary>
+    /// 创建使用兼容枚举初始化的格式描述。
+    /// </summary>
+    [Obsolete("将在下一个大版本移除；请通过 Create 或 CreateDetectionOnly 工厂创建格式描述。")]
+    public ChartFormatDescriptor() { }
+
+    [SetsRequiredMembers]
+    internal ChartFormatDescriptor(string formatId, string fileExtension, bool useLegacyType = false)
+    {
+        _formatId = formatId;
+        _legacyType = useLegacyType ? LegacyChartTypeMapping.ToValue(formatId) : -1;
+        FileExtension = fileExtension;
+    }
+
     /// <summary>内置格式类型；由工厂创建的外部格式返回未定义的枚举值 -1，应使用 <see cref="FormatId"/> 标识。</summary>
-    public required ChartType Type { get; init; }
+    [Obsolete("将在下一个大版本移除；请改用 FormatId 标识格式，并通过 Create 工厂创建格式描述。")]
+    public required ChartType Type
+    {
+        get => (ChartType)_legacyType;
+        init => _legacyType = (int)value;
+    }
 
     /// <summary>格式的稳定字符串标识；内置格式使用枚举名称。</summary>
-    public string FormatId => ExternalFormatId ?? Type.ToString();
+    public string FormatId => _formatId ?? LegacyChartTypeMapping.ToFormatId(_legacyType);
 
-    private string? ExternalFormatId { get; init; }
+    /// <summary>内置格式类型；外部格式返回 <see langword="null"/>。</summary>
+    [Obsolete("将在下一个大版本移除；请使用 FormatId 标识格式。")]
+    public ChartType? BuiltInType => _legacyType == -1 ? null : (ChartType)_legacyType;
+
+    internal bool HasLegacyType => _legacyType != -1;
 
     /// <summary>该格式的默认文件扩展名（不含点）。</summary>
     public required string FileExtension { get; init; }
@@ -26,7 +55,7 @@ public sealed class ChartFormatDescriptor
     public Func<object?>? ExportOptionsFactory { get; init; }
 
     /// <summary>
-    /// 创建不依赖内置 <see cref="ChartType"/> 枚举的外部格式描述。
+    /// 使用稳定字符串标识创建谱面格式描述。
     /// </summary>
     /// <param name="formatId">格式的稳定唯一标识。</param>
     /// <param name="fileExtension">默认文件扩展名，不含点。</param>
@@ -46,25 +75,106 @@ public sealed class ChartFormatDescriptor
         Func<object?>? exportOptionsFactory = null
     )
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(formatId);
-        ArgumentException.ThrowIfNullOrWhiteSpace(fileExtension);
-        if (formatId != formatId.Trim())
-            throw new ArgumentException("格式标识不能包含首尾空白。", nameof(formatId));
+        ValidateIdentityNames(formatId, fileExtension);
         if (importer is null && streamImporter is null && exporter is null)
             throw new ArgumentException("至少提供一种导入或导出能力。", nameof(importer));
-        if (fileExtension.StartsWith('.') || fileExtension.Any(c => !char.IsLetterOrDigit(c)))
-            throw new ArgumentException("文件扩展名只能包含字母或数字，且不含点。", nameof(fileExtension));
-        return new ChartFormatDescriptor
+        ValidateExtension(fileExtension);
+        return new ChartFormatDescriptor(formatId, fileExtension)
         {
-            Type = (ChartType)(-1),
-            ExternalFormatId = formatId,
-            FileExtension = fileExtension,
             Importer = importer,
             StreamImporter = streamImporter,
             Exporter = exporter,
             ImportOptionsFactory = importOptionsFactory,
             ExportOptionsFactory = exportOptionsFactory,
         };
+    }
+
+    /// <summary>
+    /// 创建仅用于检测的谱面格式描述。
+    /// </summary>
+    /// <param name="formatId">格式的稳定唯一标识。</param>
+    /// <param name="fileExtension">默认文件扩展名，不含点。</param>
+    /// <returns>不支持导入和导出的格式描述。</returns>
+    public static ChartFormatDescriptor CreateDetectionOnly(string formatId, string fileExtension)
+    {
+        ValidateIdentityNames(formatId, fileExtension);
+        ValidateExtension(fileExtension);
+        return new ChartFormatDescriptor(formatId, fileExtension);
+    }
+
+    private static void ValidateIdentityNames(string formatId, string fileExtension)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(formatId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(fileExtension);
+        if (formatId != formatId.Trim())
+            throw new ArgumentException("格式标识不能包含首尾空白。", nameof(formatId));
+    }
+
+    private static void ValidateExtension(string fileExtension)
+    {
+        if (fileExtension.StartsWith('.') || fileExtension.Any(c => !char.IsLetterOrDigit(c)))
+            throw new ArgumentException("文件扩展名只能包含字母或数字，且不含点。", nameof(fileExtension));
+    }
+
+    /// <summary>
+    /// 使用格式序列化器和转换器创建外部格式描述，导入和导出均使用流。
+    /// </summary>
+    /// <typeparam name="TChart">外部谱面类型。</typeparam>
+    /// <typeparam name="TInOptions">导入转换选项类型。</typeparam>
+    /// <typeparam name="TOutOptions">导出转换选项类型。</typeparam>
+    /// <param name="formatId">格式的稳定唯一标识。</param>
+    /// <param name="fileExtension">默认文件扩展名，不含点。</param>
+    /// <param name="serializer">谱面序列化器；并发调用时须支持并发使用。</param>
+    /// <param name="converterFactory">为每次转换创建转换器的工厂。</param>
+    /// <param name="importOptionsFactory">默认导入选项工厂。</param>
+    /// <param name="exportOptionsFactory">默认导出选项工厂。</param>
+    /// <returns>外部格式描述。</returns>
+    public static ChartFormatDescriptor Create<TChart, TInOptions, TOutOptions>(
+        string formatId,
+        string fileExtension,
+        IChartSerializer<TChart> serializer,
+        Func<IChartConverter<TChart, TInOptions, TOutOptions>> converterFactory,
+        Func<TInOptions>? importOptionsFactory = null,
+        Func<TOutOptions>? exportOptionsFactory = null
+    )
+    {
+        ArgumentNullException.ThrowIfNull(serializer);
+        ArgumentNullException.ThrowIfNull(converterFactory);
+        return Create(
+            formatId,
+            fileExtension,
+            streamImporter: async (stream, options, log, ct) =>
+            {
+                var source = await serializer.ReadAsync(stream, ct);
+                ct.ThrowIfCancellationRequested();
+                var converter = ChartFormatRegistry.Prepare(converterFactory(), log, ct);
+                return converter.ToIr(source, ResolveOptions<TInOptions>(options));
+            },
+            exporter: async (chart, path, write, options, log, ct) =>
+            {
+                var converter = ChartFormatRegistry.Prepare(converterFactory(), log, ct);
+                var target = converter.FromIr(chart, ResolveOptions<TOutOptions>(options));
+                ct.ThrowIfCancellationRequested();
+                await ChartFormatRegistry.WriteStreamAsync(
+                    path, write, stream => serializer.WriteAsync(target, stream, write.Indented, ct), ct
+                );
+                ct.ThrowIfCancellationRequested();
+            },
+            importOptionsFactory: importOptionsFactory is null ? null : () => importOptionsFactory(),
+            exportOptionsFactory: exportOptionsFactory is null ? null : () => exportOptionsFactory()
+        );
+    }
+
+    private static TOptions ResolveOptions<TOptions>(object? options)
+    {
+        if (options is TOptions typed)
+            return typed;
+        if (options is null && default(TOptions) is null)
+            return default!;
+        throw new ArgumentException(
+            $"选项类型不匹配：期望 {typeof(TOptions).Name}，实际为 {options?.GetType().Name ?? "null"}。",
+            nameof(options)
+        );
     }
 
     /// <summary>将该格式的谱面文本转换为 IR 中间格式。</summary>
@@ -98,6 +208,9 @@ public sealed class ChartFormatDescriptor
 
     /// <summary>该格式是否支持作为导入源。</summary>
     public bool CanImport => Importer is not null || StreamImporter is not null;
+
+    /// <summary>该格式是否支持文本导入。</summary>
+    public bool CanTextImport => Importer is not null;
 
     /// <summary>
     /// 该格式是否支持流式导入。

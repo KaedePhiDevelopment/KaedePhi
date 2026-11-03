@@ -82,6 +82,77 @@ Core 的 `net10.0` 目标在 PhiFans、Phigros v3 和 PhiChain 的 JSON 编解�
 
 Core 和 Tool 的 NuGet 包分别使用 `Core-v<版本>`、`Tool-v<版本>` 标签发布，并保留 NuGet 标准的 `<包 ID>.<版本>.nupkg` 文件名；应用使用 `App-v<版本>` 标签发布。App 附件使用 `KaedePhi-App-v<版本>-<系统>-<架构>-<包类型>` 格式命名，例如 `KaedePhi-App-v1.2.0-macOS-arm64-Installer.dmg`。
 
+## 扩展谱面格式
+外部包可以自行定义谱面模型，使用字符串格式标识注册；默认格式标识可通过 `ChartFormatIds` 常量引用。实现 Core 的 `IChartSerializer<TChart>` 负责流式读写，再实现 Tool 的 `IChartConverter<TChart, TInOptions, TOutOptions>` 负责与 IR 互转；转换器可继承 `LoggableBase`，也可实现 `ICancellableChartConverter`。工具接口同样支持外部格式类型：例如可实现 `ILayerProcessor<TLayer>`，或者将谱面转换为 IR 后使用 `KaedePhi.Tool.Layer.Intermediate.LayerProcessor` 等 IR 通用工具。
+
+例如，假设已实现 `MyChart`、`MySerializer`、`MyConverter` 和相应选项类型：
+
+```csharp
+using KaedePhi.Tool.Common;
+using KaedePhi.Tool.Converter;
+using KaedePhi.Tool.Layer.Intermediate;
+
+var format = ChartFormatDescriptor.Create<MyChart, MyImportOptions, MyExportOptions>(
+    "example.my-format", "mychart", new MySerializer(), () => new MyConverter(),
+    () => new MyImportOptions(), () => new MyExportOptions());
+
+ChartFormatRegistry.Register(format, async (stream, ct) =>
+{
+    var header = new byte[4];
+    var count = await stream.ReadAtLeastAsync(header, 4, false, ct);
+    return count == 4 && header.AsSpan().SequenceEqual("MYCH"u8);
+});
+
+await using var input = File.OpenRead("input.mychart");
+var (detectedFormat, chart) = await ChartFormatRegistry.ImportDetectedIrAsync(input);
+var processed = ChartPipeline.FromIr(chart).Transform(ir =>
+{
+    var processor = new LayerProcessor();
+    foreach (var line in ir.JudgeLineList)
+        if (line.EventLayers.Count > 0)
+            line.EventLayers = [processor.LayerMerge(line.EventLayers, 8)];
+    return ir;
+});
+await detectedFormat.ExportAsync(processed.ToIr(), "output.mychart");
+```
+
+内置格式和外部格式都以 `ChartFormatRegistration` 注册，使用同一套查询、检测和导入机制；IR 是中间表示，不作为默认谱面格式注册。格式标识不区分大小写，同一注册表内的重复标识不能被覆盖。可使用 `ChartFormatDescriptor.Create` 的回调重载只提供需要的导入或导出能力，使用 `CreateDetectionOnly` 定义仅检测的格式；不提供检测器的格式不会参与自动检测。
+
+`ChartFormatRegistry.Default` 是默认注册表。也可以创建独立的 `ChartFormatCatalog`：默认包含内置格式，传入 `includeBuiltInFormats: false` 则从空表开始。独立注册表的 `Register`、`Unregister`、`Find`、`DetectFormatAsync` 和 `ImportDetectedIrAsync` 对内置和外部格式一视同仁，修改不会影响其他注册表。例如：
+
+```csharp
+var catalog = new ChartFormatCatalog();
+var original = catalog.FindRegistration(ChartFormatIds.PhigrosV3)!;
+catalog.Unregister(ChartFormatIds.PhigrosV3);
+// 在此注册其他格式，或在需要时恢复原有格式。
+catalog.Register(original);
+```
+
+`FindRegistration` 返回的注册信息包含描述、检测器和优先级，可用于转移或恢复格式。多个格式可通过 `ChartFormatRegistration` 共享一个返回格式标识的检测器，同一次检测只执行一次；返回的标识须属于使用该检测器注册的格式。现有内置格式共用检测器，以保留原有判定顺序和单次读取行为。新格式也可使用前例中的独立检测器。
+
+检测器接收从谱面起点开始的独立可读流，返回 `false` 表示不匹配，异常则向调用方传播；共享检测器返回匹配格式的标识或空值。流可能不可定位，且不得在回调返回后继续使用。默认内置格式的优先级为 0；注册时可指定整数 `priority`，优先使用最高优先级的匹配结果，同一最高优先级有多个匹配时会报告冲突。检测器应尽量只读取必要的格式标记，不应假设文件扩展名唯一。检测使用注册表快照；移除格式及检测器不影响已开始的检测。
+
+`ChartGetType.DetectFormatAsync` 和 `ChartFormatRegistry.ImportDetectedIrAsync` 返回格式描述，可同时处理内置和外部格式。单个流重载要求流可定位，从当前位置开始检测并恢复位置；不可定位输入可使用 `Func<Stream>` 重载，每次提供一个从谱面起点开始的新流，使用后由库关闭。文本重载使用 UTF-8；二进制格式应使用流重载。
+
+以下旧接口已标记为过时，**将在下一个大版本移除**；当前版本保留其原有行为：
+
+| 旧接口 | 替代方式 |
+|---|---|
+| `ChartType`、`ChartFormatDescriptor.Type` 和 `BuiltInType` | 使用格式描述的 `FormatId`，通过 `ChartFormatDescriptor.Create` 创建格式描述。 |
+| `new ChartFormatDescriptor()` | 使用 `ChartFormatDescriptor.Create` 或 `CreateDetectionOnly` 工厂。 |
+| `ChartGetType.GetType`、`GetTypeAsync` | 使用 `ChartGetType.DetectFormatAsync` 或独立注册表的 `DetectFormatAsync`，读取返回的格式描述。 |
+| `ChartFormatRegistry`、`ChartFormatCatalog` 接受 `ChartType` 的 `Find` 和 `Get` | 使用接受字符串格式标识的重载。 |
+| 返回枚举的 `ChartFormatRegistry.ImportIrAsync` 和旧 `ImportAsync` | 使用 `ImportDetectedIrAsync`，读取返回的格式描述与 IR 谱面。 |
+| `ChartFormatRegistry.Unregister` | 使用 `ChartFormatRegistry.UnregisterFormat` 或 `ChartFormatCatalog.Unregister`。 |
+
+迁移检测接口时请注意：旧检测接口只识别内置格式且会消耗输入；新检测接口使用注册表，流重载要求可定位并恢复输入位置，不可定位输入应使用流工厂重载。旧的 `Unregister` 只移除外部格式，替代接口也可移除内置格式。默认注册表是全局共享状态，建议需要替换格式的宿主优先使用独立注册表。
+
+类型化描述使用序列化器进行流式导入与导出，导出支持 `Indented` 和 `DryRun`，并始终使用流式写入；序列化器需要遵守不关闭传入流的约定，并在并发调用时保证线程安全。不接受空值的转换选项应提供默认选项工厂或在调用时显式传入。宿主负责注册扩展和管理其生命周期；当前 CLI/GUI 不会自动加载外部包。
+
+CLI/GUI 已使用同一注册表：`--target` 接受格式标识，GUI 导出列表和文件扩展名来自注册信息，只有流式导入能力的格式也可直接导入。配置仍使用 `convert.targetType` 键，保留原有格式名称并兼容旧枚举数值；可填写已注册的外部格式标识。
+
+内部业务代码和常规测试不引用过时接口；兼容性测试仅通过反射验证旧入口，过时类型仅保留在兼容入口的声明与桥接实现中。仓库构建将 `CS0612`、`CS0618` 视为错误，避免新增代码重新依赖旧接口。
+
 ## 限制说明
 - FDD 便携版和安装版都要求先安装对应的 .NET 10 运行时，不能脱离运行时单独执行。
 - macOS 安装包未进行 Apple 开发者签名与公证，首次启动需手动确认；Intel 与 Apple 芯片用户需下载对应架构的安装包。
@@ -159,120 +230,120 @@ NuanR_Mxi All Rights Reserved.
 >
 > 本仓库直接附带的 Font Awesome 字体许可见下文“Font Awesome 7 Free Solid 字体授权声明”及 `KaedePhi.Tool.App/Assets/Fonts/LICENSE.txt`。
 
-| NuGet 包                                              | 锁定版本                     | 引用关系   | 许可证                                                                                                                       |
-|-------------------------------------------------------|------------------------------|------------|------------------------------------------------------------------------------------------------------------------------------|
-| `Avalonia`                                            | `12.1.3`                     | 直接       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Avalonia.Angle.Windows.Natives`                      | `2.1.27548.20260419`         | 传递       | [BSD-3-Clause](https://www.nuget.org/packages/Avalonia.Angle.Windows.Natives/2.1.27548.20260419#license)                     |
-| `Avalonia.BuildServices`                              | `11.3.2`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Avalonia.Controls.ColorPicker`                       | `11.3.22`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Avalonia.Desktop`                                    | `12.1.3`                     | 直接       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Avalonia.Diagnostics`                                | `11.3.22`                    | 直接       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Avalonia.Fonts.Inter`                                | `12.1.3`                     | 直接       | [MIT](https://spdx.org/licenses/MIT.html)；内含 Inter 字体另见上文                                                           |
-| `Avalonia.FreeDesktop`                                | `12.1.3`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Avalonia.FreeDesktop.AtSpi`                          | `12.1.3`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Avalonia.HarfBuzz`                                   | `12.1.3`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Avalonia.Native`                                     | `12.1.3`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Avalonia.Remote.Protocol`                            | `12.1.3`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Avalonia.Skia`                                       | `12.1.3`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Avalonia.Themes.Fluent`                              | `12.1.3`                     | 直接       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Avalonia.Themes.Simple`                              | `11.3.22`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Avalonia.Win32`                                      | `12.1.3`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Avalonia.X11`                                        | `12.1.3`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `CAPCOM.REDox`                                        | `1.0.1`                      | 直接、传递 | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `CAPCOM.REDox.Serialization.NewtonsoftJson`           | `1.0.1-preview`              | 直接、传递 | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `Castle.Core`                                         | `5.2.1`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `DiffPlex`                                            | `1.7.2`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `FluentAssertions`                                    | `8.11.0`                     | 直接       | [Xceed Community License Agreement (Non-Commercial Use)](https://www.nuget.org/packages/FluentAssertions/8.11.0#license)     |
-| `HarfBuzzSharp`                                       | `8.3.1.3`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `HarfBuzzSharp.NativeAssets.Linux`                    | `8.3.1.3`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `HarfBuzzSharp.NativeAssets.macOS`                    | `8.3.1.3`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `HarfBuzzSharp.NativeAssets.WebAssembly`              | `8.3.1.3`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `HarfBuzzSharp.NativeAssets.Win32`                    | `8.3.1.3`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Humanizer.Core`                                      | `2.14.1`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `JetBrains.Annotations`                               | `2026.2.0`                   | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `MicroCom.Runtime`                                    | `0.11.6`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.ApplicationInsights`                       | `2.23.0`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.Bcl.AsyncInterfaces`                       | `10.0.1`, `6.0.0`            | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.CodeAnalysis.Analyzer.Testing`             | `1.1.4`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.CodeAnalysis.Analyzers`                    | `5.9.0`, `5.9.0-1.26328.17`  | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.CodeAnalysis.CodeFix.Testing`              | `1.1.4`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.CodeAnalysis.Common`                       | `5.9.0`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.CodeAnalysis.CSharp`                       | `5.9.0`                      | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.CodeAnalysis.CSharp.Analyzer.Testing`      | `1.1.4`                      | 直接       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.CodeAnalysis.CSharp.CodeFix.Testing`       | `1.1.4`                      | 直接       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.CodeAnalysis.CSharp.Workspaces`            | `5.9.0`                      | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.CodeAnalysis.Workspaces.Common`            | `5.9.0`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.CodeCoverage`                              | `18.10.1`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.DiaSymReader`                              | `2.2.10`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.Extensions.DependencyModel`                | `10.0.10`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.NET.Test.Sdk`                              | `18.10.1`                    | 直接       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.NETCore.Platforms`                         | `1.1.0`                      | 传递       | [Microsoft Software License Terms](https://www.nuget.org/packages/Microsoft.NETCore.Platforms/1.1.0#license)                 |
-| `Microsoft.Testing.Extensions.CodeCoverage`           | `18.11.2`                    | 直接       | [Microsoft Software License Terms](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CodeCoverage/18.11.2#license) |
-| `Microsoft.Testing.Extensions.Telemetry`              | `2.4.0`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.Testing.Extensions.TrxReport.Abstractions` | `2.4.0`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.Testing.Platform`                          | `2.4.0`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.Testing.Platform.MSBuild`                  | `2.4.0`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.TestPlatform.ObjectModel`                  | `18.10.1`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.TestPlatform.TestHost`                     | `18.10.1`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.VisualStudio.Composition`                  | `16.1.8`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.VisualStudio.Composition.NetFxAttributes`  | `16.1.8`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Microsoft.VisualStudio.Validation`                   | `15.0.82`                    | 传递       | [MIT](https://raw.githubusercontent.com/Microsoft/vs-validation/1fc5bdcf81/LICENSE)                                          |
-| `Microsoft.Win32.Registry`                            | `5.0.0`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Moq`                                                 | `4.21.0`                     | 直接       | [BSD-3-Clause](https://spdx.org/licenses/BSD-3-Clause.html)                                                                  |
-| `NETStandard.Library`                                 | `2.0.3`                      | 直接       | [MIT](https://github.com/dotnet/standard/blob/master/LICENSE.TXT)                                                            |
-| `Newtonsoft.Json`                                     | `13.0.3`, `13.0.4`           | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `NuGet.Common`                                        | `7.0.3`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `NuGet.Configuration`                                 | `7.0.3`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `NuGet.Frameworks`                                    | `7.0.3`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `NuGet.Packaging`                                     | `7.0.3`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `NuGet.Protocol`                                      | `7.0.3`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `NuGet.Resolver`                                      | `7.0.3`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `NuGet.Versioning`                                    | `7.0.3`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `Serilog`                                             | `4.4.0`                      | 直接       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `Serilog.Sinks.Console`                               | `6.1.1`                      | 直接       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `Serilog.Sinks.File`                                  | `7.0.0`                      | 直接       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `SkiaSharp`                                           | `4.153.1`                    | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `SkiaSharp.NativeAssets.Linux`                        | `4.153.1`                    | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `SkiaSharp.NativeAssets.macOS`                        | `4.153.1`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `SkiaSharp.NativeAssets.WebAssembly`                  | `3.119.4`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `SkiaSharp.NativeAssets.Win32`                        | `4.153.1`                    | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Buffers`                                      | `4.6.1`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Collections.Immutable`                        | `10.0.1`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.CommandLine`                                  | `3.0.0-preview.6.26359.118`  | 直接       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.ComponentModel.Composition`                   | `4.5.0`                      | 传递       | [MIT](https://github.com/dotnet/corefx/blob/master/LICENSE.TXT)                                                              |
-| `System.Composition`                                  | `10.0.1`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Composition.AttributedModel`                  | `10.0.1`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Composition.Convention`                       | `10.0.1`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Composition.Hosting`                          | `10.0.1`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Composition.Runtime`                          | `10.0.1`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Composition.TypedParts`                       | `10.0.1`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Diagnostics.EventLog`                         | `6.0.0`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.IO.Pipelines`                                 | `10.0.1`, `10.0.10`, `8.0.0` | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Memory`                                       | `4.6.3`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Numerics.Vectors`                             | `4.6.1`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Reflection.Metadata`                          | `10.0.1`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Runtime.CompilerServices.Unsafe`              | `6.1.2`                      | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Security.AccessControl`                       | `6.0.1`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Security.Cryptography.Pkcs`                   | `9.0.6`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Security.Cryptography.ProtectedData`          | `9.0.6`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Security.Permissions`                         | `4.5.0`                      | 传递       | [MIT](https://github.com/dotnet/corefx/blob/master/LICENSE.TXT)                                                              |
-| `System.Text.Encoding.CodePages`                      | `8.0.0`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Text.Encodings.Web`                           | `10.0.10`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Text.Json`                                    | `10.0.10`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Threading.Channels`                           | `8.0.0`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `System.Threading.Tasks.Extensions`                   | `4.6.3`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `Tmds.DBus.Protocol`                                  | `0.94.1`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
-| `xunit.analyzers`                                     | `2.1.0`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `xunit.runner.visualstudio`                           | `4.0.0`                      | 直接       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `xunit.v3`                                            | `4.0.1`                      | 直接       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `xunit.v3.assert`                                     | `4.0.1`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `xunit.v3.common`                                     | `4.0.1`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `xunit.v3.core.mtp-v2`                                | `4.0.1`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `xunit.v3.extensibility.core`                         | `4.0.1`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `xunit.v3.mtp-v2`                                     | `4.0.1`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `xunit.v3.runner.common`                              | `4.0.1`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `xunit.v3.runner.inproc.console`                      | `4.0.1`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
-| `YamlDotNet`                                          | `18.1.0`                     | 直接       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| NuGet 包                                              | 引用关系   | 许可证                                                                                                                       |
+|-------------------------------------------------------|------------|------------------------------------------------------------------------------------------------------------------------------|
+| `Avalonia`                                            | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Avalonia.Angle.Windows.Natives`                      | 传递       | [BSD-3-Clause](https://www.nuget.org/packages/Avalonia.Angle.Windows.Natives/2.1.27548.20260419#license)                     |
+| `Avalonia.BuildServices`                              | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Avalonia.Controls.ColorPicker`                       | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Avalonia.Desktop`                                    | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Avalonia.Diagnostics`                                | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Avalonia.Fonts.Inter`                                | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)；内含 Inter 字体另见上文                                                           |
+| `Avalonia.FreeDesktop`                                | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Avalonia.FreeDesktop.AtSpi`                          | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Avalonia.HarfBuzz`                                   | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Avalonia.Native`                                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Avalonia.Remote.Protocol`                            | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Avalonia.Skia`                                       | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Avalonia.Themes.Fluent`                              | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Avalonia.Themes.Simple`                              | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Avalonia.Win32`                                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Avalonia.X11`                                        | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `CAPCOM.REDox`                                        | 直接、传递 | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `CAPCOM.REDox.Serialization.NewtonsoftJson`           | 直接、传递 | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `Castle.Core`                                         | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `DiffPlex`                                            | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `FluentAssertions`                                    | 直接       | [Xceed Community License Agreement (Non-Commercial Use)](https://www.nuget.org/packages/FluentAssertions/8.11.0#license)     |
+| `HarfBuzzSharp`                                       | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `HarfBuzzSharp.NativeAssets.Linux`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `HarfBuzzSharp.NativeAssets.macOS`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `HarfBuzzSharp.NativeAssets.WebAssembly`              | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `HarfBuzzSharp.NativeAssets.Win32`                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Humanizer.Core`                                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `JetBrains.Annotations`                               | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `MicroCom.Runtime`                                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.ApplicationInsights`                       | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.Bcl.AsyncInterfaces`                       | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.CodeAnalysis.Analyzer.Testing`             | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.CodeAnalysis.Analyzers`                    | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.CodeAnalysis.CodeFix.Testing`              | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.CodeAnalysis.Common`                       | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.CodeAnalysis.CSharp`                       | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.CodeAnalysis.CSharp.Analyzer.Testing`      | 直接       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.CodeAnalysis.CSharp.CodeFix.Testing`       | 直接       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.CodeAnalysis.CSharp.Workspaces`            | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.CodeAnalysis.Workspaces.Common`            | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.CodeCoverage`                              | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.DiaSymReader`                              | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.Extensions.DependencyModel`                | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.NET.Test.Sdk`                              | 直接       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.NETCore.Platforms`                         | 传递       | [Microsoft Software License Terms](https://www.nuget.org/packages/Microsoft.NETCore.Platforms/1.1.0#license)                 |
+| `Microsoft.Testing.Extensions.CodeCoverage`           | 直接       | [Microsoft Software License Terms](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CodeCoverage/18.11.2#license) |
+| `Microsoft.Testing.Extensions.Telemetry`              | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.Testing.Extensions.TrxReport.Abstractions` | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.Testing.Platform`                          | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.Testing.Platform.MSBuild`                  | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.TestPlatform.ObjectModel`                  | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.TestPlatform.TestHost`                     | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.VisualStudio.Composition`                  | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.VisualStudio.Composition.NetFxAttributes`  | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Microsoft.VisualStudio.Validation`                   | 传递       | [MIT](https://raw.githubusercontent.com/Microsoft/vs-validation/1fc5bdcf81/LICENSE)                                          |
+| `Microsoft.Win32.Registry`                            | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Moq`                                                 | 直接       | [BSD-3-Clause](https://spdx.org/licenses/BSD-3-Clause.html)                                                                  |
+| `NETStandard.Library`                                 | 直接       | [MIT](https://github.com/dotnet/standard/blob/master/LICENSE.TXT)                                                            |
+| `Newtonsoft.Json`                                     | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `NuGet.Common`                                        | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `NuGet.Configuration`                                 | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `NuGet.Frameworks`                                    | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `NuGet.Packaging`                                     | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `NuGet.Protocol`                                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `NuGet.Resolver`                                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `NuGet.Versioning`                                    | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `Serilog`                                             | 直接、传递 | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `Serilog.Sinks.Console`                               | 直接、传递 | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `Serilog.Sinks.File`                                  | 直接、传递 | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `SkiaSharp`                                           | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `SkiaSharp.NativeAssets.Linux`                        | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `SkiaSharp.NativeAssets.macOS`                        | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `SkiaSharp.NativeAssets.WebAssembly`                  | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `SkiaSharp.NativeAssets.Win32`                        | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Buffers`                                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Collections.Immutable`                        | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.CommandLine`                                  | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.ComponentModel.Composition`                   | 传递       | [MIT](https://github.com/dotnet/corefx/blob/master/LICENSE.TXT)                                                              |
+| `System.Composition`                                  | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Composition.AttributedModel`                  | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Composition.Convention`                       | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Composition.Hosting`                          | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Composition.Runtime`                          | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Composition.TypedParts`                       | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Diagnostics.EventLog`                         | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.IO.Pipelines`                                 | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Memory`                                       | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Numerics.Vectors`                             | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Reflection.Metadata`                          | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Runtime.CompilerServices.Unsafe`              | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Security.AccessControl`                       | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Security.Cryptography.Pkcs`                   | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Security.Cryptography.ProtectedData`          | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Security.Permissions`                         | 传递       | [MIT](https://github.com/dotnet/corefx/blob/master/LICENSE.TXT)                                                              |
+| `System.Text.Encoding.CodePages`                      | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Text.Encodings.Web`                           | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Text.Json`                                    | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Threading.Channels`                           | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `System.Threading.Tasks.Extensions`                   | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `Tmds.DBus.Protocol`                                  | 传递       | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
+| `xunit.analyzers`                                     | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `xunit.runner.visualstudio`                           | 直接       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `xunit.v3`                                            | 直接       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `xunit.v3.assert`                                     | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `xunit.v3.common`                                     | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `xunit.v3.core.mtp-v2`                                | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `xunit.v3.extensibility.core`                         | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `xunit.v3.mtp-v2`                                     | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `xunit.v3.runner.common`                              | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `xunit.v3.runner.inproc.console`                      | 传递       | [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)                                                                      |
+| `YamlDotNet`                                          | 直接、传递 | [MIT](https://spdx.org/licenses/MIT.html)                                                                                    |
 
 # Font Awesome 7 Free Solid 字体授权声明
 

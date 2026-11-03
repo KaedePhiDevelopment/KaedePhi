@@ -72,23 +72,24 @@ internal sealed class ImportController
             await Task.Yield();
 
             // 先检测格式
-            var detectedType = await Task.Run(
-                () => _chart.DetectChartTypeAsync(filePath, useStream, ct, progress),
+            var format = await Task.Run(
+                () => _chart.DetectChartFormatAsync(filePath, ct, progress),
                 ct
             );
+            var formatId = format.FormatId;
 
             // 检查是否需要显示导入选项
-            if (detectedType is ChartType.PhiEdit or ChartType.PhiChain)
+            if (formatId is ChartFormatIds.PhiEdit or ChartFormatIds.PhiChain)
             {
                 // 保存待处理的文件信息
                 _pendingFilePath = filePath;
                 _pendingUseStream = useStream;
-                _navigation.ShowImportOptions(detectedType, Path.GetFileName(filePath));
+                _navigation.ShowImportOptions(formatId, Path.GetFileName(filePath));
             }
             else
             {
                 // 不需要选项，直接加载
-                await LoadChartWithOptions(filePath, useStream, detectedType, null, progress, ct);
+                await LoadChartWithOptions(filePath, useStream, formatId, null, progress, ct);
             }
         }
         catch (OperationCanceledException)
@@ -174,7 +175,7 @@ internal sealed class ImportController
     private async Task LoadChartWithOptions(
         string filePath,
         bool useStream,
-        ChartType detectedType,
+        string formatId,
         object? importOptions,
         IProgress<double?> progress,
         CancellationToken ct
@@ -185,20 +186,20 @@ internal sealed class ImportController
             ct
         );
         ct.ThrowIfCancellationRequested();
-        _navigation.ShowToolForChart(filePath, detectedType);
+        _navigation.ShowToolForChart(filePath, formatId);
     }
 
-    private object? BuildImportOptions(ChartType detectedType)
+    private object? BuildImportOptions(string formatId)
     {
         var vm = _navigation.ImportOptions;
-        return detectedType switch
+        return formatId switch
         {
-            ChartType.PhiEdit => new PhiEditToIrConvertOptions
+            ChartFormatIds.PhiEdit => new PhiEditToIrConvertOptions
             {
                 FrameDurationBeat = 1d / vm.PeFrameDurationBeat,
                 TrailingBeatPadding = 1d / vm.PeTrailingBeatPadding,
             },
-            ChartType.PhiChain => new PhiChainToIrConvertOptions
+            ChartFormatIds.PhiChain => new PhiChainToIrConvertOptions
             {
                 UnsupportedEasingPrecision = vm.PhiChainUnsupportedEasingPrecision,
             },

@@ -37,8 +37,8 @@ public static class GetTypeTestCommand
                     65536,
                     useAsync: true
                 );
-                var type = await ChartGetType.GetTypeAsync(inputStream, ct);
-                ConsoleWriter.Info($"Type: {type}");
+                var format = await ChartGetType.DetectFormatAsync(inputStream, ct);
+                ConsoleWriter.Info($"Type: {format.FormatId}");
 #else
                 ConsoleWriter.Warn("This command can only be executed on Debug builds.");
                 await Task.CompletedTask;

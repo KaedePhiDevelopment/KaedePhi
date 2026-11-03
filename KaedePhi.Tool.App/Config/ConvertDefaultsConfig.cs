@@ -8,7 +8,26 @@ namespace KaedePhi.Tool.App.Config;
 public sealed class ConvertDefaultsConfig
 {
     /// <summary>转换目标格式。</summary>
-    public ChartType TargetType { get; set; } = ChartType.RePhiEdit;
+    public string TargetType
+    {
+        get;
+        set
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(value);
+            // 兼容旧配置中以枚举数值保存的目标格式。
+            field = value switch
+            {
+                "0" => ChartFormatIds.PhiEdit,
+                "1" => ChartFormatIds.RePhiEdit,
+                "2" => ChartFormatIds.PhigrosV1,
+                "3" => ChartFormatIds.PhigrosV3,
+                "4" => ChartFormatIds.PhiChain,
+                "5" => ChartFormatIds.PhiFans,
+                "6" => ChartFormatIds.StellateRePhiEditExtended,
+                _ => value,
+            };
+        }
+    } = ChartFormatIds.RePhiEdit;
 
     /// <summary>是否美化格式化输出 JSON（CLI 使用）。</summary>
     public bool FormatOutput { get; set; }

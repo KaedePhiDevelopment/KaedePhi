@@ -45,9 +45,9 @@ internal sealed class GuiNavigationService
         _log.Information(log_navigate_import);
     }
 
-    public void ShowImportOptions(ChartType detectedType, string fileName)
+    public void ShowImportOptions(string formatId, string fileName)
     {
-        ImportOptions.DetectedFormat = detectedType;
+        ImportOptions.DetectedFormat = formatId;
         ImportOptions.FileName = fileName;
         _main.SetShellState(
             "options",
@@ -55,7 +55,7 @@ internal sealed class GuiNavigationService
             import_options_title,
             1,
             fileName,
-            detectedType.ToString(),
+            formatId,
             false
         );
         _main.CurrentPage = ImportOptions;
@@ -69,18 +69,17 @@ internal sealed class GuiNavigationService
         _main.CurrentPage = Tool;
     }
 
-    public void ShowToolForChart(string filePath, ChartType detectedType)
+    public void ShowToolForChart(string filePath, string formatId)
     {
         Tool.CurrentFileName = Path.GetFileName(filePath);
-        Tool.DetectedFormat = detectedType.ToString();
-        Tool.SourceChartType = detectedType;
+        Tool.DetectedFormat = formatId;
         _main.SetShellState(
             "tool",
             tool_select_title,
             tool_options_title,
             2,
             Path.GetFileName(filePath),
-            detectedType.ToString(),
+            formatId,
             true
         );
         Tool.RenderOutputDir = Path.Combine(
@@ -93,8 +92,10 @@ internal sealed class GuiNavigationService
 
     public void ShowExport()
     {
-        Export.SourceFormat = Tool.SourceChartType;
-        Export.SelectedFormat = ChartType.RePhiEdit;
+        Export.SourceFormat = Tool.DetectedFormat;
+        Export.RefreshAvailableFormats();
+        if (Export.AvailableFormats.Contains(ChartFormatIds.RePhiEdit))
+            Export.SelectedFormat = ChartFormatIds.RePhiEdit;
         Export.IndentedOutput = false;
         Export.StatusText = string.Empty;
         Export.IsExporting = false;

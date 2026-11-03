@@ -1,4 +1,3 @@
-using System.Reflection;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter;
 using KaedePhi.Tool.Converter.Intermediate;
@@ -103,14 +102,9 @@ public class ExportHierarchyValidationTests
     public async Task ChartFormatDescriptor_ExportAsyncAllowsSelfReferencingJudgeLine()
     {
         var exporterStarted = false;
-        var descriptor = new ChartFormatDescriptor
-        {
-            Type = ChartType.PhiEdit,
-            FileExtension = "test",
-        };
-        SetExporter(
-            descriptor,
-            (_, _, _, _, _, _) =>
+        var descriptor = ChartFormatDescriptor.Create(
+            "tests.hierarchy", "test",
+            exporter: (_, _, _, _, _, _) =>
             {
                 exporterStarted = true;
                 return Task.CompletedTask;
@@ -183,27 +177,6 @@ public class ExportHierarchyValidationTests
 
     private static Ir.Chart CreateSelfReferencingChart() =>
         new() { JudgeLineList = [new Ir.JudgeLine { Father = 0 }] };
-
-    private static void SetExporter(
-        ChartFormatDescriptor descriptor,
-        Func<
-            Ir.Chart,
-            string,
-            ChartWriteSettings,
-            object?,
-            ChartLogSink,
-            CancellationToken,
-            Task
-        > exporter
-    )
-    {
-        var property = typeof(ChartFormatDescriptor).GetProperty(
-            "Exporter",
-            BindingFlags.Instance | BindingFlags.NonPublic
-        );
-        property.Should().NotBeNull();
-        property!.SetValue(descriptor, exporter);
-    }
 
     private sealed class UnvalidatedConverter : IChartConverter<Ir.Chart, Unit?, Unit?>
     {

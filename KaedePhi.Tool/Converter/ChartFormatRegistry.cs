@@ -1,10 +1,10 @@
-using System.Collections.ObjectModel;
 using KaedePhi.Core.Formats.PhiChain.v6.Serialization;
 using KaedePhi.Core.Formats.PhiEdit.Serialization;
 using KaedePhi.Core.Formats.PhiFans.Serialization;
 using KaedePhi.Core.Formats.Phigros.v3.Serialization;
 using KaedePhi.Core.Formats.RePhiEdit.Serialization;
 using KaedePhi.Tool.Common;
+using KaedePhi.Tool.Compatibility;
 using KaedePhi.Tool.Converter.PhiChain;
 using KaedePhi.Tool.Converter.PhiChain.Model;
 using KaedePhi.Tool.Converter.PhiEdit;
@@ -25,17 +25,13 @@ namespace KaedePhi.Tool.Converter;
 /// </summary>
 public static class ChartFormatRegistry
 {
-    private static readonly object ExternalLock = new();
-    private static readonly Dictionary<string, ChartFormatDescriptor> ExternalDescriptors =
-        new(StringComparer.OrdinalIgnoreCase);
+    private static readonly Func<Stream, CancellationToken, ValueTask<string?>> DefaultDetector =
+        ChartGetType.DetectBuiltInFormatAsync;
 
-    private static readonly ReadOnlyDictionary<ChartType, ChartFormatDescriptor> Descriptors = new(
-        new Dictionary<ChartType, ChartFormatDescriptor>
-        {
-            [ChartType.RePhiEdit] = new()
+    internal static IReadOnlyList<ChartFormatRegistration> DefaultRegistrations { get; } =
+        [
+            new(new ChartFormatDescriptor(ChartFormatIds.RePhiEdit, "json", useLegacyType: true)
             {
-                Type = ChartType.RePhiEdit,
-                FileExtension = "json",
                 ExportOptionsFactory = () => new ConvertOption(),
                 Importer = async (text, _, log, ct) =>
                 {
@@ -64,12 +60,10 @@ public static class ChartFormatRegistry
                         ct
                     );
                 },
-            },
+            }, DefaultDetector),
 
-            [ChartType.StellateRePhiEditExtended] = new()
+            new(new ChartFormatDescriptor(ChartFormatIds.StellateRePhiEditExtended, "json", useLegacyType: true)
             {
-                Type = ChartType.StellateRePhiEditExtended,
-                FileExtension = "json",
                 ExportOptionsFactory = () => new ConvertOption(),
                 Importer = async (text, _, log, ct) =>
                 {
@@ -98,12 +92,10 @@ public static class ChartFormatRegistry
                         ct
                     );
                 },
-            },
+            }, DefaultDetector),
 
-            [ChartType.PhiEdit] = new()
+            new(new ChartFormatDescriptor(ChartFormatIds.PhiEdit, "pec", useLegacyType: true)
             {
-                Type = ChartType.PhiEdit,
-                FileExtension = "pec",
                 ImportOptionsFactory = () => new PhiEditToIrConvertOptions(),
                 ExportOptionsFactory = () => new IrToPhiEditConvertOptions(),
                 Importer = async (text, options, log, ct) =>
@@ -139,12 +131,10 @@ public static class ChartFormatRegistry
                         ct
                     );
                 },
-            },
+            }, DefaultDetector),
 
-            [ChartType.PhigrosV3] = new()
+            new(new ChartFormatDescriptor(ChartFormatIds.PhigrosV3, "json", useLegacyType: true)
             {
-                Type = ChartType.PhigrosV3,
-                FileExtension = "json",
                 ExportOptionsFactory = () => new IrToPhigrosV3ConvertOptions(),
                 Importer = async (text, _, log, ct) =>
                 {
@@ -173,12 +163,10 @@ public static class ChartFormatRegistry
                         ct
                     );
                 },
-            },
+            }, DefaultDetector),
 
-            [ChartType.PhiChain] = new()
+            new(new ChartFormatDescriptor(ChartFormatIds.PhiChain, "json", useLegacyType: true)
             {
-                Type = ChartType.PhiChain,
-                FileExtension = "json",
                 ImportOptionsFactory = () => new PhiChainToIrConvertOptions(),
                 ExportOptionsFactory = () => new IrToPhiChainConvertOptions(),
                 Importer = async (text, options, log, ct) =>
@@ -214,12 +202,10 @@ public static class ChartFormatRegistry
                         ct
                     );
                 },
-            },
+            }, DefaultDetector),
 
-            [ChartType.PhiFans] = new()
+            new(new ChartFormatDescriptor(ChartFormatIds.PhiFans, "json", useLegacyType: true)
             {
-                Type = ChartType.PhiFans,
-                FileExtension = "json",
                 ExportOptionsFactory = () => new IrToPhiFansConvertOptions(),
                 Importer = async (text, _, log, ct) =>
                 {
@@ -248,74 +234,81 @@ public static class ChartFormatRegistry
                         ct
                     );
                 },
-            },
-            [ChartType.PhigrosV1] = new() { Type = ChartType.PhigrosV1, FileExtension = "json" },
-        }
-    );
+            }, DefaultDetector),
+            new(new ChartFormatDescriptor(ChartFormatIds.PhigrosV1, "json", useLegacyType: true), DefaultDetector),
+        ];
+
+    /// <summary>默认谱面格式注册表。</summary>
+    public static ChartFormatCatalog Default { get; } = new(DefaultRegistrations);
 
     /// <summary>
     /// 获取指定格式的能力描述。
     /// </summary>
     /// <param name="type">谱面格式</param>
     /// <returns>格式描述，未注册时返回 <see langword="null"/></returns>
+    [Obsolete("将在下一个大版本移除；请改用 Find(string)，通过格式标识查询。")]
     public static ChartFormatDescriptor? Find(ChartType type) =>
-        Descriptors.GetValueOrDefault(type);
+        LegacyChartTypeMapping.IsDefined((int)type)
+            ? Find(LegacyChartTypeMapping.ToFormatId((int)type))
+            : null;
 
     /// <summary>
     /// 按格式标识获取内置或外部格式描述，标识不区分大小写。
     /// </summary>
     /// <param name="formatId">格式的稳定字符串标识。</param>
     /// <returns>格式描述，未注册时返回 <see langword="null"/>。</returns>
-    public static ChartFormatDescriptor? Find(string formatId)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(formatId);
-        var builtIn = Descriptors.Values.FirstOrDefault(descriptor =>
-            string.Equals(descriptor.FormatId, formatId, StringComparison.OrdinalIgnoreCase));
-        if (builtIn is not null)
-            return builtIn;
-        lock (ExternalLock)
-            return ExternalDescriptors.GetValueOrDefault(formatId);
-    }
+    public static ChartFormatDescriptor? Find(string formatId) => Default.Find(formatId);
 
     /// <summary>
-    /// 注册外部格式；标识不区分大小写，重复标识及内置格式名称不能被覆盖。
+    /// 注册谱面格式；标识不区分大小写，重复标识不能被覆盖。
     /// </summary>
-    /// <param name="descriptor">由 <see cref="ChartFormatDescriptor.Create"/> 创建的格式描述。</param>
-    public static void Register(ChartFormatDescriptor descriptor)
-    {
-        ArgumentNullException.ThrowIfNull(descriptor);
-        if (descriptor.Type != (ChartType)(-1))
-            throw new ArgumentException("请使用格式工厂创建外部格式描述。", nameof(descriptor));
-        if (Enum.GetNames<ChartType>().Any(name =>
-                string.Equals(name, descriptor.FormatId, StringComparison.OrdinalIgnoreCase)))
-            throw new InvalidOperationException($"格式标识已被内置格式占用：{descriptor.FormatId}");
+    /// <param name="descriptor">格式描述。</param>
+    public static void Register(ChartFormatDescriptor descriptor) => Default.Register(descriptor);
 
-        lock (ExternalLock)
-        {
-            if (!ExternalDescriptors.TryAdd(descriptor.FormatId, descriptor))
-                throw new InvalidOperationException($"格式标识已注册：{descriptor.FormatId}");
-        }
-    }
+    /// <summary>
+    /// 注册谱面格式及其检测配置。
+    /// </summary>
+    /// <param name="registration">格式注册信息。</param>
+    public static void RegisterFormat(ChartFormatRegistration registration) => Default.Register(registration);
+
+    /// <summary>
+    /// 注册谱面格式及其检测器；检测器接收独立的可读流，匹配时返回真。
+    /// </summary>
+    /// <param name="descriptor">格式描述。</param>
+    /// <param name="detector">格式检测回调，不匹配时返回假；流可能不可定位，回调返回后不可继续使用。</param>
+    /// <param name="priority">检测优先级，内置格式的优先级为零；同级匹配多个格式时抛出异常。</param>
+    public static void Register(
+        ChartFormatDescriptor descriptor,
+        Func<Stream, CancellationToken, ValueTask<bool>> detector,
+        int priority = 0
+    )
+        => Default.Register(descriptor, detector, priority);
 
     /// <summary>
     /// 取消注册外部格式。
     /// </summary>
     /// <param name="formatId">外部格式的稳定字符串标识。</param>
     /// <returns>是否移除了已注册格式。</returns>
-    public static bool Unregister(string formatId)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(formatId);
-        lock (ExternalLock)
-            return ExternalDescriptors.Remove(formatId);
-    }
+    [Obsolete("将在下一个大版本移除；请改用 UnregisterFormat 或 ChartFormatCatalog.Unregister，注意新接口也可移除内置格式。")]
+    public static bool Unregister(string formatId) => Default.UnregisterExternal(formatId);
+
+    /// <summary>
+    /// 按标识取消注册默认注册表中的谱面格式，包括内置格式。
+    /// </summary>
+    /// <param name="formatId">格式的稳定字符串标识。</param>
+    /// <returns>是否移除了已注册格式。</returns>
+    public static bool UnregisterFormat(string formatId) => Default.Unregister(formatId);
 
     /// <summary>
     /// 获取指定格式的能力描述，未注册时抛出异常。
     /// </summary>
     /// <param name="type">谱面格式</param>
     /// <returns>格式描述</returns>
+    [Obsolete("将在下一个大版本移除；请改用 Get(string)，通过格式标识查询。")]
     public static ChartFormatDescriptor Get(ChartType type) =>
-        Find(type) ?? throw new NotSupportedException($"未注册的谱面格式：{type}");
+        (LegacyChartTypeMapping.IsDefined((int)type)
+            ? Find(LegacyChartTypeMapping.ToFormatId((int)type))
+            : null) ?? throw new NotSupportedException($"未注册的谱面格式：{type}");
 
     /// <summary>
     /// 按格式标识获取内置或外部格式描述，未注册时抛出异常。
@@ -395,23 +388,17 @@ public static class ChartFormatRegistry
     /// <summary>
     /// 获取内置与外部格式的快照。
     /// </summary>
-    public static IReadOnlyList<ChartFormatDescriptor> Formats
-    {
-        get
-        {
-            lock (ExternalLock)
-                return Descriptors.Values.Concat(ExternalDescriptors.Values).ToArray();
-        }
-    }
+    public static IReadOnlyList<ChartFormatDescriptor> Formats => Default.Formats;
 
     /// <summary>
-    /// 检测谱面文本格式并转换为 IR 中间格式。
+    /// 检测内置谱面文本格式并转换为 IR 中间格式；外部格式请使用 <see cref="ImportDetectedIrAsync(string, object?, ChartLogSink?, CancellationToken)"/>。
     /// </summary>
     /// <param name="text">谱面原始文本</param>
     /// <param name="importOptions">导入选项，传 <see langword="null"/> 时使用格式默认值</param>
     /// <param name="log">日志回调集合</param>
     /// <param name="ct">取消令牌</param>
     /// <returns>检测到的格式与转换结果</returns>
+    [Obsolete("将在下一个大版本移除；请改用 ImportDetectedIrAsync，并使用返回的格式描述。")]
     public static async Task<(ChartType DetectedType, Ir.Chart Chart)> ImportIrAsync(
         string text,
         object? importOptions = null,
@@ -419,11 +406,65 @@ public static class ChartFormatRegistry
         CancellationToken ct = default
     )
     {
-        using var textReader = new StringReader(text);
-        var detectedType = ChartGetType.GetType(textReader);
-        var chart = await Get(detectedType).ImportIrAsync(text, importOptions, log, ct);
-        return (detectedType, chart);
+        var (formatId, chart) = await ImportLegacyIrAsync(text, importOptions, log, ct);
+        return ((ChartType)LegacyChartTypeMapping.ToValue(formatId), chart);
     }
+
+    private static async Task<(string FormatId, Ir.Chart Chart)> ImportLegacyIrAsync(
+        string text, object? importOptions, ChartLogSink? log, CancellationToken ct
+    )
+    {
+        ct.ThrowIfCancellationRequested();
+        using var textReader = new StringReader(text);
+        var formatId = ChartGetType.DetectBuiltInFormat(textReader);
+        var chart = await Get(formatId).ImportIrAsync(text, importOptions, log, ct);
+        return (formatId, chart);
+    }
+
+    /// <summary>
+    /// 检测谱面文本的内置或外部格式并转换为 IR。
+    /// </summary>
+    /// <param name="text">谱面原始文本。</param>
+    /// <param name="importOptions">导入选项，传空时使用格式默认值。</param>
+    /// <param name="log">日志回调集合。</param>
+    /// <param name="ct">取消令牌。</param>
+    /// <returns>检测到的格式描述与 IR 谱面。</returns>
+    public static Task<(ChartFormatDescriptor Format, Ir.Chart Chart)> ImportDetectedIrAsync(
+        string text,
+        object? importOptions = null,
+        ChartLogSink? log = null,
+        CancellationToken ct = default
+    ) => Default.ImportDetectedIrAsync(text, importOptions, log, ct);
+
+    /// <summary>
+    /// 从可定位流的当前位置检测格式并转换为 IR；检测后从原位置导入。
+    /// </summary>
+    /// <param name="stream">可读取、可定位的谱面输入流；导入实现应保持其打开。</param>
+    /// <param name="importOptions">导入选项，传空时使用格式默认值。</param>
+    /// <param name="log">日志回调集合。</param>
+    /// <param name="ct">取消令牌。</param>
+    /// <returns>检测到的格式描述与 IR 谱面。</returns>
+    public static Task<(ChartFormatDescriptor Format, Ir.Chart Chart)> ImportDetectedIrAsync(
+        Stream stream,
+        object? importOptions = null,
+        ChartLogSink? log = null,
+        CancellationToken ct = default
+    ) => Default.ImportDetectedIrAsync(stream, importOptions, log, ct);
+
+    /// <summary>
+    /// 使用流工厂检测格式并转换为 IR，支持不可定位的输入。
+    /// </summary>
+    /// <param name="openRead">每次调用均返回从谱面起点开始的独立可读流；使用后关闭该流。</param>
+    /// <param name="importOptions">导入选项，传空时使用格式默认值。</param>
+    /// <param name="log">日志回调集合。</param>
+    /// <param name="ct">取消令牌。</param>
+    /// <returns>检测到的格式描述与 IR 谱面。</returns>
+    public static Task<(ChartFormatDescriptor Format, Ir.Chart Chart)> ImportDetectedIrAsync(
+        Func<Stream> openRead,
+        object? importOptions = null,
+        ChartLogSink? log = null,
+        CancellationToken ct = default
+    ) => Default.ImportDetectedIrAsync(openRead, importOptions, log, ct);
 
     /// <summary>
     /// 检测谱面文本格式并转换为已弃用的 KPC 中间格式。
@@ -433,7 +474,7 @@ public static class ChartFormatRegistry
     /// <param name="log">日志回调集合</param>
     /// <param name="ct">取消令牌</param>
     /// <returns>检测到的格式与转换结果</returns>
-    [Obsolete("已弃用：请迁移至 ImportIrAsync。")]
+    [Obsolete("将在下一个大版本移除；请改用 ImportDetectedIrAsync，并使用返回的格式描述和 IR 谱面。")]
     public static async Task<(ChartType DetectedType, KpcChart Chart)> ImportAsync(
         string text,
         object? importOptions = null,
@@ -441,20 +482,21 @@ public static class ChartFormatRegistry
         CancellationToken ct = default
     )
     {
-        var (detectedType, chart) = await ImportIrAsync(text, importOptions, log, ct);
-        return (detectedType, Compatibility.KpcCompatibilityMapper.ToKpc(chart));
+        var (formatId, chart) = await ImportLegacyIrAsync(text, importOptions, log, ct);
+        return ((ChartType)LegacyChartTypeMapping.ToValue(formatId), Compatibility.KpcCompatibilityMapper.ToKpc(chart));
     }
 
     /// <summary>
     /// 为转换器注入日志回调与取消令牌。
     /// </summary>
-    private static TConverter Prepare<TConverter>(
+    internal static TConverter Prepare<TConverter>(
         TConverter converter,
         ChartLogSink log,
         CancellationToken ct
     )
         where TConverter : ILoggable
     {
+        ArgumentNullException.ThrowIfNull(converter);
         log.AttachTo(converter);
         if (converter is ICancellableChartConverter cancellable)
             cancellable.SetCancellationToken(ct);
@@ -492,44 +534,7 @@ public static class ChartFormatRegistry
         var fullPath = Path.GetFullPath(path);
         if (write.UseStream)
         {
-            if (write.DryRun)
-            {
-                await using var stream = Stream.Null;
-                await serializeStream(stream);
-            }
-            else
-            {
-                var temporaryPath = fullPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
-                Directory.CreateDirectory(
-                    Path.GetDirectoryName(fullPath)
-                        ?? throw new InvalidOperationException("Invalid output path")
-                );
-                try
-                {
-                    await using (
-                        var stream = new FileStream(
-                            temporaryPath,
-                            FileMode.CreateNew,
-                            FileAccess.Write,
-                            FileShare.None,
-                            4096,
-                            useAsync: true
-                        )
-                    )
-                    {
-                        await serializeStream(stream);
-                        await stream.FlushAsync(ct);
-                    }
-
-                    ct.ThrowIfCancellationRequested();
-                    File.Move(temporaryPath, fullPath, true);
-                }
-                finally
-                {
-                    if (File.Exists(temporaryPath))
-                        File.Delete(temporaryPath);
-                }
-            }
+            await WriteStreamAsync(fullPath, write, serializeStream, ct);
         }
         else
         {
@@ -553,6 +558,47 @@ public static class ChartFormatRegistry
                         File.Delete(temporaryPath);
                 }
             }
+        }
+    }
+
+    internal static async Task WriteStreamAsync(
+        string path,
+        ChartWriteSettings write,
+        Func<Stream, Task> serializeStream,
+        CancellationToken ct
+    )
+    {
+        ct.ThrowIfCancellationRequested();
+        var fullPath = Path.GetFullPath(path);
+        if (write.DryRun)
+        {
+            await serializeStream(Stream.Null);
+            return;
+        }
+
+        var temporaryPath = fullPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        Directory.CreateDirectory(
+            Path.GetDirectoryName(fullPath)
+                ?? throw new InvalidOperationException("Invalid output path")
+        );
+        try
+        {
+            await using (
+                var stream = new FileStream(
+                    temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, useAsync: true
+                )
+            )
+            {
+                await serializeStream(stream);
+                await stream.FlushAsync(ct);
+            }
+            ct.ThrowIfCancellationRequested();
+            File.Move(temporaryPath, fullPath, true);
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath))
+                File.Delete(temporaryPath);
         }
     }
 }

@@ -256,7 +256,8 @@
                 </Button>
                 <Button Classes="secondary" Click="OnCancelExportClick" IsVisible="{Binding IsExporting}"
                         Content="{x:Static loc:GuiLocalizationString.btn_cancel}" />
-                <Button Classes="primary" Click="OnExportClick" IsVisible="{Binding !IsExporting}">
+                <Button Classes="primary" Click="OnExportClick" IsVisible="{Binding !IsExporting}"
+                        IsEnabled="{Binding CanExport}">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <TextBlock Text="&#xf019;" Classes="fa-icon" FontSize="13" />
                         <TextBlock Text="{x:Static loc:GuiLocalizationString.btn_export}" />

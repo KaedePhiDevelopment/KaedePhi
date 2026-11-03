@@ -1,5 +1,3 @@
-#pragma warning disable CS0618
-
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Compatibility;
 using KaedePhi.Tool.Converter.Intermediate;
