@@ -285,33 +285,6 @@ namespace KaedePhi.Tool.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to IrRenderOptions 的数值属性超出运行时允许范围，会在渲染前抛出参数异常。.
-        /// </summary>
-        internal static string kpte_0013_description {
-            get {
-                return ResourceManager.GetString("kpte_0013_description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 渲染配置属性 {0} 的值 {1} 非法，允许范围：{2}。.
-        /// </summary>
-        internal static string kpte_0013_message_format {
-            get {
-                return ResourceManager.GetString("kpte_0013_message_format", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 渲染配置数值越界.
-        /// </summary>
-        internal static string kpte_0013_title {
-            get {
-                return ResourceManager.GetString("kpte_0013_title", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to 将 cutLength 改为倒数.
         /// </summary>
         internal static string kpti_0001_code_fix_title {

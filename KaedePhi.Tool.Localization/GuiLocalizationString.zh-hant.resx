@@ -97,30 +97,6 @@
   <data name="option_disable_compress_hint" xml:space="preserve">
     <value>僅在啟用經典模式時可用</value>
   </data>
-  <data name="option_pixels_per_beat" xml:space="preserve">
-    <value>每拍像素</value>
-  </data>
-  <data name="option_channel_width" xml:space="preserve">
-    <value>通道寬度</value>
-  </data>
-  <data name="option_samples_per_event" xml:space="preserve">
-    <value>每事件取樣數</value>
-  </data>
-  <data name="option_beat_subdivisions" xml:space="preserve">
-    <value>拍細分數</value>
-  </data>
-  <data name="option_render_output_dir" xml:space="preserve">
-    <value>圖片輸出資料夾（預設為譜面同層目錄下的 RenderLayer）</value>
-  </data>
-  <data name="option_render_output_dir_hint" xml:space="preserve">
-    <value>輸出資料夾路徑（不存在時自動建立）</value>
-  </data>
-  <data name="btn_browse" xml:space="preserve">
-    <value>瀏覽</value>
-  </data>
-  <data name="render_output_dir_picker_title" xml:space="preserve">
-    <value>選擇渲染輸出資料夾</value>
-  </data>
   <data name="btn_run_tool" xml:space="preserve">
     <value>執行工具</value>
   </data>
@@ -202,12 +178,6 @@
   <data name="tool_fit_desc" xml:space="preserve">
     <value>將線性事件擬合為緩動曲線</value>
   </data>
-  <data name="tool_render_name" xml:space="preserve">
-    <value>事件渲染</value>
-  </data>
-  <data name="tool_render_desc" xml:space="preserve">
-    <value>將譜面事件層渲染為圖片</value>
-  </data>
   <data name="log_app_starting" xml:space="preserve">
     <value>應用程式啟動中...</value>
   </data>
@@ -240,9 +210,6 @@
   </data>
   <data name="log_tool_cancelled" xml:space="preserve">
     <value>工具操作已取消。</value>
-  </data>
-  <data name="log_tool_render_output" xml:space="preserve">
-    <value>渲染輸出: {0}</value>
   </data>
   <data name="log_tool_failed" xml:space="preserve">
     <value>工具執行失敗。</value>
@@ -316,9 +283,6 @@
   <data name="settings_fit" xml:space="preserve">
     <value>事件擬合</value>
   </data>
-  <data name="settings_render" xml:space="preserve">
-    <value>譜面渲染</value>
-  </data>
   <data name="settings_convert" xml:space="preserve">
     <value>格式轉換</value>
   </data>
@@ -348,21 +312,6 @@
   </data>
   <data name="option_phase_epsilon" xml:space="preserve">
     <value>相位偵測精度</value>
-  </data>
-  <data name="option_range_padding_ratio" xml:space="preserve">
-    <value>值域填充比例</value>
-  </data>
-  <data name="option_range_samples" xml:space="preserve">
-    <value>值域取樣數</value>
-  </data>
-  <data name="option_segment_group_tolerance" xml:space="preserve">
-    <value>段分組容差</value>
-  </data>
-  <data name="option_min_value_range_half" xml:space="preserve">
-    <value>最小值域半寬</value>
-  </data>
-  <data name="option_min_value_range_half_ratio" xml:space="preserve">
-    <value>最小值域半寬比例</value>
   </data>
   <data name="convert_options_title" xml:space="preserve">
     <value>轉換選項</value>
@@ -613,7 +562,6 @@
   <data name="ui_tool_precision_desc" xml:space="preserve"><value>取樣與切割使用的精度</value></data>
   <data name="ui_tool_tolerance_desc" xml:space="preserve"><value>允許的相對誤差範圍</value></data>
   <data name="ui_tool_merge_tolerance_desc" xml:space="preserve"><value>相鄰事件層的合併閾值</value></data>
-  <data name="ui_tool_render_title" xml:space="preserve"><value>渲染設定</value></data>
   <data name="ui_export_eyebrow" xml:space="preserve"><value>第 03 步  /  輸出</value></data>
   <data name="ui_export_result_title" xml:space="preserve"><value>匯出你的結果</value></data>
   <data name="ui_export_result_desc" xml:space="preserve"><value>選擇目標格式，KaedePhi 會在儲存前套用對應的轉換規則。</value></data>

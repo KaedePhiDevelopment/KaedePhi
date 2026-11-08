@@ -16,7 +16,6 @@ public sealed class SettingsViewModelTests : IDisposable
     {
         var service = new AppConfigService(_configDir);
         service.Config.LogLevel = 1;
-        service.Config.Render.OutputDir = "render-output";
         service.Config.Unbind.DryRun = true;
         service.Config.Convert.TargetType = ChartFormatIds.PhigrosV3;
         service.Config.Convert.PhiFansDiscontinuityBeatPrecision = 32;
@@ -32,7 +31,6 @@ public sealed class SettingsViewModelTests : IDisposable
         reloaded.Fit.Tolerance.Should().Be(0.25);
         reloaded.Cut.Precision.Should().Be(16d);
         reloaded.LogLevel.Should().Be(1u);
-        reloaded.Render.OutputDir.Should().Be("render-output");
         reloaded.Unbind.DryRun.Should().BeTrue();
         reloaded.Convert.TargetType.Should().Be(ChartFormatIds.PhigrosV3);
         reloaded.Convert.PhiFansDiscontinuityBeatPrecision.Should().Be(32);

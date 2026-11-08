@@ -11,7 +11,6 @@ using KaedePhi.Tool.Converter.Phigros.v3;
 using KaedePhi.Tool.Converter.Phigros.v3.Model;
 using KaedePhi.Tool.Converter.RePhiEdit;
 using KaedePhi.Tool.Converter.RePhiEdit.Model;
-using KaedePhi.Tool.Render.Intermediate;
 using Ir = KaedePhi.Core.Intermediate.Model;
 
 namespace KaedePhi.Tests.Validation;
@@ -121,50 +120,6 @@ public class ExportHierarchyValidationTests
 
         await act.Should().NotThrowAsync();
         exporterStarted.Should().BeTrue();
-    }
-
-    [Fact]
-    public void IrChartRenderExporter_ExportChartAllowsSelfReferencingJudgeLine()
-    {
-        var outputDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-        try
-        {
-            Action act = () =>
-                new IrChartRenderExporter().ExportChart(
-                    CreateSelfReferencingChart(),
-                    outputDir,
-                    new IrRenderOptions()
-                );
-
-            act.Should().NotThrow();
-        }
-        finally
-        {
-            if (Directory.Exists(outputDir))
-                Directory.Delete(outputDir, true);
-        }
-    }
-
-    [Fact]
-    public void IrChartRenderExporter_ExportChartAllowsValidJudgeLineTree()
-    {
-        var outputDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-        var chart = new Ir.Chart
-        {
-            JudgeLineList = [new Ir.JudgeLine(), new Ir.JudgeLine { Father = 0 }],
-        };
-        try
-        {
-            Action act = () =>
-                new IrChartRenderExporter().ExportChart(chart, outputDir, new IrRenderOptions());
-
-            act.Should().NotThrow();
-        }
-        finally
-        {
-            if (Directory.Exists(outputDir))
-                Directory.Delete(outputDir, true);
-        }
     }
 
     [Fact]

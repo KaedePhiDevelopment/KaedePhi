@@ -1,4 +1,4 @@
-using KaedePhi.Tool.Compatibility;
+using KaedePhi.Tool.Render;
 using KaedePhi.Tool.Render.KaedePhi;
 using Kpc = KaedePhi.Core.KaedePhi;
 using KpcEvents = KaedePhi.Core.KaedePhi.Events;
@@ -6,49 +6,45 @@ using KpcEvents = KaedePhi.Core.KaedePhi.Events;
 namespace KaedePhi.Tool.Common;
 
 /// <summary>
-/// 已弃用的 KPC 渲染参数校验入口，行为与 <see cref="IrRenderValidator"/> 一致。
+/// 已移除的 KPC 渲染参数校验入口：渲染工具已被彻底移除，仅为二进制兼容保留。
 /// </summary>
-[Obsolete("已弃用：请迁移至 KaedePhi.Tool.Common.IrRenderValidator。")]
+[Obsolete(RenderRemovedNotice.Message, true)]
 public static class KpcRenderValidator
 {
-    /// <summary>渲染位图的最大像素数。</summary>
+    /// <summary>
+    /// 已移除的渲染像素上限常量，仅为兼容保留。
+    /// </summary>
     public const long MaximumRenderPixels = IrRenderValidator.MaximumRenderPixels;
 
     /// <summary>
-    /// 校验 KPC 谱面与渲染配置。
+    /// 已移除的渲染参数校验入口，调用始终抛出未实现异常。
     /// </summary>
     /// <param name="chart">待渲染的 KPC 谱面。</param>
     /// <param name="options">渲染配置。</param>
-    /// <param name="lineIndex">若指定，则只渲染该索引的判定线。</param>
-    /// <param name="layerIndex">若指定，则只渲染该索引的事件层。</param>
-    [Obsolete("已弃用：请迁移至 IrRenderValidator.Validate。")]
+    /// <param name="lineIndex">可选判定线索引。</param>
+    /// <param name="layerIndex">可选事件层索引。</param>
+    /// <exception cref="NotImplementedException">渲染工具已被彻底移除，始终抛出。</exception>
     public static void Validate(
         Kpc.Chart chart,
         KpcRenderOptions options,
         int? lineIndex = null,
         int? layerIndex = null
-    ) =>
-        IrRenderValidator.Validate(
-            KpcCompatibilityMapper.ToIntermediate(chart),
-            options,
-            lineIndex,
-            layerIndex
-        );
+    ) => throw RenderRemovedNotice.CreateException();
 
     /// <summary>
-    /// 校验渲染配置。
+    /// 已移除的渲染配置校验入口，调用始终抛出未实现异常。
     /// </summary>
     /// <param name="options">渲染配置。</param>
-    [Obsolete("已弃用：请迁移至 IrRenderValidator.ValidateOptions。")]
+    /// <exception cref="NotImplementedException">渲染工具已被彻底移除，始终抛出。</exception>
     public static void ValidateOptions(KpcRenderOptions options) =>
-        IrRenderValidator.ValidateOptions(options);
+        throw RenderRemovedNotice.CreateException();
 
     /// <summary>
-    /// 校验单个事件层与渲染配置。
+    /// 已移除的事件层校验入口，调用始终抛出未实现异常。
     /// </summary>
     /// <param name="layer">待渲染的事件层。</param>
     /// <param name="options">渲染配置。</param>
-    [Obsolete("已弃用：请迁移至 IrRenderValidator.ValidateEventLayer。")]
+    /// <exception cref="NotImplementedException">渲染工具已被彻底移除，始终抛出。</exception>
     public static void ValidateEventLayer(KpcEvents.EventLayer layer, KpcRenderOptions options) =>
-        IrRenderValidator.ValidateEventLayer(KpcCompatibilityMapper.ToIntermediate(layer), options);
+        throw RenderRemovedNotice.CreateException();
 }

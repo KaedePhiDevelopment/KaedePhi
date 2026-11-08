@@ -1,15 +1,26 @@
 using KaedePhi.Tool.Common;
-using SkiaSharp;
 using Chart = KaedePhi.Core.Intermediate.Model.Chart;
 
 namespace KaedePhi.Tool.Render.Intermediate;
 
 /// <summary>
-/// IR 谱面渲染导出器：将谱面各判定线、各事件层渲染为 PNG 图片并写入目录。
+/// 已移除的 IR 谱面渲染导出器：渲染工具已被彻底移除，仅为二进制兼容保留。
 /// </summary>
+[Obsolete(RenderRemovedNotice.Message, true)]
 public class IrChartRenderExporter : LoggableBase, IChartRenderExporter<Chart, IrRenderOptions>
 {
-    /// <inheritdoc/>
+    /// <summary>
+    /// 已移除的渲染入口，调用始终抛出未实现异常。
+    /// </summary>
+    /// <param name="chart">谱面对象。</param>
+    /// <param name="outputDir">输出目录。</param>
+    /// <param name="opts">渲染配置。</param>
+    /// <param name="lineIndex">判定线索引。</param>
+    /// <param name="layerIndex">事件层索引。</param>
+    /// <param name="progress">进度回调。</param>
+    /// <param name="ct">取消令牌。</param>
+    /// <returns>不会正常返回。</returns>
+    /// <exception cref="NotImplementedException">渲染工具已被彻底移除，始终抛出。</exception>
     public IReadOnlyList<string> ExportChart(
         Chart chart,
         string outputDir,
@@ -18,117 +29,5 @@ public class IrChartRenderExporter : LoggableBase, IChartRenderExporter<Chart, I
         int? layerIndex = null,
         IProgress<ToolProgress>? progress = null,
         CancellationToken ct = default
-    )
-    {
-        IrRenderValidator.Validate(chart, opts, lineIndex, layerIndex);
-        Directory.CreateDirectory(outputDir);
-        var written = new List<string>();
-
-        var lineStart = lineIndex ?? 0;
-        var lineEnd = lineIndex.HasValue ? lineIndex.Value + 1 : chart.JudgeLineList.Count;
-        var totalLines = lineEnd - lineStart;
-        var completedLines = 0;
-
-        for (var li = lineStart; li < lineEnd; li++)
-        {
-            ct.ThrowIfCancellationRequested();
-            if (li >= chart.JudgeLineList.Count)
-                break;
-            var line = chart.JudgeLineList[li];
-            if (line is null)
-            {
-                completedLines++;
-                continue;
-            }
-
-            var layers = line.EventLayers ?? [];
-            if (layers.Count == 0)
-            {
-                completedLines++;
-                continue;
-            }
-
-            var safeName = SanitizeFileName(line.Name);
-
-            var layerStart = layerIndex ?? 0;
-            var layerEnd = layerIndex.HasValue ? layerIndex.Value + 1 : layers.Count;
-            var totalLayers = layerEnd - layerStart;
-            var completedLayers = 0;
-
-            for (var ei = layerStart; ei < layerEnd; ei++)
-            {
-                ct.ThrowIfCancellationRequested();
-                if (ei >= layers.Count)
-                    break;
-                var eventLayer = layers[ei];
-                if ((object?)eventLayer is null)
-                {
-                    completedLayers++;
-                    continue;
-                }
-
-                LogInfo($"渲染 [{li}]{safeName} 第 {ei} 层...");
-
-                using var bitmap = IrEventLayerRenderer.RenderEventLayer(eventLayer, opts);
-                var filename = $"{safeName}_L{li}_layer{ei}.png";
-                var filePath = Path.Combine(outputDir, filename);
-
-                SaveBitmap(bitmap, filePath, ct);
-                written.Add(filePath);
-                LogInfo($"  已写入: {filePath}");
-
-                completedLayers++;
-                var lineProgress = (double)completedLines / totalLines;
-                var layerProgress = (double)completedLayers / totalLayers / totalLines;
-                progress?.Report(
-                    new ToolProgress(lineProgress + layerProgress, $"[{li}]{safeName} layer{ei}")
-                );
-            }
-
-            completedLines++;
-        }
-
-        progress?.Report(new ToolProgress(1.0));
-        return written;
-    }
-
-    private static void SaveBitmap(SKBitmap bitmap, string filePath, CancellationToken ct)
-    {
-        ct.ThrowIfCancellationRequested();
-        using var image = SKImage.FromBitmap(bitmap);
-        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-        var temporaryPath = filePath + "." + Guid.NewGuid().ToString("N") + ".tmp";
-        try
-        {
-            using (
-                var stream = new FileStream(
-                    temporaryPath,
-                    FileMode.CreateNew,
-                    FileAccess.Write,
-                    FileShare.None,
-                    4096,
-                    useAsync: false
-                )
-            )
-            {
-                data.SaveTo(stream);
-                stream.Flush(true);
-            }
-
-            ct.ThrowIfCancellationRequested();
-            File.Move(temporaryPath, filePath, true);
-        }
-        finally
-        {
-            if (File.Exists(temporaryPath))
-                File.Delete(temporaryPath);
-        }
-    }
-
-    private static string SanitizeFileName(string name)
-    {
-        var invalid = Path.GetInvalidFileNameChars();
-        var chars = name.Select(c => invalid.Contains(c) ? '_' : c).ToArray();
-        return new string(chars).Trim('.', ' ');
-    }
+    ) => throw RenderRemovedNotice.CreateException();
 }

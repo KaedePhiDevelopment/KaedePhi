@@ -153,13 +153,4 @@
   <data name="kpte_0012_description" xml:space="preserve">
     <value>Negative values for non-negative properties such as trailing beat padding throw at runtime validation.</value>
   </data>
-  <data name="kpte_0013_title" xml:space="preserve">
-    <value>Render option value is out of range</value>
-  </data>
-  <data name="kpte_0013_message_format" xml:space="preserve">
-    <value>The render option property {0} has the invalid value {1}; allowed range: {2}.</value>
-  </data>
-  <data name="kpte_0013_description" xml:space="preserve">
-    <value>IrRenderOptions numeric properties outside the allowed range throw before rendering.</value>
-  </data>
 </root>

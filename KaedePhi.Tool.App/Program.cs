@@ -94,7 +94,11 @@ internal static partial class Program
         root.Add(CutEventCommand.Create());
         root.Add(LayerMergeCommand.Create());
         root.Add(UnbindFatherCommand.Create());
-        root.Add(RenderCommand.Create());
+        // 渲染工具已被彻底移除，隐藏命令接受任意旧参数，仅输出移除提示
+        var renderCmd = RenderCommand.Create();
+        renderCmd.Hidden = true;
+        renderCmd.TreatUnmatchedTokensAsErrors = false;
+        root.Add(renderCmd);
 
         var configBranch = new Command("config", CliLocalizationString.branch_config_desc)
         {

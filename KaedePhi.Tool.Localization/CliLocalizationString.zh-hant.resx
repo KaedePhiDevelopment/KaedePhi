@@ -188,18 +188,7 @@
     <data name="convert_opt_negative_alpha_step" xml:space="preserve">
         <value>負透明度段每次抬高的 KPC Y 偏移量（預設：4.0）</value>
     </data>
-    <data name="render_opt_pixels_per_beat" xml:space="preserve"><value>每拍對應的像素高度（預設：100）</value></data>
-    <data name="render_opt_channel_width" xml:space="preserve"><value>每個通道的寬度（像素，預設：150）</value></data>
-    <data name="render_opt_samples" xml:space="preserve"><value>每個事件的曲線採樣點數（預設：64）</value></data>
-    <data name="render_opt_line" xml:space="preserve"><value>只渲染指定索引的判定線</value></data>
-    <data name="render_opt_layer" xml:space="preserve"><value>只渲染指定索引的事件層（需同時指定 --line）</value></data>
-    <data name="render_opt_beat_subdivisions" xml:space="preserve"><value>每拍格線細分數（預設：2）</value></data>
-    <data name="render_opt_output" xml:space="preserve"><value>圖片輸出資料夾路徑</value></data>
-    <data name="render_opt_range_padding_ratio" xml:space="preserve"><value>通道值域填充比例（預設：0.1）</value></data>
-    <data name="render_opt_range_samples" xml:space="preserve"><value>通道值域計算採樣點數（預設：16）</value></data>
-    <data name="render_opt_segment_tolerance" xml:space="preserve"><value>事件段壓縮容差（預設：0.000001）</value></data>
-    <data name="render_opt_min_range_half" xml:space="preserve"><value>通道值域最小半寬（預設：0.1）</value></data>
-    <data name="render_opt_min_range_half_ratio" xml:space="preserve"><value>通道值域最小半寬比例（預設：0.15）</value></data>
+    <data name="render_removed_notice" xml:space="preserve"><value>渲染工具已被徹底移除，不再提供任何功能。</value></data>
     <data name="convert_opt_pe_trailing_padding" xml:space="preserve"><value>PhiEdit 尾部拍填充量</value></data>
     <data name="convert_opt_pe_easing_precision" xml:space="preserve"><value>PhiEdit 不支援緩動切割精度</value></data>
     <data name="convert_opt_pe_xy_precision" xml:space="preserve"><value>PhiEdit 非對齊 XY 事件精度</value></data>

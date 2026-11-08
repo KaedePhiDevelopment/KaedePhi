@@ -3,7 +3,6 @@ using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Event.Intermediate;
 using KaedePhi.Tool.JudgeLines.Intermediate;
 using KaedePhi.Tool.Layer.Intermediate;
-using KaedePhi.Tool.Render.Intermediate;
 using Chart = KaedePhi.Core.Intermediate.Model.Chart;
 
 namespace KaedePhi.Tool.App.Shared;
@@ -197,23 +196,6 @@ public static class ChartProcessor
         }
 
         progress?.Report(new ToolProgress(1.0, 1.0));
-    }
-
-    public static IReadOnlyList<string> Render(
-        Chart chart,
-        string outputDir,
-        IrRenderOptions options,
-        int? lineIndex = null,
-        int? layerIndex = null,
-        ChartLogSink? log = null,
-        IProgress<ToolProgress>? progress = null,
-        CancellationToken ct = default
-    )
-    {
-        IrRenderValidator.Validate(chart, options, lineIndex, layerIndex);
-        var exporter = new IrChartRenderExporter();
-        log?.AttachTo(exporter);
-        return exporter.ExportChart(chart, outputDir, options, lineIndex, layerIndex, progress, ct);
     }
 
     private static void FitLayer(

@@ -6,5 +6,4 @@ public static class ToolIds
     public const string LayerMerge = "layermerge";
     public const string Cut = "cut";
     public const string Fit = "fit";
-    public const string Render = "render";
 }

@@ -198,18 +198,7 @@
     <data name="convert_opt_negative_alpha_step" xml:space="preserve">
         <value>KPC Y offset per elevation step for negative alpha segments (default: 4.0)</value>
     </data>
-    <data name="render_opt_pixels_per_beat" xml:space="preserve"><value>Pixels per beat (default: 100)</value></data>
-    <data name="render_opt_channel_width" xml:space="preserve"><value>Channel width in pixels (default: 150)</value></data>
-    <data name="render_opt_samples" xml:space="preserve"><value>Curve samples per event (default: 64)</value></data>
-    <data name="render_opt_line" xml:space="preserve"><value>Render only the specified judgment line index</value></data>
-    <data name="render_opt_layer" xml:space="preserve"><value>Render only the specified event layer index; requires --line</value></data>
-    <data name="render_opt_beat_subdivisions" xml:space="preserve"><value>Beat grid subdivisions (default: 2)</value></data>
-    <data name="render_opt_output" xml:space="preserve"><value>PNG output directory</value></data>
-    <data name="render_opt_range_padding_ratio" xml:space="preserve"><value>Channel range padding ratio (default: 0.1)</value></data>
-    <data name="render_opt_range_samples" xml:space="preserve"><value>Samples used for channel range detection (default: 16)</value></data>
-    <data name="render_opt_segment_tolerance" xml:space="preserve"><value>Event segment compression tolerance (default: 0.000001)</value></data>
-    <data name="render_opt_min_range_half" xml:space="preserve"><value>Minimum channel range half-width (default: 0.1)</value></data>
-    <data name="render_opt_min_range_half_ratio" xml:space="preserve"><value>Minimum channel range half-width ratio (default: 0.15)</value></data>
+    <data name="render_removed_notice" xml:space="preserve"><value>The render tool has been completely removed and is no longer available.</value></data>
     <data name="convert_opt_pe_trailing_padding" xml:space="preserve"><value>PhiEdit trailing beat padding</value></data>
     <data name="convert_opt_pe_easing_precision" xml:space="preserve"><value>PhiEdit unsupported easing precision</value></data>
     <data name="convert_opt_pe_xy_precision" xml:space="preserve"><value>PhiEdit misaligned XY event precision</value></data>

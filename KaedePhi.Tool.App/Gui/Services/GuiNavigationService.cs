@@ -83,10 +83,6 @@ internal sealed class GuiNavigationService
             formatId,
             true
         );
-        Tool.RenderOutputDir = Path.Combine(
-            Path.GetDirectoryName(filePath) ?? string.Empty,
-            "RenderLayer"
-        );
         Tool.SelectedTool = null;
         ShowTool();
     }

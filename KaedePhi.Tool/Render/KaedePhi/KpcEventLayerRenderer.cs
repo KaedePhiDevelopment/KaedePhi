@@ -1,25 +1,20 @@
-using KaedePhi.Tool.Compatibility;
 using SkiaSharp;
 using KpcEvents = KaedePhi.Core.KaedePhi.Events;
 
 namespace KaedePhi.Tool.Render.KaedePhi;
 
 /// <summary>
-/// 已弃用的 KPC 事件层渲染入口，行为与 <see cref="Intermediate.IrEventLayerRenderer"/> 一致。
+/// 已移除的 KPC 事件层渲染入口：渲染工具已被彻底移除，仅为二进制兼容保留。
 /// </summary>
-[Obsolete("已弃用：请迁移至 KaedePhi.Tool.Render.Intermediate.IrEventLayerRenderer。")]
+[Obsolete(RenderRemovedNotice.Message, true)]
 public static class KpcEventLayerRenderer
 {
     /// <summary>
-    /// 将单个 KPC 事件层渲染为位图。
+    /// 已移除的事件层渲染入口，调用始终抛出未实现异常。
     /// </summary>
-    /// <param name="layer">待渲染的事件层。</param>
+    /// <param name="layer">事件层。</param>
     /// <param name="opts">渲染配置。</param>
-    /// <returns>渲染结果位图。</returns>
-    [Obsolete("已弃用：请迁移至 IrEventLayerRenderer.RenderEventLayer。")]
+    /// <exception cref="NotImplementedException">渲染工具已被彻底移除，始终抛出。</exception>
     public static SKBitmap RenderEventLayer(KpcEvents.EventLayer layer, KpcRenderOptions opts) =>
-        Intermediate.IrEventLayerRenderer.RenderEventLayer(
-            KpcCompatibilityMapper.ToIntermediate(layer),
-            opts
-        );
+        throw RenderRemovedNotice.CreateException();
 }

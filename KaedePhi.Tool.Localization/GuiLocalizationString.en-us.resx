@@ -97,30 +97,6 @@
   <data name="option_disable_compress_hint" xml:space="preserve">
     <value>Only available when Classic Mode is enabled</value>
   </data>
-  <data name="option_pixels_per_beat" xml:space="preserve">
-    <value>Pixels Per Beat</value>
-  </data>
-  <data name="option_channel_width" xml:space="preserve">
-    <value>Channel Width</value>
-  </data>
-  <data name="option_samples_per_event" xml:space="preserve">
-    <value>Samples Per Event</value>
-  </data>
-  <data name="option_beat_subdivisions" xml:space="preserve">
-    <value>Beat Subdivisions</value>
-  </data>
-  <data name="option_render_output_dir" xml:space="preserve">
-    <value>Image output folder (defaults to a RenderLayer folder next to the chart)</value>
-  </data>
-  <data name="option_render_output_dir_hint" xml:space="preserve">
-    <value>Output folder path (created automatically if missing)</value>
-  </data>
-  <data name="btn_browse" xml:space="preserve">
-    <value>Browse</value>
-  </data>
-  <data name="render_output_dir_picker_title" xml:space="preserve">
-    <value>Choose output folder for rendering</value>
-  </data>
   <data name="btn_run_tool" xml:space="preserve">
     <value>Run Tool</value>
   </data>
@@ -202,12 +178,6 @@
   <data name="tool_fit_desc" xml:space="preserve">
     <value>Fit linear events into easing curves</value>
   </data>
-  <data name="tool_render_name" xml:space="preserve">
-    <value>Render Events</value>
-  </data>
-  <data name="tool_render_desc" xml:space="preserve">
-    <value>Render chart event layers to images</value>
-  </data>
   <data name="log_app_starting" xml:space="preserve">
     <value>Application starting...</value>
   </data>
@@ -240,9 +210,6 @@
   </data>
   <data name="log_tool_cancelled" xml:space="preserve">
     <value>Tool operation cancelled.</value>
-  </data>
-  <data name="log_tool_render_output" xml:space="preserve">
-    <value>Render output: {0}</value>
   </data>
   <data name="log_tool_failed" xml:space="preserve">
     <value>Tool execution failed.</value>
@@ -316,9 +283,6 @@
   <data name="settings_fit" xml:space="preserve">
     <value>Fit Events</value>
   </data>
-  <data name="settings_render" xml:space="preserve">
-    <value>Render</value>
-  </data>
   <data name="settings_convert" xml:space="preserve">
     <value>Conversion</value>
   </data>
@@ -348,21 +312,6 @@
   </data>
   <data name="option_phase_epsilon" xml:space="preserve">
     <value>Phase Detection Epsilon</value>
-  </data>
-  <data name="option_range_padding_ratio" xml:space="preserve">
-    <value>Range Padding Ratio</value>
-  </data>
-  <data name="option_range_samples" xml:space="preserve">
-    <value>Range Samples</value>
-  </data>
-  <data name="option_segment_group_tolerance" xml:space="preserve">
-    <value>Segment Group Tolerance</value>
-  </data>
-  <data name="option_min_value_range_half" xml:space="preserve">
-    <value>Min Value Range Half</value>
-  </data>
-  <data name="option_min_value_range_half_ratio" xml:space="preserve">
-    <value>Min Value Range Half Ratio</value>
   </data>
   <data name="convert_options_title" xml:space="preserve">
     <value>Conversion Options</value>
@@ -613,7 +562,6 @@
   <data name="ui_tool_precision_desc" xml:space="preserve"><value>Precision used for sampling and cutting</value></data>
   <data name="ui_tool_tolerance_desc" xml:space="preserve"><value>Allowed relative error range</value></data>
   <data name="ui_tool_merge_tolerance_desc" xml:space="preserve"><value>Threshold for merging adjacent event layers</value></data>
-  <data name="ui_tool_render_title" xml:space="preserve"><value>Render settings</value></data>
   <data name="ui_export_eyebrow" xml:space="preserve"><value>STEP 03  /  OUTPUT</value></data>
   <data name="ui_export_result_title" xml:space="preserve"><value>Export your result</value></data>
   <data name="ui_export_result_desc" xml:space="preserve"><value>Choose a target format and KaedePhi will apply its conversion rules before saving.</value></data>

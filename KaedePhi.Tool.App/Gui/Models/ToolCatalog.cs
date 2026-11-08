@@ -52,13 +52,5 @@ public static class ToolCatalog
                 HasFitOptions = true,
                 DefaultTolerance = 0.5,
             },
-            new()
-            {
-                Name = tool_render_name,
-                Description = tool_render_desc,
-                IconGlyph = FontAwesome.Image,
-                ToolId = ToolIds.Render,
-                HasRenderOptions = true,
-            },
         ];
 }

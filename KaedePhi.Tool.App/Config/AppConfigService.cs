@@ -65,7 +65,7 @@ public sealed class AppConfigService
             if (File.Exists(ConfigPath))
             {
                 var originalYaml = File.ReadAllText(ConfigPath);
-                var yaml = RemoveObsoleteConvertOptions(originalYaml);
+                var yaml = RemoveObsoleteOptions(originalYaml);
                 var config = _deserializer.Deserialize<AppConfig>(yaml);
                 if (config is null)
                     throw new FormatException("配置文件为空。");
@@ -163,30 +163,11 @@ public sealed class AppConfigService
         ValidateTool(config.Unbind);
         ValidateTool(config.LayerMerge);
         ValidateTool(config.Cut);
-        if (config.Fit is null || config.Render is null || config.Convert is null)
+        if (config.Fit is null || config.Convert is null)
             throw new FormatException("配置文件缺少必要的配置段。");
         NumericParameterValidator.ValidateTolerance(config.Fit.Tolerance);
-        ValidateRender(config.Render);
         ValidateConvert(config.Convert);
     }
-
-    private static void ValidateRender(RenderDefaultsConfig render)
-    {
-        NumericParameterValidator.ValidatePrecision(render.SamplesPerEvent);
-        if (
-            render.PixelsPerBeat <= 0
-            || render.ChannelWidth <= 0
-            || render.BeatSubdivisions <= 0
-            || render.RangeSamplesPerEvent <= 0
-            || !IsNonNegativeFinite(render.RangePaddingRatio)
-            || !IsNonNegativeFinite(render.SegmentGroupTolerance)
-            || !IsNonNegativeFinite(render.MinValueRangeHalf)
-            || !IsNonNegativeFinite(render.MinValueRangeHalfRatio)
-        )
-            throw new ArgumentOutOfRangeException(nameof(render));
-    }
-
-    private static bool IsNonNegativeFinite(double value) => double.IsFinite(value) && value >= 0;
 
     private static void ValidateTool(ToolDefaultsConfig? config)
     {
@@ -222,34 +203,43 @@ public sealed class AppConfigService
             throw new ArgumentOutOfRangeException(nameof(config));
     }
 
-    private static string RemoveObsoleteConvertOptions(string yaml)
+    private static string RemoveObsoleteOptions(string yaml)
     {
         var yamlStream = new YamlStream();
         yamlStream.Load(new StringReader(yaml));
         if (yamlStream.Documents.FirstOrDefault()?.RootNode is not YamlMappingNode root)
             return yaml;
 
+        // 渲染工具已被彻底移除，旧配置中的整个 render 段不再被识别，需要在读取前丢弃
+        var removedRender = RemoveObsoleteKeys(root, key => key is "render");
+        var removedConvert = false;
         var convertNode = root
             .Children.FirstOrDefault(pair => pair.Key is YamlScalarNode { Value: "convert" })
             .Value;
-        if (convertNode is not YamlMappingNode convert)
-            return yaml;
+        if (convertNode is YamlMappingNode convert)
+            removedConvert = RemoveObsoleteKeys(
+                convert,
+                key => key is "peSpeedCutCompress" or "peSpeedCutTolerance" or "phigrosDefaultBpm"
+            );
 
-        var obsoleteKeys = convert
-            .Children.Keys.OfType<YamlScalarNode>()
-            .Where(key =>
-                key.Value is "peSpeedCutCompress" or "peSpeedCutTolerance" or "phigrosDefaultBpm"
-            )
-            .ToList();
-        if (obsoleteKeys.Count == 0)
+        if (!removedRender && !removedConvert)
             return yaml;
-
-        foreach (var key in obsoleteKeys)
-            convert.Children.Remove(key);
 
         using var writer = new StringWriter();
         yamlStream.Save(writer, false);
         return writer.ToString();
+    }
+
+    private static bool RemoveObsoleteKeys(YamlMappingNode node, Func<string?, bool> isObsolete)
+    {
+        var obsoleteKeys = node
+            .Children.Keys.OfType<YamlScalarNode>()
+            .Where(key => isObsolete(key.Value))
+            .ToList();
+        foreach (var key in obsoleteKeys)
+            node.Children.Remove(key);
+
+        return obsoleteKeys.Count > 0;
     }
 
     private void TryBackupInvalidConfig()

@@ -153,13 +153,4 @@
   <data name="kpte_0012_description" xml:space="preserve">
     <value>尾部拍填充等非負屬性為負數時，執行時驗證會拋出例外。</value>
   </data>
-  <data name="kpte_0013_title" xml:space="preserve">
-    <value>渲染設定數值越界</value>
-  </data>
-  <data name="kpte_0013_message_format" xml:space="preserve">
-    <value>渲染設定屬性 {0} 的值 {1} 非法，允許範圍：{2}。</value>
-  </data>
-  <data name="kpte_0013_description" xml:space="preserve">
-    <value>IrRenderOptions 的數值屬性超出執行時允許範圍，會在渲染前拋出參數例外。</value>
-  </data>
 </root>

@@ -1,7 +1,6 @@
 using KaedePhi.Tool.App.Shared;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter;
-using KaedePhi.Tool.Render.Intermediate;
 using Serilog;
 using static KaedePhi.Tool.Localization.GuiLocalizationString;
 using Chart = KaedePhi.Core.Intermediate.Model.Chart;
@@ -262,31 +261,6 @@ public sealed class GuiChartService
     {
         _log.Information(log_running_tool, tool_fit_name);
         ChartProcessor.FitEvent(chart, tolerance, CreateLogSink(), progress, ct);
-    }
-
-    public IReadOnlyList<string> RunRender(
-        Chart chart,
-        string outputDir,
-        IrRenderOptions options,
-        IProgress<ToolProgress>? progress = null,
-        CancellationToken ct = default
-    )
-    {
-        _log.Information(log_running_tool, tool_render_name);
-
-        // 输出目录为空时回退到导入谱面同级目录的 RenderLayer 文件夹
-        if (string.IsNullOrWhiteSpace(outputDir))
-            outputDir = Path.Combine(Path.GetDirectoryName(SourceFilePath) ?? ".", "RenderLayer");
-
-        Directory.CreateDirectory(outputDir);
-        return ChartProcessor.Render(
-            chart,
-            outputDir,
-            options,
-            log: CreateLogSink(),
-            progress: progress,
-            ct: ct
-        );
     }
 
     #endregion

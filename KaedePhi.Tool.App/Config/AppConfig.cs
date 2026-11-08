@@ -43,6 +43,5 @@ public sealed class AppConfig
         };
 
     public FitDefaultsConfig Fit { get; set; } = new();
-    public RenderDefaultsConfig Render { get; set; } = new();
     public ConvertDefaultsConfig Convert { get; set; } = new();
 }

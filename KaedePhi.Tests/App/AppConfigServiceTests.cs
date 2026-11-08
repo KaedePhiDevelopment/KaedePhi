@@ -76,6 +76,45 @@ public sealed class AppConfigServiceTests : IDisposable
     }
 
     [Fact]
+    public void Load_RemovesRemovedRenderSectionAndPreservesExistingSettings()
+    {
+        WriteConfig(
+            """
+            logLevel: 2
+            render:
+              pixelsPerBeat: 120
+              outputDir: render-output
+            fit:
+              tolerance: 0.25
+            convert:
+              phigrosDefaultBpm: 180
+              phigrosSpeedCutPrecision: 32
+            """
+        );
+
+        var service = new AppConfigService(_configDir);
+
+        service.Config.LogLevel.Should().Be(2);
+        service.Config.Fit.Tolerance.Should().Be(0.25);
+        service.Config.Convert.PhigrosSpeedCutPrecision.Should().Be(32d);
+        var migratedYaml = File.ReadAllText(ConfigPath);
+        migratedYaml.Should().NotContain("render").And.NotContain("phigrosDefaultBpm");
+        Directory.GetFiles(_configDir, "config.yaml.invalid.*").Should().BeEmpty();
+
+        var reloaded = new AppConfigService(_configDir);
+        reloaded.Config.Should().BeEquivalentTo(service.Config);
+        File.ReadAllText(ConfigPath).Should().Be(migratedYaml);
+    }
+
+    [Fact]
+    public void NewConfiguration_DoesNotWriteRenderSection()
+    {
+        _ = new AppConfigService(_configDir);
+
+        File.ReadAllText(ConfigPath).Should().NotContainEquivalentOf("render");
+    }
+
+    [Fact]
     public void Load_HandlesConvertSectionContainingOnlyObsoleteBpm()
     {
         WriteConfig("convert: { phigrosDefaultBpm: 180 }\n");

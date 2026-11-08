@@ -40,7 +40,6 @@ public sealed class ToolViewModel : ViewModelBase
                 nameof(ShowClassicMode),
                 nameof(ShowDisableCompress),
                 nameof(ShowGeneralOptions),
-                nameof(ShowRenderOptions),
                 nameof(ShowFitOptions),
                 nameof(DisableCompressEnabled),
                 nameof(CanRun)
@@ -97,41 +96,6 @@ public sealed class ToolViewModel : ViewModelBase
 
     #endregion
 
-    #region 渲染参数
-
-    public int PixelsPerBeat
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = 100;
-
-    public int ChannelWidth
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = 150;
-
-    public int SamplesPerEvent
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = 64;
-
-    public int BeatSubdivisions
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = 2;
-
-    // 默认取导入谱面同级目录下的 RenderLayer 文件夹
-    public string RenderOutputDir
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = string.Empty;
-
-    #endregion
-
     #region 运行状态
 
     public string StatusText
@@ -168,7 +132,6 @@ public sealed class ToolViewModel : ViewModelBase
     public bool ShowMergeTolerance => SelectedTool?.HasMergeTolerance == true;
     public bool ShowClassicMode => SelectedTool?.HasClassicMode == true;
     public bool ShowDisableCompress => SelectedTool?.HasDisableCompress == true;
-    public bool ShowRenderOptions => SelectedTool?.HasRenderOptions == true;
     public bool ShowFitOptions => SelectedTool?.HasFitOptions == true;
 
     public bool ShowGeneralOptions =>
@@ -206,12 +169,6 @@ public sealed class ToolViewModel : ViewModelBase
                 break;
             case ToolIds.Fit:
                 Tolerance = config.Fit.Tolerance;
-                break;
-            case ToolIds.Render:
-                PixelsPerBeat = config.Render.PixelsPerBeat;
-                ChannelWidth = config.Render.ChannelWidth;
-                SamplesPerEvent = config.Render.SamplesPerEvent;
-                BeatSubdivisions = config.Render.BeatSubdivisions;
                 break;
         }
     }

@@ -199,16 +199,4 @@
     <value>尾部拍填充等非负属性为负数时，运行时校验会抛出异常。</value>
     <comment>KPTE0012 诊断描述。</comment>
   </data>
-  <data name="kpte_0013_title" xml:space="preserve">
-    <value>渲染配置数值越界</value>
-    <comment>KPTE0013 诊断标题。</comment>
-  </data>
-  <data name="kpte_0013_message_format" xml:space="preserve">
-    <value>渲染配置属性 {0} 的值 {1} 非法，允许范围：{2}。</value>
-    <comment>KPTE0013 诊断消息。</comment>
-  </data>
-  <data name="kpte_0013_description" xml:space="preserve">
-    <value>IrRenderOptions 的数值属性超出运行时允许范围，会在渲染前抛出参数异常。</value>
-    <comment>KPTE0013 诊断描述。</comment>
-  </data>
 </root>

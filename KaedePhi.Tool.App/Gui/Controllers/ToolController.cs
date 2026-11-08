@@ -6,7 +6,6 @@ using KaedePhi.Tool.App.Gui.Services;
 using KaedePhi.Tool.App.Gui.ViewModels;
 using KaedePhi.Tool.App.Gui.Views;
 using KaedePhi.Tool.Common;
-using KaedePhi.Tool.Render.Intermediate;
 using static KaedePhi.Tool.Localization.GuiLocalizationString;
 using Chart = KaedePhi.Core.Intermediate.Model.Chart;
 
@@ -69,10 +68,8 @@ internal sealed class ToolController : ControllerBase
             var toolId = toolVm.SelectedTool.ToolId;
             _navigation.ShowProcessing();
 
-            // 渲染为只读操作直接读取当前谱面；其余变更型工具在克隆副本上处理，
-            // 保证取消或异常时当前谱面不会被半处理污染
-            var isRender = toolId == ToolIds.Render;
-            var workingChart = isRender ? currentChart : currentChart.Clone();
+            // 变更型工具在克隆副本上处理，保证取消或异常时当前谱面不会被半处理污染
+            var workingChart = currentChart.Clone();
 
             processingVm.SetStep(0, string.Format(log_running_tool, toolId));
             var toolProgress = new Progress<ToolProgress>(p =>
@@ -82,12 +79,9 @@ internal sealed class ToolController : ControllerBase
             });
             await Task.Run(() => RunTool(toolId, workingChart, toolProgress, ct), ct);
 
-            // 变更型工具完成后先校验副本，通过后才替换当前谱面
-            if (!isRender)
-            {
-                IrChartValidator.ValidateJudgeLineHierarchy(workingChart.JudgeLineList);
-                _chart.CommitChart(workingChart);
-            }
+            // 工具完成后先校验副本，通过后才替换当前谱面
+            IrChartValidator.ValidateJudgeLineHierarchy(workingChart.JudgeLineList);
+            _chart.CommitChart(workingChart);
 
             Logger.Information(log_tool_completed, toolId);
 
@@ -161,36 +155,7 @@ internal sealed class ToolController : ControllerBase
             case ToolIds.Fit:
                 _chart.RunFitEvent(chart, toolVm.Tolerance, progress, ct);
                 break;
-            case ToolIds.Render:
-                RunRender(chart, progress, ct);
-                break;
         }
-    }
-
-    private void RunRender(Chart chart, IProgress<ToolProgress> progress, CancellationToken ct)
-    {
-        var toolVm = _navigation.Tool;
-        var renderConfig = _config.Config.Render;
-        var renderPaths = _chart.RunRender(
-            chart,
-            toolVm.RenderOutputDir,
-            new IrRenderOptions
-            {
-                PixelsPerBeat = toolVm.PixelsPerBeat,
-                ChannelWidth = toolVm.ChannelWidth,
-                SamplesPerEvent = toolVm.SamplesPerEvent,
-                BeatSubdivisions = toolVm.BeatSubdivisions,
-                RangePaddingRatio = renderConfig.RangePaddingRatio,
-                RangeSamplesPerEvent = renderConfig.RangeSamplesPerEvent,
-                SegmentGroupTolerance = renderConfig.SegmentGroupTolerance,
-                MinValueRangeHalf = renderConfig.MinValueRangeHalf,
-                MinValueRangeHalfRatio = renderConfig.MinValueRangeHalfRatio,
-            },
-            progress,
-            ct
-        );
-        foreach (var path in renderPaths)
-            Logger.Information(log_tool_render_output, path);
     }
 
     private void OnCancelProcessing()

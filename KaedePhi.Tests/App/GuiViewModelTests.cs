@@ -35,7 +35,6 @@ public sealed class GuiViewModelTests
         vm.ClassicMode.Should().BeTrue();
         vm.CanRun.Should().BeTrue();
         vm.ShowMergeTolerance.Should().BeTrue();
-        vm.ShowRenderOptions.Should().BeFalse();
     }
 
     [Fact]

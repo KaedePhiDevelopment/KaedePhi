@@ -105,15 +105,6 @@ namespace KaedePhi.Tool.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 浏览.
-        /// </summary>
-        public static string btn_browse {
-            get {
-                return ResourceManager.GetString("btn_browse", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to 取消.
         /// </summary>
         public static string btn_cancel {
@@ -951,38 +942,11 @@ namespace KaedePhi.Tool.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 渲染输出: {0}.
-        /// </summary>
-        public static string log_tool_render_output {
-            get {
-                return ResourceManager.GetString("log_tool_render_output", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to 工作区已清除。.
         /// </summary>
         public static string log_workspace_cleared {
             get {
                 return ResourceManager.GetString("log_workspace_cleared", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 拍细分数.
-        /// </summary>
-        public static string option_beat_subdivisions {
-            get {
-                return ResourceManager.GetString("option_beat_subdivisions", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 通道宽度.
-        /// </summary>
-        public static string option_channel_width {
-            get {
-                return ResourceManager.GetString("option_channel_width", resourceCulture);
             }
         }
         
@@ -1041,24 +1005,6 @@ namespace KaedePhi.Tool.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 最小值域半宽.
-        /// </summary>
-        public static string option_min_value_range_half {
-            get {
-                return ResourceManager.GetString("option_min_value_range_half", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 最小值域半宽比例.
-        /// </summary>
-        public static string option_min_value_range_half_ratio {
-            get {
-                return ResourceManager.GetString("option_min_value_range_half_ratio", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to 相位检测精度.
         /// </summary>
         public static string option_phase_epsilon {
@@ -1068,74 +1014,11 @@ namespace KaedePhi.Tool.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 每拍像素.
-        /// </summary>
-        public static string option_pixels_per_beat {
-            get {
-                return ResourceManager.GetString("option_pixels_per_beat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to 精度.
         /// </summary>
         public static string option_precision {
             get {
                 return ResourceManager.GetString("option_precision", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 值域填充比例.
-        /// </summary>
-        public static string option_range_padding_ratio {
-            get {
-                return ResourceManager.GetString("option_range_padding_ratio", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 值域采样点数.
-        /// </summary>
-        public static string option_range_samples {
-            get {
-                return ResourceManager.GetString("option_range_samples", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 图片输出文件夹（默认为谱面同级目录下的 RenderLayer）.
-        /// </summary>
-        public static string option_render_output_dir {
-            get {
-                return ResourceManager.GetString("option_render_output_dir", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 输出文件夹路径（不存在时自动创建）.
-        /// </summary>
-        public static string option_render_output_dir_hint {
-            get {
-                return ResourceManager.GetString("option_render_output_dir_hint", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 每事件采样数.
-        /// </summary>
-        public static string option_samples_per_event {
-            get {
-                return ResourceManager.GetString("option_samples_per_event", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 段分组容差.
-        /// </summary>
-        public static string option_segment_group_tolerance {
-            get {
-                return ResourceManager.GetString("option_segment_group_tolerance", resourceCulture);
             }
         }
         
@@ -1203,15 +1086,6 @@ namespace KaedePhi.Tool.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 选择渲染输出文件夹.
-        /// </summary>
-        public static string render_output_dir_picker_title {
-            get {
-                return ResourceManager.GetString("render_output_dir_picker_title", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to 格式转换.
         /// </summary>
         public static string settings_convert {
@@ -1253,15 +1127,6 @@ namespace KaedePhi.Tool.Localization {
         public static string settings_max_log_files {
             get {
                 return ResourceManager.GetString("settings_max_log_files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 谱面渲染.
-        /// </summary>
-        public static string settings_render {
-            get {
-                return ResourceManager.GetString("settings_render", resourceCulture);
             }
         }
         
@@ -1505,24 +1370,6 @@ namespace KaedePhi.Tool.Localization {
         public static string tool_options_title {
             get {
                 return ResourceManager.GetString("tool_options_title", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 将谱面事件层渲染为图片.
-        /// </summary>
-        public static string tool_render_desc {
-            get {
-                return ResourceManager.GetString("tool_render_desc", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 事件渲染.
-        /// </summary>
-        public static string tool_render_name {
-            get {
-                return ResourceManager.GetString("tool_render_name", resourceCulture);
             }
         }
         
@@ -2405,15 +2252,6 @@ namespace KaedePhi.Tool.Localization {
         public static string ui_tool_precision_desc {
             get {
                 return ResourceManager.GetString("ui_tool_precision_desc", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 渲染设置.
-        /// </summary>
-        public static string ui_tool_render_title {
-            get {
-                return ResourceManager.GetString("ui_tool_render_title", resourceCulture);
             }
         }
         

@@ -3,7 +3,6 @@ using KaedePhi.Core.Intermediate.Model;
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter.Intermediate;
-using KaedePhi.Tool.Render.Intermediate;
 
 namespace KaedePhi.Tests.Validation;
 
@@ -37,17 +36,6 @@ public class ValidationComponentTests
 
         cycleCheck.Should().Throw<FormatException>();
         invalidCheck.Should().Throw<FormatException>();
-    }
-
-    [Fact]
-    public void ValidateRender_RequiresLineForLayer()
-    {
-        var chart = new Chart { JudgeLineList = [new JudgeLine()] };
-        var options = new IrRenderOptions();
-
-        Action act = () => IrRenderValidator.Validate(chart, options, layerIndex: 0);
-
-        act.Should().Throw<ArgumentException>();
     }
 
     [Theory]
