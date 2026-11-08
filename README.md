@@ -49,12 +49,6 @@ KaedePhi.Tool.App workspace clear --all
 KaedePhi.Tool.App config reset
 ```
 
-从源码运行时，将上例中的程序名替换为 `dotnet run --project KaedePhi.Tool.App --`，例如：
-
-```bash
-dotnet run --project KaedePhi.Tool.App -- --help
-```
-
 ## 配置与数据路径
 应用使用 .NET 的本机应用数据目录：
 - Windows：`%LOCALAPPDATA%\KaedePhi\config\config.yaml`、`%LOCALAPPDATA%\KaedePhi\workspaces`、`%LOCALAPPDATA%\KaedePhi\logs`
@@ -62,131 +56,27 @@ dotnet run --project KaedePhi.Tool.App -- --help
 
 配置文件由 CLI 和 GUI 共享。工作区只保存名为 `chart.json` 的原始谱面文件，工作区 ID 只允许字母、数字、下划线和连字符。
 
-## 构建与测试
-根目录 `global.json` 为 `dotnet test` 配置 Microsoft.Testing.Platform 测试运行器。
-
-```bash
-dotnet restore KaedePhi.sln
-dotnet test KaedePhi.sln --configuration Release --no-restore
-dotnet publish KaedePhi.Tool.App/KaedePhi.Tool.App.csproj \
-  --configuration Release --framework net10.0 --runtime win-x64 --self-contained false
-```
-
-## .NET版本
-- `KaedePhi.Core`：.NETStandard2.1、.NET8.0、.NET10.0
-- `KaedePhi.Tool`：.NET8.0、.NET10.0
-- `KaedePhi.Tool.App`：源码支持 .NET8.0、.NET10.0，官方应用发布目标为 .NET10.0
-- `KaedePhi.Tool.Localization`：.NET8.0、.NET10.0
-
-Core 的 `net10.0` 目标在 PhiFans、Phigros v3 和 PhiChain 的 JSON 编解码路径中使用 REDox；`net8.0` 与 `netstandard2.1` 继续使用 Newtonsoft.Json。为保持现有模型兼容和 PhiChain 流式输入行为，RePhiEdit 编解码及 PhiChain 流式反序列化仍使用 Newtonsoft.Json。目前 Newtonsoft 兼容包版本为 `1.0.1-preview`，打包稳定版 Core 会产生 NuGet `NU5104` 预览依赖警告；该包发布稳定版后应升级并清除此警告。
-
-Core 和 Tool 的 NuGet 包分别使用 `Core-v<版本>`、`Tool-v<版本>` 标签发布，并保留 NuGet 标准的 `<包 ID>.<版本>.nupkg` 文件名；应用使用 `App-v<版本>` 标签发布。App 附件使用 `KaedePhi-App-v<版本>-<系统>-<架构>-<包类型>` 格式命名，例如 `KaedePhi-App-v1.2.0-macOS-arm64-Installer.dmg`。
-
-## 扩展谱面格式
-外部包可以自行定义谱面模型，使用字符串格式标识注册；默认格式标识可通过 `ChartFormatIds` 常量引用。实现 Core 的 `IChartSerializer<TChart>` 负责流式读写，再实现 Tool 的 `IChartConverter<TChart, TInOptions, TOutOptions>` 负责与 IR 互转；转换器可继承 `LoggableBase`，也可实现 `ICancellableChartConverter`。工具接口同样支持外部格式类型：例如可实现 `ILayerProcessor<TLayer>`，或者将谱面转换为 IR 后使用 `KaedePhi.Tool.Layer.Intermediate.LayerProcessor` 等 IR 通用工具。
-
-例如，假设已实现 `MyChart`、`MySerializer`、`MyConverter` 和相应选项类型：
-
-```csharp
-using KaedePhi.Tool.Common;
-using KaedePhi.Tool.Converter;
-using KaedePhi.Tool.Layer.Intermediate;
-
-var format = ChartFormatDescriptor.Create<MyChart, MyImportOptions, MyExportOptions>(
-    "example.my-format", "mychart", new MySerializer(), () => new MyConverter(),
-    () => new MyImportOptions(), () => new MyExportOptions());
-
-ChartFormatRegistry.Register(format, async (stream, ct) =>
-{
-    var header = new byte[4];
-    var count = await stream.ReadAtLeastAsync(header, 4, false, ct);
-    return count == 4 && header.AsSpan().SequenceEqual("MYCH"u8);
-});
-
-await using var input = File.OpenRead("input.mychart");
-var (detectedFormat, chart) = await ChartFormatRegistry.ImportDetectedIrAsync(input);
-var processed = ChartPipeline.FromIr(chart).Transform(ir =>
-{
-    var processor = new LayerProcessor();
-    foreach (var line in ir.JudgeLineList)
-        if (line.EventLayers.Count > 0)
-            line.EventLayers = [processor.LayerMerge(line.EventLayers, 8)];
-    return ir;
-});
-await detectedFormat.ExportAsync(processed.ToIr(), "output.mychart");
-```
-
-内置格式和外部格式都以 `ChartFormatRegistration` 注册，使用同一套查询、检测和导入机制；IR 是中间表示，不作为默认谱面格式注册。格式标识不区分大小写，同一注册表内的重复标识不能被覆盖。可使用 `ChartFormatDescriptor.Create` 的回调重载只提供需要的导入或导出能力，使用 `CreateDetectionOnly` 定义仅检测的格式；不提供检测器的格式不会参与自动检测。
-
-`ChartFormatRegistry.Default` 是默认注册表。也可以创建独立的 `ChartFormatCatalog`：默认包含内置格式，传入 `includeBuiltInFormats: false` 则从空表开始。独立注册表的 `Register`、`Unregister`、`Find`、`DetectFormatAsync` 和 `ImportDetectedIrAsync` 对内置和外部格式一视同仁，修改不会影响其他注册表。例如：
-
-```csharp
-var catalog = new ChartFormatCatalog();
-var original = catalog.FindRegistration(ChartFormatIds.PhigrosV3)!;
-catalog.Unregister(ChartFormatIds.PhigrosV3);
-// 在此注册其他格式，或在需要时恢复原有格式。
-catalog.Register(original);
-```
-
-`FindRegistration` 返回的注册信息包含描述、检测器和优先级，可用于转移或恢复格式。多个格式可通过 `ChartFormatRegistration` 共享一个返回格式标识的检测器，同一次检测只执行一次；返回的标识须属于使用该检测器注册的格式。现有内置格式共用检测器，以保留原有判定顺序和单次读取行为。新格式也可使用前例中的独立检测器。
-
-检测器接收从谱面起点开始的独立可读流，返回 `false` 表示不匹配，异常则向调用方传播；共享检测器返回匹配格式的标识或空值。流可能不可定位，且不得在回调返回后继续使用。默认内置格式的优先级为 0；注册时可指定整数 `priority`，优先使用最高优先级的匹配结果，同一最高优先级有多个匹配时会报告冲突。检测器应尽量只读取必要的格式标记，不应假设文件扩展名唯一。检测使用注册表快照；移除格式及检测器不影响已开始的检测。
-
-`ChartGetType.DetectFormatAsync` 和 `ChartFormatRegistry.ImportDetectedIrAsync` 返回格式描述，可同时处理内置和外部格式。单个流重载要求流可定位，从当前位置开始检测并恢复位置；不可定位输入可使用 `Func<Stream>` 重载，每次提供一个从谱面起点开始的新流，使用后由库关闭。文本重载使用 UTF-8；二进制格式应使用流重载。
-
-以下旧接口已标记为过时，**将在下一个大版本移除**；除另有说明外，当前版本保留其原有行为：
-
-| 旧接口 | 替代方式 |
-|---|---|
-| `ChartType`、`ChartFormatDescriptor.Type` 和 `BuiltInType` | 使用格式描述的 `FormatId`，通过 `ChartFormatDescriptor.Create` 创建格式描述。 |
-| `new ChartFormatDescriptor()` | 使用 `ChartFormatDescriptor.Create` 或 `CreateDetectionOnly` 工厂。 |
-| `ChartGetType.GetType`、`GetTypeAsync` | 使用 `ChartGetType.DetectFormatAsync` 或独立注册表的 `DetectFormatAsync`，读取返回的格式描述。 |
-| `ChartFormatRegistry`、`ChartFormatCatalog` 接受 `ChartType` 的 `Find` 和 `Get` | 使用接受字符串格式标识的重载。 |
-| 返回枚举的 `ChartFormatRegistry.ImportIrAsync` 和旧 `ImportAsync` | 使用 `ImportDetectedIrAsync`，读取返回的格式描述与 IR 谱面。 |
-| `ChartFormatRegistry.Unregister` | 使用 `ChartFormatRegistry.UnregisterFormat` 或 `ChartFormatCatalog.Unregister`。 |
-| `IrToPhigrosV3ConvertOptions.DefaultBpm`、`DefaultGlobalBpm` | 无需替代。谱面 BPM 列表不允许为空，该选项已不再生效，转换直接使用谱面的 BPM 列表；列表为空时 `PhigrosV3Converter.FromIr` 抛出 `FormatException`，不再回退到默认 BPM。 |
-
-迁移检测接口时请注意：旧检测接口只识别内置格式且会消耗输入；新检测接口使用注册表，流重载要求可定位并恢复输入位置，不可定位输入应使用流工厂重载。旧的 `Unregister` 只移除外部格式，替代接口也可移除内置格式。默认注册表是全局共享状态，建议需要替换格式的宿主优先使用独立注册表。
-
-类型化描述使用序列化器进行流式导入与导出，导出支持 `Indented` 和 `DryRun`，并始终使用流式写入；序列化器需要遵守不关闭传入流的约定，并在并发调用时保证线程安全。不接受空值的转换选项应提供默认选项工厂或在调用时显式传入。宿主负责注册扩展和管理其生命周期；当前 CLI/GUI 不会自动加载外部包。
-
-CLI/GUI 已使用同一注册表：`--target` 接受格式标识，GUI 导出列表和文件扩展名来自注册信息，只有流式导入能力的格式也可直接导入。配置仍使用 `convert.targetType` 键，保留原有格式名称并兼容旧枚举数值；可填写已注册的外部格式标识。
-
-内部业务代码和测试项目不引用过时接口；过时类型仅保留在兼容入口的声明与桥接实现中。测试项目构建将 `CS0612`、`CS0618` 视为错误，避免新增测试重新依赖旧接口。
-
 ## 限制说明
 - FDD 便携版和安装版都要求先安装对应的 .NET 10 运行时，不能脱离运行时单独执行。
 - macOS 安装包未进行 Apple 开发者签名与公证，首次启动需手动确认；Intel 与 Apple 芯片用户需下载对应架构的安装包。
 - 目前正式应用产物提供 Windows x64、Linux x64 和 macOS x86_64/arm64；其他系统和架构需要自行编译验证。
 - 部分目标格式不支持源格式的全部事件或缓动类型，转换时可能进行采样、拟合或压缩；大型谱面可尝试 `--stream` 降低内存占用。
-- 项目仍处于早期阶段，字段、默认配置和转换行为可能变化；升级前请备份谱面和配置。
 
-## 发布流程
-GitHub Actions 是唯一权威发布入口，负责 Core、Tool 和 App 的标签、GitHub Release 及正式附件，并为 App 提供 Windows 安装程序以及分别面向 macOS x86_64 和 arm64 的 `.dmg`。GitLab CI 仅保留夜间 App 构建，不再创建发布和标签，避免两个平台并发发布导致版本、附件和标签不一致。正式 App 发布固定为 `net10.0` FDD；GitLab 夜间构建也使用同一目标框架。
+## 开发者文档
+构建、测试、发布流程、谱面格式扩展和接口迁移说明见 [DEVELOPMENT.md](DEVELOPMENT.md)。
 
 ## 招新
 本项目需要更多人开发与维护，欢迎发送邮件到 nrlt@nuanr-mxi.com 来加入开发！  
-也欢迎加入我的小群！QQ群号: 390530513
+若您需要其它私下联系方式，请在邮件中说明。
 
 ## 开源许可证
 [GNU LESSER GENERAL PUBLIC LICENSE 3.0](https://www.gnu.org/licenses/lgpl-3.0.html)
 
 ## Copyright
-NuanR_Mxi Copyright © 2026 KaedePhi Project.  
-NuanR_Star Copyright © 2026 KaedePhi Project.  
-Kaede HikariN Copyright © 2026 KaedePhi Project.  
-Kaede NuanR_Mxi Copyright © 2026 KaedePhi Project.  
-Kaede NuanR_Star Copyright © 2026 KaedePhi Project.  
-枫暖日明曦 Copyright © 2026 KaedePhi Project.  
-枫暖日星辉 Copyright © 2026 KaedePhi Project.  
-暖日明曦 Copyright © 2026 KaedePhi Project.  
-暖日星辉 Copyright © 2026 KaedePhi Project.  
-暖日 Copyright © 2026 KaedePhi Project.  
-暖星 Copyright © 2026 KaedePhi Project.  
 NuanR_Mxi Lazy Team Copyright © 2026 KaedePhi Project.  
 NuanR_Star Lazy Team Copyright © 2026 KaedePhi Project.  
 NuanR_Star Ciallo Team Copyright © 2026 KaedePhi Project.
-
+KaedePhiDevelopment Team Copyright © 2026 KaedePhi Project.
 ## 致谢
 [cmdysj](https://space.bilibili.com/252635690)  
 [HLMC](https://space.bilibili.com/357681195)  
@@ -221,7 +111,7 @@ NuanR_Mxi All Rights Reserved.
 
 # 外部 NuGet 包及其许可证
 
-下表汇总本仓库所有已提交 `packages.lock.json` 中的 112 个外部 NuGet 包，包含直接依赖、传递依赖以及测试和构建工具依赖。版本列列出各目标框架和运行时标识中锁定的全部版本；“引用关系”表示该包在依赖图中作为直接依赖、传递依赖或两者出现。项目内部项目引用不属于外部包。更新依赖或锁文件后，应同步更新本表。包自身及其内含组件的许可证声明可能不同，重新分发时还应保留包内的 `LICENSE`、`NOTICE` 和 `THIRD-PARTY-NOTICES` 文件。
+下表汇总本仓库所有已提交 `packages.lock.json` 中的 112 个外部 NuGet 包，包含直接依赖、传递依赖以及测试和构建工具依赖。版本列列出各目标框架和运行时标识中锁定的全部版本；“引用关系”表示该包在依赖图中作为直接依赖、传递依赖或两者出现。项目内部项目引用不属于外部包。包自身及其内含组件的许可证声明可能不同，重新分发时还应保留包内的 `LICENSE`、`NOTICE` 和 `THIRD-PARTY-NOTICES` 文件。
 
 > **特别注意：** `FluentAssertions` 8.11.0 仅用于测试，其许可为 Xceed Community License Agreement（Non-Commercial Use），并非 MIT 等通用开源许可证。该许可对组织或商业场景的使用有限制；如项目在组织或商业场景中开发、测试或使用，请先核对完整条款，必要时取得相应商业许可或替换该依赖。
 >

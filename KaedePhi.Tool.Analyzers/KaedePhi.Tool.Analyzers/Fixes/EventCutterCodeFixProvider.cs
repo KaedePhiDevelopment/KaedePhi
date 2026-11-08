@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Operations;
 using Microsoft.CodeAnalysis.Text;
 
-namespace KaedePhi.Tool.Analyzers;
+namespace KaedePhi.Tool.Analyzers.Fixes;
 
 /// <summary>
 /// 为事件切割长度诊断提供倒数修复建议。
