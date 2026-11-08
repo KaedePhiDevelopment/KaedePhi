@@ -61,7 +61,6 @@ internal static class ConversionOptionsValidator
     public static void Validate(IrToPhigrosV3ConvertOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
-        ValidatePositive(options.DefaultBpm, nameof(options.DefaultBpm));
         ValidatePositive(options.Cutting.EasingPrecision, "Cutting.EasingPrecision");
         ValidatePositive(
             options.Cutting.MisalignedXyEventPrecision,

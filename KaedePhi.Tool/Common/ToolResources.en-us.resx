@@ -14,6 +14,9 @@
   <data name="ir_chart_bpm_list_null" xml:space="preserve">
     <value>Chart BPM list cannot be null.</value>
   </data>
+  <data name="ir_chart_bpm_list_empty" xml:space="preserve">
+    <value>Chart BPM list cannot be empty.</value>
+  </data>
   <data name="ir_chart_judge_line_list_null" xml:space="preserve">
     <value>Chart judge line list cannot be null.</value>
   </data>

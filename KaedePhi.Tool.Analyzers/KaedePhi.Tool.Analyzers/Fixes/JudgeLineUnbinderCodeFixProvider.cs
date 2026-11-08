@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Operations;
 using Microsoft.CodeAnalysis.Text;
 
-namespace KaedePhi.Tool.Analyzers;
+namespace KaedePhi.Tool.Analyzers.Fixes;
 
 /// <summary>
 /// 为父线解绑容差诊断提供百分比换算修复建议。

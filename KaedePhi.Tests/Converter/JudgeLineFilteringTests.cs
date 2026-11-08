@@ -84,6 +84,7 @@ public class JudgeLineFilteringTests
     {
         return new Ir.Chart
         {
+            BpmList = [new Ir.BpmItem { StartBeat = new Beat(0), Bpm = 120f }],
             JudgeLineList =
             [
                 CreateLine(1),

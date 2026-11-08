@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 using Xunit;
 using Verifier = Microsoft.CodeAnalysis.CSharp.Testing.CSharpCodeFixVerifier<
     KaedePhi.Tool.Analyzers.JudgeLineUnbinderAnalyzer,
-    KaedePhi.Tool.Analyzers.JudgeLineUnbinderCodeFixProvider,
+    KaedePhi.Tool.Analyzers.Fixes.JudgeLineUnbinderCodeFixProvider,
     Microsoft.CodeAnalysis.Testing.DefaultVerifier
 >;
 

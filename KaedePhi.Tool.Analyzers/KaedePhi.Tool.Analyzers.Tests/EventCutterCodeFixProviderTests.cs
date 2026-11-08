@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Xunit;
 using Verifier = Microsoft.CodeAnalysis.CSharp.Testing.CSharpCodeFixVerifier<
     KaedePhi.Tool.Analyzers.EventCutterAnalyzer,
-    KaedePhi.Tool.Analyzers.EventCutterCodeFixProvider,
+    KaedePhi.Tool.Analyzers.Fixes.EventCutterCodeFixProvider,
     Microsoft.CodeAnalysis.Testing.DefaultVerifier
 >;
 

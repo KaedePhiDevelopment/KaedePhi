@@ -2,7 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace KaedePhi.Tool.Analyzers;
+namespace KaedePhi.Tool.Analyzers.Fixes;
 
 /// <summary>
 /// 生成容差参数百分比换算修复所需的替换表达式。

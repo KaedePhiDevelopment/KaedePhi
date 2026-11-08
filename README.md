@@ -134,7 +134,7 @@ catalog.Register(original);
 
 `ChartGetType.DetectFormatAsync` 和 `ChartFormatRegistry.ImportDetectedIrAsync` 返回格式描述，可同时处理内置和外部格式。单个流重载要求流可定位，从当前位置开始检测并恢复位置；不可定位输入可使用 `Func<Stream>` 重载，每次提供一个从谱面起点开始的新流，使用后由库关闭。文本重载使用 UTF-8；二进制格式应使用流重载。
 
-以下旧接口已标记为过时，**将在下一个大版本移除**；当前版本保留其原有行为：
+以下旧接口已标记为过时，**将在下一个大版本移除**；除另有说明外，当前版本保留其原有行为：
 
 | 旧接口 | 替代方式 |
 |---|---|
@@ -144,6 +144,7 @@ catalog.Register(original);
 | `ChartFormatRegistry`、`ChartFormatCatalog` 接受 `ChartType` 的 `Find` 和 `Get` | 使用接受字符串格式标识的重载。 |
 | 返回枚举的 `ChartFormatRegistry.ImportIrAsync` 和旧 `ImportAsync` | 使用 `ImportDetectedIrAsync`，读取返回的格式描述与 IR 谱面。 |
 | `ChartFormatRegistry.Unregister` | 使用 `ChartFormatRegistry.UnregisterFormat` 或 `ChartFormatCatalog.Unregister`。 |
+| `IrToPhigrosV3ConvertOptions.DefaultBpm`、`DefaultGlobalBpm` | 无需替代。谱面 BPM 列表不允许为空，该选项已不再生效，转换直接使用谱面的 BPM 列表；列表为空时 `PhigrosV3Converter.FromIr` 抛出 `FormatException`，不再回退到默认 BPM。 |
 
 迁移检测接口时请注意：旧检测接口只识别内置格式且会消耗输入；新检测接口使用注册表，流重载要求可定位并恢复输入位置，不可定位输入应使用流工厂重载。旧的 `Unregister` 只移除外部格式，替代接口也可移除内置格式。默认注册表是全局共享状态，建议需要替换格式的宿主优先使用独立注册表。
 

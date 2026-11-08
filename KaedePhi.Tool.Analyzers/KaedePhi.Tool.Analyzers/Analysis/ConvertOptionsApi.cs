@@ -62,8 +62,7 @@ internal static class ConvertOptionsApi
                 PropertyKind.Tolerance,
             var name when name.Contains("Precision", StringComparison.Ordinal) =>
                 PropertyKind.Positive,
-            "DefaultBpm"
-            or "ElevationStep"
+            "ElevationStep"
             or "DiscontinuityBeatPrecision"
             or "FrameDurationBeat" => PropertyKind.Positive,
             "TrailingBeatPadding" => PropertyKind.NonNegative,

@@ -381,45 +381,20 @@ public class PhigrosV3BlockAreaConversionTests
     }
 
     [Fact]
-    public void FromIrUsesDefaultBpmForAreasWhenTheChartHasNoBpmList()
+    public void FromIrRejectsAreasWhenTheChartHasNoBpmList()
     {
         var source = new IrChart
         {
-            BlockAreaList =
-            [
-                new IrBlockArea
-                {
-                    TopRightX = 1d,
-                    BottomLeftX = -1d,
-                    AppearBeat = new Beat(2),
-                    MoveXEvents =
-                    [
-                        new IrEvent
-                        {
-                            StartBeat = new Beat(0),
-                            EndBeat = new Beat(2),
-                            StartValue = 0d,
-                            EndValue = 1d,
-                        },
-                    ],
-                },
-            ],
+            BlockAreaList = [new IrBlockArea { AppearBeat = new Beat(2) }],
         };
-        var options = new IrToPhigrosV3ConvertOptions { DefaultBpm = 60f };
 
-        var converted = new PhigrosV3Converter().FromIr(source, options);
-        var area = Assert.Single(converted.BlockAreaList);
+        var act = () => new PhigrosV3Converter().FromIr(source, new IrToPhigrosV3ConvertOptions());
 
-        Assert.Empty(converted.JudgeLineList);
-        Assert.Equal(2f, area.AppearTime);
-        Assert.Equal(2, area.MoveEvents.Count);
-        Assert.Equal(0f, area.MoveEvents[0].Time);
-        Assert.Equal(2f, area.MoveEvents[^1].Time);
-        Assert.Equal(1f, area.MoveEvents[^1].EndPosition.X);
+        Assert.Throws<FormatException>(act);
     }
 
     [Fact]
-    public void FromIrWithSingleBpmKeepsAreaMusicTimesIndependentOfDefaultBpm()
+    public void FromIrWithSingleBpmUsesTheBpmForAreaMusicTimes()
     {
         var source = new IrChart
         {
@@ -447,9 +422,7 @@ public class PhigrosV3BlockAreaConversionTests
                 },
             ],
         };
-        var options = new IrToPhigrosV3ConvertOptions { DefaultBpm = 60f };
-
-        var converted = new PhigrosV3Converter().FromIr(source, options);
+        var converted = new PhigrosV3Converter().FromIr(source, new IrToPhigrosV3ConvertOptions());
         var area = Assert.Single(converted.BlockAreaList);
 
         Assert.Empty(converted.JudgeLineList);

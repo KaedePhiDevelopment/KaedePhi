@@ -87,6 +87,15 @@ namespace KaedePhi.Tool.Common {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 谱面 BPM 列表不能为空。.
+        /// </summary>
+        internal static string ir_chart_bpm_list_empty {
+            get {
+                return ResourceManager.GetString("ir_chart_bpm_list_empty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to 谱面 BPM 列表不能为 null。.
         /// </summary>
         internal static string ir_chart_bpm_list_null {

@@ -177,7 +177,7 @@ public class PhigrosV3JudgeLineBuilderTests
         };
 
         var converted = converter.FromIr(
-            new Chart { JudgeLineList = [line] },
+            CreateChart(line),
             new IrToPhigrosV3ConvertOptions()
         );
 
@@ -392,7 +392,7 @@ public class PhigrosV3JudgeLineBuilderTests
                 },
             ],
         };
-        var chart = new Chart { JudgeLineList = [negativeAlphaLine, new JudgeLine()] };
+        var chart = CreateChart(negativeAlphaLine, new JudgeLine());
         var options = new IrToPhigrosV3ConvertOptions();
         options.NegativeAlpha.Enabled = true;
         options.Cutting.MisalignedXyEventPrecision = 1d;
@@ -430,7 +430,7 @@ public class PhigrosV3JudgeLineBuilderTests
         options.Speed.CutPrecision = 1d;
 
         var converted = new global::KaedePhi.Tool.Converter.Phigros.v3.PhigrosV3Converter()
-            .FromIr(new Chart { JudgeLineList = [line] }, options)
+            .FromIr(CreateChart(line), options)
             .JudgeLineList.Single();
 
         converted.NotesAbove.Single().Speed.Should().Be(2f);
@@ -448,7 +448,7 @@ public class PhigrosV3JudgeLineBuilderTests
         options.Speed.CutPrecision = 1d;
 
         var converted = new global::KaedePhi.Tool.Converter.Phigros.v3.PhigrosV3Converter()
-            .FromIr(new Chart { JudgeLineList = [line] }, options)
+            .FromIr(CreateChart(line), options)
             .JudgeLineList.Single();
 
         converted
@@ -505,7 +505,7 @@ public class PhigrosV3JudgeLineBuilderTests
         options.Speed.CutPrecision = 1d;
 
         var converted = new global::KaedePhi.Tool.Converter.Phigros.v3.PhigrosV3Converter()
-            .FromIr(new Chart { JudgeLineList = [line] }, options)
+            .FromIr(CreateChart(line), options)
             .JudgeLineList.Single();
 
         converted.NotesAbove.Select(n => n.Speed).Should().Equal(1f, 2f, 2f, 3f, 3f);
@@ -681,28 +681,14 @@ public class PhigrosV3JudgeLineBuilderTests
     }
 
     [Fact]
-    public void FromIr_WithoutBpmList_PreservesDefaultBpmAndBeatTime()
+    public void FromIr_WithoutBpmList_ThrowsFormatException()
     {
-        var source = new JudgeLine
-        {
-            BpmFactor = 2f,
-            Notes =
-            [
-                new Note
-                {
-                    Type = NoteType.Tap,
-                    StartBeat = Beat(1),
-                    EndBeat = Beat(1),
-                },
-            ],
-        };
+        var converter = new global::KaedePhi.Tool.Converter.Phigros.v3.PhigrosV3Converter();
+        var chart = new Chart { JudgeLineList = [new JudgeLine()] };
 
-        var converted = new global::KaedePhi.Tool.Converter.Phigros.v3.PhigrosV3Converter()
-            .FromIr(new Chart { JudgeLineList = [source] }, new IrToPhigrosV3ConvertOptions())
-            .JudgeLineList.Single();
+        var act = () => converter.FromIr(chart, new IrToPhigrosV3ConvertOptions());
 
-        converted.Bpm.Should().Be(60f);
-        converted.NotesAbove.Single().Time.Should().Be(32);
+        act.Should().Throw<FormatException>();
     }
 
     [Fact]
@@ -771,13 +757,14 @@ public class PhigrosV3JudgeLineBuilderTests
         var originalChart = chart.Clone();
         var converter = new global::KaedePhi.Tool.Converter.Phigros.v3.PhigrosV3Converter();
 
-        var converted = converter.FromIr(
-            chart,
-            new IrToPhigrosV3ConvertOptions { DefaultBpm = 60f }
-        );
+        var converted = converter.FromIr(chart, new IrToPhigrosV3ConvertOptions());
         var expected = converter.FromIr(
-            new Chart { JudgeLineList = chart.JudgeLineList },
-            new IrToPhigrosV3ConvertOptions { DefaultBpm = sourceBpm }
+            new Chart
+            {
+                BpmList = [new BpmItem { StartBeat = Beat(0), Bpm = sourceBpm }],
+                JudgeLineList = chart.JudgeLineList,
+            },
+            new IrToPhigrosV3ConvertOptions()
         );
 
         converted.JudgeLineList[0].Bpm.Should().Be(sourceBpm / bpmFactor);
@@ -926,7 +913,7 @@ public class PhigrosV3JudgeLineBuilderTests
         var options = new IrToPhigrosV3ConvertOptions();
         options.LineFilter.RemoveTextureLine = true;
 
-        var converted = converter.FromIr(new Chart { JudgeLineList = [source] }, options);
+        var converted = converter.FromIr(CreateChart(source), options);
 
         converted.JudgeLineList.Should().BeEmpty();
         warnings
@@ -979,7 +966,7 @@ public class PhigrosV3JudgeLineBuilderTests
         var options = new IrToPhigrosV3ConvertOptions();
         options.LineFilter.RemoveTextureLine = true;
 
-        var converted = converter.FromIr(new Chart { JudgeLineList = [parent, child] }, options);
+        var converted = converter.FromIr(CreateChart(parent, child), options);
 
         converted.JudgeLineList.Should().ContainSingle();
         warnings
@@ -1010,6 +997,13 @@ public class PhigrosV3JudgeLineBuilderTests
     }
 
     private static Beat Beat(double value) => new(value);
+
+    private static Chart CreateChart(params JudgeLine[] lines) =>
+        new()
+        {
+            BpmList = [new BpmItem { StartBeat = Beat(0), Bpm = 120f }],
+            JudgeLineList = [.. lines],
+        };
 
     private static Note Hold(double endBeat, float speedMultiplier = 1f) =>
         new()

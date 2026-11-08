@@ -80,17 +80,16 @@ public class PhigrosV3Converter
         ArgumentNullException.ThrowIfNull(options);
         ConversionOptionsValidator.Validate(options);
         var normalized = IrChartNormalizer.NormalizeAndValidateNoteEndBeats(input);
+        if (normalized.BpmList.Count == 0)
+            throw new FormatException(ToolResources.ir_chart_bpm_list_empty);
         IrChartValidator.ValidateJudgeLineHierarchy(normalized.JudgeLineList);
         _ct.ThrowIfCancellationRequested();
 
         WarnIfUnsupportedMeta(normalized.Meta);
 
-        var timeMapper = normalized.BpmList is { Count: > 1 }
-            ? new PhigrosV3TimeMapper(normalized.BpmList)
-            : null;
-        var globalBpm = normalized.BpmList is { Count: 1 }
-            ? normalized.BpmList[0].Bpm
-            : options.DefaultBpm;
+        var timeMapper =
+            normalized.BpmList.Count > 1 ? new PhigrosV3TimeMapper(normalized.BpmList) : null;
+        var globalBpm = normalized.BpmList[0].Bpm;
         PhigrosV3JudgeLineBuilder judgeLineConverter;
         if (timeMapper is not null)
         {

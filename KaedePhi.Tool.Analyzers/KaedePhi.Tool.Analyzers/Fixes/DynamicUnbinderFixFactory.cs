@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Operations;
 
-namespace KaedePhi.Tool.Analyzers;
+namespace KaedePhi.Tool.Analyzers.Fixes;
 
 /// <summary>
 /// 生成将动态解绑调用改写为普通解绑调用的替换表达式。

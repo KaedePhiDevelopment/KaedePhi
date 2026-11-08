@@ -20,11 +20,13 @@ public class IrToPhigrosV3ConvertOptions
     /// <summary>
     /// 表示默认全局节拍速度常量。
     /// </summary>
+    [Obsolete("将在下一个大版本移除；谱面 BPM 列表不允许为空，该常量已不再使用。")]
     public const float DefaultGlobalBpm = 120f;
 
     /// <summary>
-    /// 当谱面 BPM 列表为空时使用的默认全局 BPM。
+    /// 已不再生效的默认全局 BPM；谱面 BPM 列表为空时转换会直接失败，不再回退到该值。
     /// </summary>
+    [Obsolete("将在下一个大版本移除；谱面 BPM 列表不允许为空，该选项已不再生效。")]
     public float DefaultBpm { get; set; } = DefaultGlobalBpm;
 
     /// <summary>

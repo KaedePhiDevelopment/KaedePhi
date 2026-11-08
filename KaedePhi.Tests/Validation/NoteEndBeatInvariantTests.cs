@@ -650,7 +650,11 @@ public class NoteEndBeatInvariantTests
         );
 
     private static Ir.Chart CreateIrChartWithNote(Ir.Note note) =>
-        new() { JudgeLineList = [new Ir.JudgeLine { Notes = [note] }] };
+        new()
+        {
+            BpmList = [new Ir.BpmItem { StartBeat = Beat(0), Bpm = 120f }],
+            JudgeLineList = [new Ir.JudgeLine { Notes = [note] }],
+        };
 
     private static Pf.Chart CreatePhiFansChart(Pf.Note note) =>
         new() { JudgeLineList = [new Pf.Line { NoteList = [note] }] };

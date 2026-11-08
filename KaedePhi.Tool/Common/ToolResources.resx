@@ -14,6 +14,9 @@
   <data name="ir_chart_bpm_list_null" xml:space="preserve">
     <value>谱面 BPM 列表不能为 null。</value>
   </data>
+  <data name="ir_chart_bpm_list_empty" xml:space="preserve">
+    <value>谱面 BPM 列表不能为空。</value>
+  </data>
   <data name="ir_chart_judge_line_list_null" xml:space="preserve">
     <value>谱面判定线列表不能为 null。</value>
   </data>
