@@ -16,6 +16,18 @@ public static class ConsoleWriter
     public static uint LogLevel { get; set; } = 3;
 
     /// <summary>
+    /// 将各级别输出接入工具层日志回调。
+    /// </summary>
+    public static ChartLogSink Sink { get; } =
+        new()
+        {
+            Info = Info,
+            Warning = Warn,
+            Error = Error,
+            Debug = Debug,
+        };
+
+    /// <summary>
     /// Debug 级输出（级别 1）。
     /// </summary>
     public static void Debug(string message)

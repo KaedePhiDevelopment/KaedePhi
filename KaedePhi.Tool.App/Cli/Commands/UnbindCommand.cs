@@ -28,13 +28,16 @@ public static partial class UnbindFatherCommand
     [CliHandler]
     private static async Task<int> HandleAsync(ParseResult result, CancellationToken ct)
     {
-        var input = result.GetValue(InputOpt);
-        var workspace = result.GetValue(WorkspaceOpt);
-        if (string.IsNullOrWhiteSpace(input) && string.IsNullOrWhiteSpace(workspace))
-        {
-            ConsoleWriter.Error(CliLocalizationString.err_input_required);
+        if (
+            !ChartCommandHelper.TryGetInput(
+                result,
+                InputOpt,
+                WorkspaceOpt,
+                out var input,
+                out var workspace
+            )
+        )
             return 1;
-        }
 
         var c = AppConfigService.Instance.Config.Unbind;
         var precision = SharedOptions.GetIfSpecified(result, PrecisionOpt) ?? c.Precision;
@@ -52,37 +55,24 @@ public static partial class UnbindFatherCommand
             return 1;
         }
 
-        var svc = new ChartService();
-        var kpc = await svc.LoadKpcAsync(input, workspace, ct);
-        if (kpc == null)
-        {
-            ConsoleWriter.Error(CliLocalizationString.err_unimplemented);
-            return 1;
-        }
-
-        var kpcClone = kpc.Clone();
-        ChartProcessor.UnbindFather(
-            kpcClone,
-            precision,
-            tolerance,
-            classic,
-            disableCompress: disableCompress,
-            mergeTolerance: mergeTolerance,
-            info: ConsoleWriter.Info,
-            warning: ConsoleWriter.Warn,
-            error: ConsoleWriter.Error,
-            debug: ConsoleWriter.Debug,
-            progress: ConsoleWriter.CreateProgress(),
-            ct: ct
-        );
-
-        var output = await ChartService.SaveAsRpeAsync(
-            kpcClone,
-            svc.ResolveOutputPath(input, result.GetValue(OutputOpt), workspace),
+        return await ChartCommandHelper.RunToolAsync(
+            input,
+            workspace,
+            result.GetValue(OutputOpt),
             dryRun,
+            chart =>
+                ChartProcessor.UnbindFather(
+                    chart,
+                    precision,
+                    tolerance,
+                    classic,
+                    disableCompress: disableCompress,
+                    mergeTolerance: mergeTolerance,
+                    log: ConsoleWriter.Sink,
+                    progress: ConsoleWriter.CreateProgress(),
+                    ct: ct
+                ),
             ct
         );
-        ConsoleWriter.Info(string.Format(CliLocalizationString.msg_written, output));
-        return 0;
     }
 }

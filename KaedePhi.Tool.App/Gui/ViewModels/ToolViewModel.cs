@@ -1,149 +1,71 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using KaedePhi.Tool.App.Config;
 using KaedePhi.Tool.App.Gui.Models;
-using KaedePhi.Tool.Common;
-using static KaedePhi.Tool.App.Gui.Models.FontAwesome;
-using static KaedePhi.Tool.Localization.GuiLocalizationString;
 
 namespace KaedePhi.Tool.App.Gui.ViewModels;
 
-public sealed class ToolViewModel : INotifyPropertyChanged
+public sealed class ToolViewModel : ViewModelBase
 {
     public string CurrentFileName
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref field, value);
     } = string.Empty;
 
     public string DetectedFormat
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref field, value);
     } = string.Empty;
 
-    public List<ToolOption> Tools { get; } =
-    [
-        new()
-        {
-            Name = tool_unbind_name,
-            Description = tool_unbind_desc,
-            IconGlyph = Unbind,
-            ToolId = "unbind",
-            HasPrecision = true,
-            HasTolerance = true,
-            HasMergeTolerance = true,
-            HasClassicMode = true,
-            HasDisableCompress = true,
-            DefaultTolerance = 1,
-            DefaultMergeTolerance = 0.1,
-        },
-        new()
-        {
-            Name = tool_layermerge_name,
-            Description = tool_layermerge_desc,
-            IconGlyph = Merge,
-            ToolId = "layermerge",
-            HasPrecision = true,
-            HasTolerance = true,
-            HasClassicMode = true,
-            HasDisableCompress = true,
-        },
-        new()
-        {
-            Name = tool_cut_name,
-            Description = tool_cut_desc,
-            IconGlyph = Cut,
-            ToolId = "cut",
-            HasPrecision = true,
-            HasTolerance = true,
-            HasDisableCompress = true,
-        },
-        new()
-        {
-            Name = tool_fit_name,
-            Description = tool_fit_desc,
-            IconGlyph = Fix,
-            ToolId = "fit",
-            HasTolerance = true,
-            HasFitOptions = true,
-            DefaultTolerance = 0.5,
-        },
-        new()
-        {
-            Name = tool_render_name,
-            Description = tool_render_desc,
-            IconGlyph = Image,
-            ToolId = "render",
-            HasRenderOptions = true,
-        },
-    ];
+    public IReadOnlyList<ToolOption> Tools { get; } = ToolCatalog.Create();
 
     public ToolOption? SelectedTool
     {
         get;
         set
         {
+            if (EqualityComparer<ToolOption?>.Default.Equals(field, value))
+                return;
+
             field = value;
+            // 必须先重置参数再通知：监听者会在收到通知后写入配置默认值
             if (value != null)
-            {
-                Precision = value.DefaultPrecision;
-                Tolerance = value.DefaultTolerance;
-                MergeTolerance = value.DefaultMergeTolerance;
-                ClassicMode = false;
-                DisableCompress = false;
-            }
+                ResetParameters(value);
 
             OnPropertyChanged();
-            OnPropertyChanged(nameof(ShowPrecision));
-            OnPropertyChanged(nameof(ShowTolerance));
-            OnPropertyChanged(nameof(ShowMergeTolerance));
-            OnPropertyChanged(nameof(ShowClassicMode));
-            OnPropertyChanged(nameof(ShowDisableCompress));
-            OnPropertyChanged(nameof(ShowGeneralOptions));
-            OnPropertyChanged(nameof(ShowRenderOptions));
-            OnPropertyChanged(nameof(ShowFitOptions));
-            OnPropertyChanged(nameof(DisableCompressEnabled));
-            OnPropertyChanged(nameof(CanRun));
+            OnPropertiesChanged(
+                nameof(ShowPrecision),
+                nameof(ShowTolerance),
+                nameof(ShowMergeTolerance),
+                nameof(ShowClassicMode),
+                nameof(ShowDisableCompress),
+                nameof(ShowGeneralOptions),
+                nameof(ShowRenderOptions),
+                nameof(ShowFitOptions),
+                nameof(DisableCompressEnabled),
+                nameof(CanRun)
+            );
         }
     }
+
+    #region 通用工具参数
 
     public double Precision
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref field, value);
     } = 64;
 
     public double Tolerance
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref field, value);
     } = 0.1;
 
     public double MergeTolerance
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref field, value);
     } = 0.1;
 
     public bool ClassicMode
@@ -151,94 +73,71 @@ public sealed class ToolViewModel : INotifyPropertyChanged
         get;
         set
         {
-            field = value;
-            OnPropertyChanged();
+            if (!SetProperty(ref field, value))
+                return;
+
             OnPropertyChanged(nameof(DisableCompressEnabled));
             // 经典模式关闭时，禁用压缩选项不可用，自动取消
             if (!value)
-            {
                 DisableCompress = false;
-            }
         }
     }
 
-    /// <summary>
-    /// 仅当工具支持经典模式且当前已启用经典模式时，才允许修改"禁用压缩"选项。
-    /// </summary>
+    public bool DisableCompress
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    // 仅当工具支持经典模式且当前已启用经典模式时，才允许修改“禁用压缩”选项
     public bool DisableCompressEnabled =>
         SelectedTool is { HasDisableCompress: true, HasClassicMode: true }
             ? ClassicMode
             : SelectedTool?.HasDisableCompress == true;
 
-    public bool DisableCompress
-    {
-        get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
-    }
+    #endregion
+
+    #region 渲染参数
 
     public int PixelsPerBeat
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref field, value);
     } = 100;
 
     public int ChannelWidth
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref field, value);
     } = 150;
 
     public int SamplesPerEvent
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref field, value);
     } = 64;
 
     public int BeatSubdivisions
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref field, value);
     } = 2;
 
-    // 渲染输出目录，默认取导入谱面同级目录下的 RenderLayer 文件夹
+    // 默认取导入谱面同级目录下的 RenderLayer 文件夹
     public string RenderOutputDir
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref field, value);
     } = string.Empty;
+
+    #endregion
+
+    #region 运行状态
 
     public string StatusText
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref field, value);
     } = string.Empty;
 
     public bool IsProcessing
@@ -246,40 +145,40 @@ public sealed class ToolViewModel : INotifyPropertyChanged
         get;
         set
         {
-            field = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(CanRun));
+            if (SetProperty(ref field, value))
+                OnPropertyChanged(nameof(CanRun));
         }
     }
 
-    /// <summary>
-    /// 当前谱面是否含有行为暂不明确、无法处理的内容
-    /// </summary>
+    // 当前谱面是否含有行为暂不明确、无法处理的内容
     public bool HasUnclearContent
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref field, value);
     }
+
+    public bool CanRun => SelectedTool != null && !IsProcessing;
+
+    #endregion
+
+    #region 选项可见性
 
     public bool ShowPrecision => SelectedTool?.HasPrecision == true;
     public bool ShowTolerance => SelectedTool?.HasTolerance == true;
     public bool ShowMergeTolerance => SelectedTool?.HasMergeTolerance == true;
     public bool ShowClassicMode => SelectedTool?.HasClassicMode == true;
     public bool ShowDisableCompress => SelectedTool?.HasDisableCompress == true;
+    public bool ShowRenderOptions => SelectedTool?.HasRenderOptions == true;
+    public bool ShowFitOptions => SelectedTool?.HasFitOptions == true;
+
     public bool ShowGeneralOptions =>
         ShowPrecision
         || ShowTolerance
         || ShowMergeTolerance
         || ShowClassicMode
         || ShowDisableCompress;
-    public bool ShowRenderOptions => SelectedTool?.HasRenderOptions == true;
-    public bool ShowFitOptions => SelectedTool?.HasFitOptions == true;
 
-    public bool CanRun => SelectedTool != null && !IsProcessing;
+    #endregion
 
     public event Action? RequestRun;
     public event Action? RequestExport;
@@ -293,33 +192,22 @@ public sealed class ToolViewModel : INotifyPropertyChanged
 
     public void ApplyConfigDefaults(AppConfig config)
     {
-        if (SelectedTool == null)
-            return;
-
-        switch (SelectedTool.ToolId)
+        switch (SelectedTool?.ToolId)
         {
-            case "unbind":
-                Precision = config.Unbind.Precision;
-                Tolerance = config.Unbind.Tolerance;
+            case ToolIds.Unbind:
+                ApplyToolDefaults(config.Unbind);
                 MergeTolerance = config.Unbind.MergeTolerance;
-                ClassicMode = config.Unbind.ClassicMode;
-                DisableCompress = config.Unbind.DisableCompress;
                 break;
-            case "layermerge":
-                Precision = config.LayerMerge.Precision;
-                Tolerance = config.LayerMerge.Tolerance;
-                ClassicMode = config.LayerMerge.ClassicMode;
-                DisableCompress = config.LayerMerge.DisableCompress;
+            case ToolIds.LayerMerge:
+                ApplyToolDefaults(config.LayerMerge);
                 break;
-            case "cut":
-                Precision = config.Cut.Precision;
-                Tolerance = config.Cut.Tolerance;
-                DisableCompress = config.Cut.DisableCompress;
+            case ToolIds.Cut:
+                ApplyToolDefaults(config.Cut);
                 break;
-            case "fit":
+            case ToolIds.Fit:
                 Tolerance = config.Fit.Tolerance;
                 break;
-            case "render":
+            case ToolIds.Render:
                 PixelsPerBeat = config.Render.PixelsPerBeat;
                 ChannelWidth = config.Render.ChannelWidth;
                 SamplesPerEvent = config.Render.SamplesPerEvent;
@@ -328,8 +216,22 @@ public sealed class ToolViewModel : INotifyPropertyChanged
         }
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    private void ResetParameters(ToolOption tool)
+    {
+        Precision = tool.DefaultPrecision;
+        Tolerance = tool.DefaultTolerance;
+        MergeTolerance = tool.DefaultMergeTolerance;
+        ClassicMode = false;
+        DisableCompress = false;
+    }
 
-    private void OnPropertyChanged([CallerMemberName] string? name = null) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    // 仅写入该工具实际提供的参数，其余保持当前值
+    private void ApplyToolDefaults(ToolDefaultsConfig defaults)
+    {
+        Precision = defaults.Precision;
+        Tolerance = defaults.Tolerance;
+        if (SelectedTool is { HasClassicMode: true })
+            ClassicMode = defaults.ClassicMode;
+        DisableCompress = defaults.DisableCompress;
+    }
 }

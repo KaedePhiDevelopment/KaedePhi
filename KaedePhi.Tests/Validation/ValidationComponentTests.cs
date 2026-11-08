@@ -62,7 +62,9 @@ public class ValidationComponentTests
 
         Action act = () => IrChartNormalizer.NormalizeAndValidateNoteEndBeats(chart);
 
-        act.Should().Throw<FormatException>().WithMessage("*Chart BPM item 0 must be a finite positive number*");
+        act.Should()
+            .Throw<FormatException>()
+            .WithMessage("*Chart BPM item 0 must be a finite positive number*");
     }
 
     [Fact]
@@ -90,7 +92,9 @@ public class ValidationComponentTests
 
         Action act = () => IrChartNormalizer.NormalizeAndValidateNoteEndBeats(chart);
 
-        act.Should().Throw<FormatException>().WithMessage("*Judge line 0 BPM factor must be a finite positive number*");
+        act.Should()
+            .Throw<FormatException>()
+            .WithMessage("*Judge line 0 BPM factor must be a finite positive number*");
     }
 
     [Theory]

@@ -1,12 +1,12 @@
 using KaedePhi.Core.Intermediate.Model;
+using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter;
 using KaedePhi.Tool.Converter.RePhiEdit.Model;
 using KaedePhi.Tool.Render.Intermediate;
-using KaedePhi.Core.Primitives;
 using IrChart = KaedePhi.Core.Intermediate.Model.Chart;
-using IrEvents = KaedePhi.Core.Intermediate.Model.Events;
 using IrControls = KaedePhi.Core.Intermediate.Model.Controls;
+using IrEvents = KaedePhi.Core.Intermediate.Model.Events;
 
 namespace KaedePhi.Tests.Compatibility;
 
@@ -16,7 +16,9 @@ namespace KaedePhi.Tests.Compatibility;
 public class KpcCompatibilityShimTests
 {
     private const double Tolerance = 0.5;
-    private static readonly Type Mapper = LegacyApi.ToolType("KaedePhi.Tool.Compatibility.KpcCompatibilityMapper");
+    private static readonly Type Mapper = LegacyApi.ToolType(
+        "KaedePhi.Tool.Compatibility.KpcCompatibilityMapper"
+    );
 
     [Fact]
     public void KpcChartNormalizer_RoundTrip_PreservesChartData()
@@ -26,7 +28,9 @@ public class KpcCompatibilityShimTests
 
         var result = LegacyApi.Invoke(
             LegacyApi.ToolType("KaedePhi.Tool.Common.KpcChartNormalizer"),
-            "NormalizeAndValidateNoteEndBeats", null, legacyChart
+            "NormalizeAndValidateNoteEndBeats",
+            null,
+            legacyChart
         )!;
         result.Should().NotBeSameAs(legacyChart);
         var normalized = (IrChart)LegacyApi.Invoke(Mapper, "ToIntermediate", null, result)!;
@@ -86,13 +90,17 @@ public class KpcCompatibilityShimTests
             new() { Father = 0 },
         };
         var legacyLines = LegacyApi.ConvertTo(
-            lines, typeof(List<>).MakeGenericType(LegacyApi.CoreType("KaedePhi.Core.KaedePhi.JudgeLine"))
+            lines,
+            typeof(List<>).MakeGenericType(LegacyApi.CoreType("KaedePhi.Core.KaedePhi.JudgeLine"))
         );
 
-        var act = () => LegacyApi.Invoke(
-            LegacyApi.ToolType("KaedePhi.Tool.Common.KpcChartValidator"),
-            "ValidateJudgeLineHierarchy", null, legacyLines
-        );
+        var act = () =>
+            LegacyApi.Invoke(
+                LegacyApi.ToolType("KaedePhi.Tool.Common.KpcChartValidator"),
+                "ValidateJudgeLineHierarchy",
+                null,
+                legacyLines
+            );
 
         act.Should().Throw<FormatException>();
     }
@@ -101,14 +109,21 @@ public class KpcCompatibilityShimTests
     public void KpcRenderValidator_MappedChart_ValidatesLikeIrImplementation()
     {
         var chart = CreateChart();
-        var options = (IrRenderOptions)Activator.CreateInstance(
-            LegacyApi.ToolType("KaedePhi.Tool.Render.KaedePhi.KpcRenderOptions")
-        )!;
+        var options = (IrRenderOptions)
+            Activator.CreateInstance(
+                LegacyApi.ToolType("KaedePhi.Tool.Render.KaedePhi.KpcRenderOptions")
+            )!;
 
-        var legacyAct = () => LegacyApi.Invoke(
-            LegacyApi.ToolType("KaedePhi.Tool.Common.KpcRenderValidator"),
-            "Validate", null, ToLegacyChart(chart), options, null, null
-        );
+        var legacyAct = () =>
+            LegacyApi.Invoke(
+                LegacyApi.ToolType("KaedePhi.Tool.Common.KpcRenderValidator"),
+                "Validate",
+                null,
+                ToLegacyChart(chart),
+                options,
+                null,
+                null
+            );
 
         var irAct = () => IrRenderValidator.Validate(chart, options);
 
@@ -125,16 +140,27 @@ public class KpcCompatibilityShimTests
             CreateEvent(1, 2, 100, 200),
             CreateEvent(2, 3, 200, 300),
         };
-        var legacyEvents = LegacyApi.InvokeGeneric(Mapper, "ToKpc", [typeof(double)], null, irEvents)!;
+        var legacyEvents = LegacyApi.InvokeGeneric(
+            Mapper,
+            "ToKpc",
+            [typeof(double)],
+            null,
+            irEvents
+        )!;
 
-        var legacyType = LegacyApi.ToolType("KaedePhi.Tool.Event.KaedePhi.EventFit`1")
+        var legacyType = LegacyApi
+            .ToolType("KaedePhi.Tool.Event.KaedePhi.EventFit`1")
             .MakeGenericType(typeof(double));
         var result = LegacyApi.Invoke(
-            legacyType, "FitEvents", Activator.CreateInstance(legacyType), legacyEvents, Tolerance
+            legacyType,
+            "FitEvents",
+            Activator.CreateInstance(legacyType),
+            legacyEvents,
+            Tolerance
         )!;
-        var legacyResult = (List<IrEvents.Event<double>>)LegacyApi.InvokeGeneric(
-            Mapper, "ToIntermediate", [typeof(double)], null, result
-        )!;
+        var legacyResult =
+            (List<IrEvents.Event<double>>)
+                LegacyApi.InvokeGeneric(Mapper, "ToIntermediate", [typeof(double)], null, result)!;
         var irResult = new KaedePhi.Tool.Event.Intermediate.EventFit<double>().FitEvents(
             irEvents,
             Tolerance
@@ -160,16 +186,34 @@ public class KpcCompatibilityShimTests
 
         try
         {
-            await LegacyApi.AwaitResult(LegacyApi.Invoke(
-                typeof(ChartFormatDescriptor), "ExportAsync", descriptor,
-                ToLegacyChart(chart), path, null, new ConvertOption(), null, TestContext.Current.CancellationToken
-            ));
+            await LegacyApi.AwaitResult(
+                LegacyApi.Invoke(
+                    typeof(ChartFormatDescriptor),
+                    "ExportAsync",
+                    descriptor,
+                    ToLegacyChart(chart),
+                    path,
+                    null,
+                    new ConvertOption(),
+                    null,
+                    TestContext.Current.CancellationToken
+                )
+            );
 
             var text = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
-            var result = (await LegacyApi.AwaitResult(LegacyApi.Invoke(
-                typeof(ChartFormatDescriptor), "ImportAsync", descriptor,
-                text, null, null, TestContext.Current.CancellationToken
-            )))!;
+            var result = (
+                await LegacyApi.AwaitResult(
+                    LegacyApi.Invoke(
+                        typeof(ChartFormatDescriptor),
+                        "ImportAsync",
+                        descriptor,
+                        text,
+                        null,
+                        null,
+                        TestContext.Current.CancellationToken
+                    )
+                )
+            )!;
             var imported = (IrChart)LegacyApi.Invoke(Mapper, "ToIntermediate", null, result)!;
 
             imported.Meta.Name.Should().Be(chart.Meta.Name);
@@ -191,15 +235,23 @@ public class KpcCompatibilityShimTests
         var descriptor = ChartFormatRegistry.Get(ChartFormatIds.PhiEdit);
 
         var export = () =>
-            LegacyApi.AwaitResult(LegacyApi.Invoke(
-                typeof(ChartFormatDescriptor), "ExportAsync", descriptor,
-                ToLegacyChart(chart),
-                "unused.pec",
-                new ChartWriteSettings { DryRun = true },
-                Activator.CreateInstance(LegacyApi.ToolType("KaedePhi.Tool.Converter.PhiEdit.Model.KpcToPhiEditConvertOptions")),
-                null,
-                TestContext.Current.CancellationToken
-            ));
+            LegacyApi.AwaitResult(
+                LegacyApi.Invoke(
+                    typeof(ChartFormatDescriptor),
+                    "ExportAsync",
+                    descriptor,
+                    ToLegacyChart(chart),
+                    "unused.pec",
+                    new ChartWriteSettings { DryRun = true },
+                    Activator.CreateInstance(
+                        LegacyApi.ToolType(
+                            "KaedePhi.Tool.Converter.PhiEdit.Model.KpcToPhiEditConvertOptions"
+                        )
+                    ),
+                    null,
+                    TestContext.Current.CancellationToken
+                )
+            );
 
         await export.Should().NotThrowAsync();
     }
@@ -316,5 +368,4 @@ public class KpcCompatibilityShimTests
             StartValue = startValue,
             EndValue = endValue,
         };
-
 }

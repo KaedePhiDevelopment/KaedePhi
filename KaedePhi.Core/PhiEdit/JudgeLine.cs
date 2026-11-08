@@ -13,14 +13,17 @@ namespace KaedePhi.Core.PhiEdit
         /// 获取或设置速度帧列表。
         /// </summary>
         public List<Frame> SpeedFrames { get; set; } = new();
+
         /// <summary>
         /// 获取或设置移动帧列表。
         /// </summary>
         public List<MoveFrame> MoveFrames { get; set; } = new();
+
         /// <summary>
         /// 获取或设置旋转帧列表。
         /// </summary>
         public List<Frame> RotateFrames { get; set; } = new();
+
         /// <summary>
         /// 获取或设置不透明度帧列表。
         /// </summary>
@@ -30,10 +33,12 @@ namespace KaedePhi.Core.PhiEdit
         /// 获取或设置不透明度事件列表。
         /// </summary>
         public List<Event> AlphaEvents { get; set; } = new();
+
         /// <summary>
         /// 获取或设置移动事件列表。
         /// </summary>
         public List<MoveEvent> MoveEvents { get; set; } = new();
+
         /// <summary>
         /// 获取或设置旋转事件列表。
         /// </summary>

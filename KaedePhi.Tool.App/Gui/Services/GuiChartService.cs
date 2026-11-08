@@ -1,4 +1,3 @@
-using System.Text;
 using KaedePhi.Tool.App.Shared;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter;
@@ -19,6 +18,8 @@ public sealed class GuiChartService
     {
         _log = logService.ForContext<GuiChartService>();
     }
+
+    #region 当前谱面状态
 
     /// <summary>
     /// 当前加载的 KPC 图表（内存中）
@@ -45,6 +46,10 @@ public sealed class GuiChartService
     /// </summary>
     public bool HasUnclearContent { get; private set; }
 
+    #endregion
+
+    #region 导入与导出
+
     /// <summary>
     /// 异步检测文件格式，避免在界面线程同步读取大型文件。
     /// </summary>
@@ -63,9 +68,7 @@ public sealed class GuiChartService
     )
     {
         InputFileValidator.Validate(filePath);
-        await using var inputStream = OpenProgressReadStream(filePath, progress);
-        var format = await ChartGetType.DetectFormatAsync(inputStream, ct);
-        progress?.Report(null);
+        var format = await ChartImporter.DetectFormatAsync(filePath, progress, ct);
         _detectedFilePath = filePath;
         _detectedFormat = format;
         _log.Information(log_step_detected, format.FormatId);
@@ -93,24 +96,11 @@ public sealed class GuiChartService
         _log.Information(log_file_selected, filePath, stream);
 
         InputFileValidator.Validate(filePath);
+        // 复用刚完成的格式检测结果，避免重复读取文件
         var hasDetectedFormat = _detectedFilePath == filePath && _detectedFormat is not null;
-        ChartFormatDescriptor descriptor;
-        if (hasDetectedFormat)
-        {
-            descriptor = _detectedFormat!;
-        }
-        else
-        {
-            await using var detectStream = new FileStream(
-                filePath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read,
-                65536,
-                useAsync: true
-            );
-            descriptor = await ChartGetType.DetectFormatAsync(detectStream, ct);
-        }
+        var descriptor = hasDetectedFormat
+            ? _detectedFormat!
+            : await ChartImporter.DetectFormatAsync(filePath, null, ct);
 
         _detectedFilePath = null;
         _detectedFormat = null;
@@ -119,39 +109,22 @@ public sealed class GuiChartService
 
         if (!descriptor.CanImport)
             throw new NotSupportedException($"{descriptor.FormatId} 不支持作为导入源。");
-        Chart kpcChart;
-        if (descriptor.CanStreamImport && (stream || !descriptor.CanTextImport))
-        {
-            await using var inputStream = OpenProgressReadStream(filePath, progress);
-            kpcChart = await descriptor.ImportStreamIrAsync(
-                inputStream,
-                importOptions,
-                CreateLogSink(),
-                ct
-            );
-        }
-        else
-        {
-            await using var inputStream = OpenProgressReadStream(filePath, progress);
-            using var reader = new StreamReader(
-                inputStream,
-                Encoding.UTF8,
-                detectEncodingFromByteOrderMarks: true,
-                bufferSize: 4096,
-                leaveOpen: true
-            );
-            var text = await reader.ReadToEndAsync(ct);
-            progress?.Report(null);
-            kpcChart = await descriptor.ImportIrAsync(text, importOptions, CreateLogSink(), ct);
-        }
 
-        var hasUnclearContent =
-            descriptor.FormatId == ChartFormatIds.PhigrosV3 && kpcChart.BlockAreaList.Count > 0;
+        var kpcChart = await ChartImporter.ImportAsync(
+            filePath,
+            descriptor,
+            stream,
+            importOptions,
+            CreateLogSink(),
+            progress,
+            ct
+        );
 
         CurrentChart = kpcChart;
         SourceFormat = descriptor.FormatId;
         SourceFilePath = filePath;
-        HasUnclearContent = hasUnclearContent;
+        HasUnclearContent =
+            descriptor.FormatId == ChartFormatIds.PhigrosV3 && kpcChart.BlockAreaList.Count > 0;
         progress?.Report(1.0);
     }
 
@@ -207,30 +180,9 @@ public sealed class GuiChartService
         CurrentChart = chart;
     }
 
-    /// <summary>
-    /// 将 Serilog 日志接入工具层日志回调。
-    /// </summary>
-    private ChartLogSink CreateLogSink() =>
-        new()
-        {
-            Info = msg => _log.Information(msg),
-            Warning = msg => _log.Warning(msg),
-            Error = msg => _log.Error(msg),
-            Debug = msg => _log.Debug(msg),
-        };
+    #endregion
 
-    private static Stream OpenProgressReadStream(string filePath, IProgress<double?>? progress)
-    {
-        var inputStream = new FileStream(
-            filePath,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read,
-            65536,
-            useAsync: true
-        );
-        return progress is null ? inputStream : new ProgressReadStream(inputStream, progress);
-    }
+    #region 工具运行
 
     public void RunFatherUnbind(
         Chart chart,
@@ -250,13 +202,10 @@ public sealed class GuiChartService
             tolerance,
             classic,
             disableCompress,
-            mergeTolerance: mergeTolerance,
-            info: msg => _log.Information(msg),
-            warning: msg => _log.Warning(msg),
-            error: msg => _log.Error(msg),
-            debug: msg => _log.Debug(msg),
-            progress: progress,
-            ct: ct
+            mergeTolerance,
+            CreateLogSink(),
+            progress,
+            ct
         );
     }
 
@@ -277,12 +226,9 @@ public sealed class GuiChartService
             tolerance,
             classic,
             disableCompress,
-            info: msg => _log.Information(msg),
-            warning: msg => _log.Warning(msg),
-            error: msg => _log.Error(msg),
-            debug: msg => _log.Debug(msg),
-            progress: progress,
-            ct: ct
+            CreateLogSink(),
+            progress,
+            ct
         );
     }
 
@@ -301,12 +247,9 @@ public sealed class GuiChartService
             precision,
             tolerance,
             disableCompress,
-            info: msg => _log.Information(msg),
-            warning: msg => _log.Warning(msg),
-            error: msg => _log.Error(msg),
-            debug: msg => _log.Debug(msg),
-            progress: progress,
-            ct: ct
+            CreateLogSink(),
+            progress,
+            ct
         );
     }
 
@@ -318,16 +261,7 @@ public sealed class GuiChartService
     )
     {
         _log.Information(log_running_tool, tool_fit_name);
-        ChartProcessor.FitEvent(
-            chart,
-            tolerance,
-            info: msg => _log.Information(msg),
-            warning: msg => _log.Warning(msg),
-            error: msg => _log.Error(msg),
-            debug: msg => _log.Debug(msg),
-            progress: progress,
-            ct: ct
-        );
+        ChartProcessor.FitEvent(chart, tolerance, CreateLogSink(), progress, ct);
     }
 
     public IReadOnlyList<string> RunRender(
@@ -342,20 +276,28 @@ public sealed class GuiChartService
 
         // 输出目录为空时回退到导入谱面同级目录的 RenderLayer 文件夹
         if (string.IsNullOrWhiteSpace(outputDir))
-        {
             outputDir = Path.Combine(Path.GetDirectoryName(SourceFilePath) ?? ".", "RenderLayer");
-        }
 
         Directory.CreateDirectory(outputDir);
         return ChartProcessor.Render(
             chart,
             outputDir,
             options,
-            info: msg => _log.Information(msg),
-            warning: msg => _log.Warning(msg),
-            error: msg => _log.Error(msg),
+            log: CreateLogSink(),
             progress: progress,
             ct: ct
         );
     }
+
+    #endregion
+
+    // 将 Serilog 日志接入工具层日志回调
+    private ChartLogSink CreateLogSink() =>
+        new()
+        {
+            Info = msg => _log.Information(msg),
+            Warning = msg => _log.Warning(msg),
+            Error = msg => _log.Error(msg),
+            Debug = msg => _log.Debug(msg),
+        };
 }

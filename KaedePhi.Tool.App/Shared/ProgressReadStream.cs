@@ -1,4 +1,4 @@
-namespace KaedePhi.Tool.App.Gui.Services;
+namespace KaedePhi.Tool.App.Shared;
 
 internal sealed class ProgressReadStream : Stream
 {

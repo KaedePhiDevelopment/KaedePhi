@@ -17,10 +17,7 @@ public static class ChartProcessor
         bool classic,
         bool disableCompress = false,
         double mergeTolerance = Constants.DefaultTolerancePercent,
-        Action<string>? info = null,
-        Action<string>? warning = null,
-        Action<string>? error = null,
-        Action<string>? debug = null,
+        ChartLogSink? log = null,
         IProgress<ToolProgress>? progress = null,
         CancellationToken ct = default
     )
@@ -31,11 +28,8 @@ public static class ChartProcessor
         IrChartValidator.ValidateJudgeLineHierarchy(chart.JudgeLineList);
 
         var unbinder = new JudgeLineUnbinder();
-        if (info != null || warning != null || error != null || debug != null)
-            unbinder.SubscribeLog(info, warning, error, debug);
         var compressor = new LayerProcessor();
-        if (info != null || warning != null || error != null || debug != null)
-            compressor.SubscribeLog(info, warning, error, debug);
+        log?.AttachToAll(unbinder, compressor);
 
         var linesToProcess = new List<int>();
         for (var i = 0; i < chart.JudgeLineList.Count; i++)
@@ -49,14 +43,7 @@ public static class ChartProcessor
         {
             ct.ThrowIfCancellationRequested();
             var i = linesToProcess[idx];
-            var capturedIdx = idx;
-            var lineProgress = progress is null
-                ? null
-                : new Progress<ToolProgress>(p =>
-                {
-                    var overall = (capturedIdx + p.Percentage) / totalLines;
-                    progress.Report(new ToolProgress(p.Percentage, overall, p.Detail));
-                });
+            var lineProgress = CreateLineProgress(progress, idx, totalLines);
             var unboundLine = classic
                 ? unbinder.FatherUnbind(i, chart.JudgeLineList, precision, lineProgress, ct)
                 : unbinder.FatherUnbindDynamic(
@@ -86,10 +73,7 @@ public static class ChartProcessor
         double tolerance,
         bool classic,
         bool disableCompress,
-        Action<string>? info = null,
-        Action<string>? warning = null,
-        Action<string>? error = null,
-        Action<string>? debug = null,
+        ChartLogSink? log = null,
         IProgress<ToolProgress>? progress = null,
         CancellationToken ct = default
     )
@@ -98,8 +82,7 @@ public static class ChartProcessor
         NumericParameterValidator.ValidateTolerance(tolerance);
 
         var processor = new LayerProcessor();
-        if (info != null || warning != null || error != null || debug != null)
-            processor.SubscribeLog(info, warning, error, debug);
+        log?.AttachTo(processor);
 
         var totalLines = chart.JudgeLineList.Count;
         for (var li = 0; li < totalLines; li++)
@@ -108,18 +91,11 @@ public static class ChartProcessor
             var line = chart.JudgeLineList[li];
             if (line.EventLayers is not { Count: > 1 })
             {
-                progress?.Report(new ToolProgress(1.0, (double)(li + 1) / totalLines));
+                ReportLineSkipped(progress, li, totalLines);
                 continue;
             }
 
-            var capturedLi = li;
-            var lineProgress = progress is null
-                ? null
-                : new Progress<ToolProgress>(p =>
-                {
-                    var overall = (capturedLi + p.Percentage) / totalLines;
-                    progress.Report(new ToolProgress(p.Percentage, overall, p.Detail));
-                });
+            var lineProgress = CreateLineProgress(progress, li, totalLines);
             var merged = classic
                 ? processor.LayerMerge(line.EventLayers, precision, lineProgress)
                 : processor.LayerMergePlus(line.EventLayers, precision, tolerance, lineProgress);
@@ -137,10 +113,7 @@ public static class ChartProcessor
         double precision,
         double tolerance,
         bool disableCompress,
-        Action<string>? info = null,
-        Action<string>? warning = null,
-        Action<string>? error = null,
-        Action<string>? debug = null,
+        ChartLogSink? log = null,
         IProgress<ToolProgress>? progress = null,
         CancellationToken ct = default
     )
@@ -149,8 +122,7 @@ public static class ChartProcessor
         NumericParameterValidator.ValidateTolerance(tolerance);
 
         var processor = new LayerProcessor();
-        if (info != null || warning != null || error != null || debug != null)
-            processor.SubscribeLog(info, warning, error, debug);
+        log?.AttachTo(processor);
 
         var totalLines = chart.JudgeLineList.Count;
         for (var li = 0; li < totalLines; li++)
@@ -159,18 +131,11 @@ public static class ChartProcessor
             var line = chart.JudgeLineList[li];
             if (line.EventLayers is not { Count: > 0 })
             {
-                progress?.Report(new ToolProgress(1.0, (double)(li + 1) / totalLines));
+                ReportLineSkipped(progress, li, totalLines);
                 continue;
             }
 
-            var capturedLi = li;
-            var lineProgress = progress is null
-                ? null
-                : new Progress<ToolProgress>(p =>
-                {
-                    var overall = (capturedLi + p.Percentage) / totalLines;
-                    progress.Report(new ToolProgress(p.Percentage, overall, p.Detail));
-                });
+            var lineProgress = CreateLineProgress(progress, li, totalLines);
             line.EventLayers = processor.CutLayerEvents(line.EventLayers, precision, lineProgress);
             if (disableCompress)
                 continue;
@@ -184,10 +149,7 @@ public static class ChartProcessor
     public static void FitEvent(
         Chart chart,
         double tolerance,
-        Action<string>? info = null,
-        Action<string>? warning = null,
-        Action<string>? error = null,
-        Action<string>? debug = null,
+        ChartLogSink? log = null,
         IProgress<ToolProgress>? progress = null,
         CancellationToken ct = default
     )
@@ -197,12 +159,7 @@ public static class ChartProcessor
         var doubleFit = new EventFit<double>();
         var intFit = new EventFit<int>();
         var floatFit = new EventFit<float>();
-        if (info != null || warning != null || error != null || debug != null)
-        {
-            doubleFit.SubscribeLog(info, warning, error, debug);
-            intFit.SubscribeLog(info, warning, error, debug);
-            floatFit.SubscribeLog(info, warning, error, debug);
-        }
+        log?.AttachToAll(doubleFit, intFit, floatFit);
 
         var totalLines = chart.JudgeLineList.Count;
         for (var li = 0; li < totalLines; li++)
@@ -211,7 +168,7 @@ public static class ChartProcessor
             var line = chart.JudgeLineList[li];
             if (line.EventLayers is not { Count: > 0 })
             {
-                progress?.Report(new ToolProgress(1.0, (double)(li + 1) / totalLines));
+                ReportLineSkipped(progress, li, totalLines);
                 continue;
             }
 
@@ -242,6 +199,23 @@ public static class ChartProcessor
         progress?.Report(new ToolProgress(1.0, 1.0));
     }
 
+    public static IReadOnlyList<string> Render(
+        Chart chart,
+        string outputDir,
+        IrRenderOptions options,
+        int? lineIndex = null,
+        int? layerIndex = null,
+        ChartLogSink? log = null,
+        IProgress<ToolProgress>? progress = null,
+        CancellationToken ct = default
+    )
+    {
+        IrRenderValidator.Validate(chart, options, lineIndex, layerIndex);
+        var exporter = new IrChartRenderExporter();
+        log?.AttachTo(exporter);
+        return exporter.ExportChart(chart, outputDir, options, lineIndex, layerIndex, progress, ct);
+    }
+
     private static void FitLayer(
         EventLayer layer,
         EventFit<double> doubleFit,
@@ -264,24 +238,27 @@ public static class ChartProcessor
         progress?.Report(new ToolProgress(1.0));
     }
 
-    public static IReadOnlyList<string> Render(
-        Chart chart,
-        string outputDir,
-        IrRenderOptions options,
-        int? lineIndex = null,
-        int? layerIndex = null,
-        Action<string>? info = null,
-        Action<string>? warning = null,
-        Action<string>? error = null,
-        Action<string>? debug = null,
-        IProgress<ToolProgress>? progress = null,
-        CancellationToken ct = default
-    )
-    {
-        IrRenderValidator.Validate(chart, options, lineIndex, layerIndex);
-        var exporter = new IrChartRenderExporter();
-        if (info != null || warning != null || error != null || debug != null)
-            exporter.SubscribeLog(info, warning, error, debug);
-        return exporter.ExportChart(chart, outputDir, options, lineIndex, layerIndex, progress, ct);
-    }
+    // 将单条判定线内的进度折算为整体进度
+    private static IProgress<ToolProgress>? CreateLineProgress(
+        IProgress<ToolProgress>? progress,
+        int lineIndex,
+        int totalLines
+    ) =>
+        progress is null
+            ? null
+            : new Progress<ToolProgress>(p =>
+                progress.Report(
+                    new ToolProgress(
+                        p.Percentage,
+                        (lineIndex + p.Percentage) / totalLines,
+                        p.Detail
+                    )
+                )
+            );
+
+    private static void ReportLineSkipped(
+        IProgress<ToolProgress>? progress,
+        int lineIndex,
+        int totalLines
+    ) => progress?.Report(new ToolProgress(1.0, (double)(lineIndex + 1) / totalLines));
 }

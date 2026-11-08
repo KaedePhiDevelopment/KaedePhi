@@ -13,7 +13,9 @@ public sealed class FormatExtensionTests
 {
     private static ChartFormatDescriptor CreateDescriptor(string id) =>
         ChartFormatDescriptor.Create(
-            id, "txt", importer: (text, _, _, _) =>
+            id,
+            "txt",
+            importer: (text, _, _, _) =>
                 Task.FromResult(new Chart { Meta = new Meta { Name = text } })
         );
 
@@ -43,7 +45,9 @@ public sealed class FormatExtensionTests
         try
         {
             var (format, chart) = await ChartFormatRegistry.ImportDetectedIrAsync(
-                "KAED_TEST\n标题", log: sink, ct: TestContext.Current.CancellationToken
+                "KAED_TEST\n标题",
+                log: sink,
+                ct: TestContext.Current.CancellationToken
             );
             format.Should().BeSameAs(descriptor);
             format.FormatId.Should().Be(id);
@@ -60,11 +64,15 @@ public sealed class FormatExtensionTests
             source.ToIr().JudgeLineList[0].EventLayers.Should().HaveCount(2);
             chart.JudgeLineList[0].EventLayers.Should().HaveCount(2);
             await format.ExportAsync(
-                processed.ToIr(), path, new ChartWriteSettings { Indented = true }, log: sink,
+                processed.ToIr(),
+                path,
+                new ChartWriteSettings { Indented = true },
+                log: sink,
                 ct: TestContext.Current.CancellationToken
             );
             (await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken))
-                .Should().Be("KAED_TEST\n前缀:标题:后缀|1");
+                .Should()
+                .Be("KAED_TEST\n前缀:标题:后缀|1");
             serializer.LastIndented.Should().BeTrue();
             logs.Should().Equal("导入", "导出");
         }
@@ -81,24 +89,31 @@ public sealed class FormatExtensionTests
     {
         const string id = "tests.position";
         var descriptor = CreateDescriptor(id);
-        ChartFormatRegistry.Register(descriptor, async (stream, ct) =>
-        {
-            stream.Position.Should().Be(0);
-            var result = await DetectExternal(stream, ct);
-            stream.Dispose();
-            return result;
-        });
+        ChartFormatRegistry.Register(
+            descriptor,
+            async (stream, ct) =>
+            {
+                stream.Position.Should().Be(0);
+                var result = await DetectExternal(stream, ct);
+                stream.Dispose();
+                return result;
+            }
+        );
         try
         {
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes("prefixKAED_TEST\n内容"));
             stream.Position = 6;
-            var format = await ChartGetType.DetectFormatAsync(stream, TestContext.Current.CancellationToken);
+            var format = await ChartGetType.DetectFormatAsync(
+                stream,
+                TestContext.Current.CancellationToken
+            );
             format.Should().BeSameAs(descriptor);
             stream.Position.Should().Be(6);
             stream.CanRead.Should().BeTrue();
 
             var (importedFormat, chart) = await ChartFormatRegistry.ImportDetectedIrAsync(
-                stream, ct: TestContext.Current.CancellationToken
+                stream,
+                ct: TestContext.Current.CancellationToken
             );
             importedFormat.Should().BeSameAs(descriptor);
             chart.Meta.Name.Should().Be("KAED_TEST\n内容");
@@ -115,7 +130,10 @@ public sealed class FormatExtensionTests
     {
         const string id = "tests.nonseekable";
         var descriptor = ChartFormatDescriptor.Create<ExternalChart, string?, string?>(
-            id, "txt", new ExternalChartSerializer(), () => new ExternalChartConverter()
+            id,
+            "txt",
+            new ExternalChartSerializer(),
+            () => new ExternalChartConverter()
         );
         var opened = 0;
         var disposed = 0;
@@ -136,7 +154,8 @@ public sealed class FormatExtensionTests
             await invalid.Should().ThrowAsync<ArgumentException>();
 
             var (format, chart) = await ChartFormatRegistry.ImportDetectedIrAsync(
-                Open, ct: TestContext.Current.CancellationToken
+                Open,
+                ct: TestContext.Current.CancellationToken
             );
             format.Should().BeSameAs(descriptor);
             chart.Meta.Name.Should().Be("内容");
@@ -161,19 +180,28 @@ public sealed class FormatExtensionTests
         try
         {
             (await ChartGetType.DetectFormatAsync(json, TestContext.Current.CancellationToken))
-                .FormatId.Should().Be(ChartFormatIds.PhigrosV3);
+                .FormatId.Should()
+                .Be(ChartFormatIds.PhigrosV3);
             ChartFormatRegistry.Register(CreateDescriptor(equalId), Match);
-            var ambiguous = () => ChartGetType.DetectFormatAsync(json, TestContext.Current.CancellationToken);
+            var ambiguous = () =>
+                ChartGetType.DetectFormatAsync(json, TestContext.Current.CancellationToken);
             var exception = await ambiguous.Should().ThrowAsync<InvalidOperationException>();
             exception.Which.Message.Should().Contain(equalId).And.Contain("PhigrosV3");
 
             ChartFormatRegistry.Register(CreateDescriptor(highId), Match, 1);
             (await ChartGetType.DetectFormatAsync(json, TestContext.Current.CancellationToken))
-                .FormatId.Should().Be(highId);
+                .FormatId.Should()
+                .Be(highId);
             ChartFormatRegistry.UnregisterFormat(highId).Should().BeTrue();
             ChartFormatRegistry.UnregisterFormat(equalId).Should().BeTrue();
-            (await ChartGetType.DetectFormatAsync("未知格式", TestContext.Current.CancellationToken))
-                .FormatId.Should().Be(lowId);
+            (
+                await ChartGetType.DetectFormatAsync(
+                    "未知格式",
+                    TestContext.Current.CancellationToken
+                )
+            )
+                .FormatId.Should()
+                .Be(lowId);
         }
         finally
         {
@@ -187,16 +215,21 @@ public sealed class FormatExtensionTests
     public async Task Detection_PropagatesDetectorErrorsAndRestoresStream()
     {
         const string id = "tests.detector-error";
-        ChartFormatRegistry.Register(CreateDescriptor(id), (stream, _) =>
-        {
-            stream.ReadByte();
-            throw new InvalidDataException("检测失败");
-        }, 1);
+        ChartFormatRegistry.Register(
+            CreateDescriptor(id),
+            (stream, _) =>
+            {
+                stream.ReadByte();
+                throw new InvalidDataException("检测失败");
+            },
+            1
+        );
         try
         {
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes("xKAED_TEST"));
             stream.Position = 1;
-            var detect = () => ChartGetType.DetectFormatAsync(stream, TestContext.Current.CancellationToken);
+            var detect = () =>
+                ChartGetType.DetectFormatAsync(stream, TestContext.Current.CancellationToken);
             await detect.Should().ThrowAsync<InvalidDataException>();
             stream.Position.Should().Be(1);
             stream.CanRead.Should().BeTrue();
@@ -212,14 +245,19 @@ public sealed class FormatExtensionTests
     {
         const string id = "tests.detector-cancel";
         var invoked = false;
-        ChartFormatRegistry.Register(CreateDescriptor(id), (_, _) =>
-        {
-            invoked = true;
-            return ValueTask.FromResult(true);
-        }, 1);
+        ChartFormatRegistry.Register(
+            CreateDescriptor(id),
+            (_, _) =>
+            {
+                invoked = true;
+                return ValueTask.FromResult(true);
+            },
+            1
+        );
         try
         {
-            var detect = () => ChartGetType.DetectFormatAsync("未知格式", new CancellationToken(true));
+            var detect = () =>
+                ChartGetType.DetectFormatAsync("未知格式", new CancellationToken(true));
             await detect.Should().ThrowAsync<OperationCanceledException>();
             invoked.Should().BeFalse();
         }
@@ -227,7 +265,8 @@ public sealed class FormatExtensionTests
         {
             ChartFormatRegistry.UnregisterFormat(id);
         }
-        var unknown = () => ChartGetType.DetectFormatAsync("未知格式", TestContext.Current.CancellationToken);
+        var unknown = () =>
+            ChartGetType.DetectFormatAsync("未知格式", TestContext.Current.CancellationToken);
         await unknown.Should().ThrowAsync<NotSupportedException>();
     }
 
@@ -236,16 +275,22 @@ public sealed class FormatExtensionTests
     {
         const string id = "tests.detector-cancel-during";
         using var cts = new CancellationTokenSource();
-        ChartFormatRegistry.Register(CreateDescriptor(id), (stream, ct) =>
-        {
-            ct.Should().Be(cts.Token);
-            stream.ReadByte();
-            cts.Cancel();
-            return ValueTask.FromResult(false);
-        }, 1);
+        ChartFormatRegistry.Register(
+            CreateDescriptor(id),
+            (stream, ct) =>
+            {
+                ct.Should().Be(cts.Token);
+                stream.ReadByte();
+                cts.Cancel();
+                return ValueTask.FromResult(false);
+            },
+            1
+        );
         try
         {
-            using var stream = new MemoryStream(Encoding.UTF8.GetBytes("prefix{\"formatVersion\":3}"));
+            using var stream = new MemoryStream(
+                Encoding.UTF8.GetBytes("prefix{\"formatVersion\":3}")
+            );
             stream.Position = 6;
             var detect = () => ChartGetType.DetectFormatAsync(stream, cts.Token);
             await detect.Should().ThrowAsync<OperationCanceledException>();
@@ -263,17 +308,25 @@ public sealed class FormatExtensionTests
     {
         const string id = "tests.detector-snapshot";
         var descriptor = CreateDescriptor(id);
-        ChartFormatRegistry.Register(descriptor, (_, _) =>
-        {
-            ChartFormatRegistry.UnregisterFormat(id);
-            return ValueTask.FromResult(true);
-        }, 1);
+        ChartFormatRegistry.Register(
+            descriptor,
+            (_, _) =>
+            {
+                ChartFormatRegistry.UnregisterFormat(id);
+                return ValueTask.FromResult(true);
+            },
+            1
+        );
         try
         {
-            var result = await ChartGetType.DetectFormatAsync("未知格式", TestContext.Current.CancellationToken);
+            var result = await ChartGetType.DetectFormatAsync(
+                "未知格式",
+                TestContext.Current.CancellationToken
+            );
             result.Should().BeSameAs(descriptor);
             ChartFormatRegistry.Find(id).Should().BeNull();
-            var detectAgain = () => ChartGetType.DetectFormatAsync("未知格式", TestContext.Current.CancellationToken);
+            var detectAgain = () =>
+                ChartGetType.DetectFormatAsync("未知格式", TestContext.Current.CancellationToken);
             await detectAgain.Should().ThrowAsync<NotSupportedException>();
         }
         finally
@@ -287,12 +340,14 @@ public sealed class FormatExtensionTests
     {
         var serializer = new ExternalChartSerializer { FailWrite = true };
         var descriptor = ChartFormatDescriptor.Create<ExternalChart, string?, string?>(
-            "tests.typed-failure", "txt", serializer, () => new ExternalChartConverter()
+            "tests.typed-failure",
+            "txt",
+            serializer,
+            () => new ExternalChartConverter()
         );
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes("KAED_TEST\n标题"));
-        var invalidOptions = () => descriptor.ImportStreamIrAsync(
-            stream, 42, ct: TestContext.Current.CancellationToken
-        );
+        var invalidOptions = () =>
+            descriptor.ImportStreamIrAsync(stream, 42, ct: TestContext.Current.CancellationToken);
         await invalidOptions.Should().ThrowAsync<ArgumentException>();
 
         var chart = new ExternalChartConverter().ToIr(new ExternalChart { Name = "标题" }, null);
@@ -300,11 +355,16 @@ public sealed class FormatExtensionTests
         try
         {
             await File.WriteAllTextAsync(path, "原文件", TestContext.Current.CancellationToken);
-            var export = () => descriptor.ExportAsync(chart, path, ct: TestContext.Current.CancellationToken);
+            var export = () =>
+                descriptor.ExportAsync(chart, path, ct: TestContext.Current.CancellationToken);
             await export.Should().ThrowAsync<InvalidDataException>();
-            (await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken)).Should().Be("原文件");
-            Directory.GetFiles(Path.GetDirectoryName(path)!, Path.GetFileName(path) + ".*.tmp")
-                .Should().BeEmpty();
+            (await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken))
+                .Should()
+                .Be("原文件");
+            Directory
+                .GetFiles(Path.GetDirectoryName(path)!, Path.GetFileName(path) + ".*.tmp")
+                .Should()
+                .BeEmpty();
         }
         finally
         {
@@ -318,16 +378,21 @@ public sealed class FormatExtensionTests
     {
         const string id = "tests.read-error";
         var invoked = false;
-        ChartFormatRegistry.Register(CreateDescriptor(id), (_, _) =>
-        {
-            invoked = true;
-            return ValueTask.FromResult(true);
-        });
+        ChartFormatRegistry.Register(
+            CreateDescriptor(id),
+            (_, _) =>
+            {
+                invoked = true;
+                return ValueTask.FromResult(true);
+            }
+        );
         try
         {
-            var detect = () => ChartGetType.DetectFormatAsync(
-                () => new FailingReadStream(), TestContext.Current.CancellationToken
-            );
+            var detect = () =>
+                ChartGetType.DetectFormatAsync(
+                    () => new FailingReadStream(),
+                    TestContext.Current.CancellationToken
+                );
             var exception = await detect.Should().ThrowAsync<NotSupportedException>();
             exception.Which.Message.Should().Be("读取失败");
             invoked.Should().BeFalse();
@@ -353,17 +418,22 @@ public sealed class FormatExtensionTests
                 return new Chart { Meta = new Meta { Name = Convert.ToHexString(input) } };
             }
         );
-        ChartFormatRegistry.Register(descriptor, async (stream, ct) =>
-        {
-            var header = new byte[2];
-            return await stream.ReadAtLeastAsync(header, 2, false, ct) == 2
-                && header[0] == 0 && header[1] == 255;
-        });
+        ChartFormatRegistry.Register(
+            descriptor,
+            async (stream, ct) =>
+            {
+                var header = new byte[2];
+                return await stream.ReadAtLeastAsync(header, 2, false, ct) == 2
+                    && header[0] == 0
+                    && header[1] == 255;
+            }
+        );
         try
         {
             using var stream = new MemoryStream(bytes);
             var (format, chart) = await ChartFormatRegistry.ImportDetectedIrAsync(
-                stream, ct: TestContext.Current.CancellationToken
+                stream,
+                ct: TestContext.Current.CancellationToken
             );
             format.Should().BeSameAs(descriptor);
             chart.Meta.Name.Should().Be("00FF072A");
@@ -383,7 +453,11 @@ public sealed class FormatExtensionTests
         ChartFormatRegistry.Register(CreateDescriptor(second), DetectExternal);
         try
         {
-            var detect = () => ChartGetType.DetectFormatAsync("KAED_TEST\n标题", TestContext.Current.CancellationToken);
+            var detect = () =>
+                ChartGetType.DetectFormatAsync(
+                    "KAED_TEST\n标题",
+                    TestContext.Current.CancellationToken
+                );
             var exception = await detect.Should().ThrowAsync<InvalidOperationException>();
             exception.Which.Message.Should().Contain(first).And.Contain(second);
         }
@@ -399,7 +473,10 @@ public sealed class FormatExtensionTests
     {
         var converter = new ExternalChartConverter();
         var pipeline = ChartPipeline.From<ExternalChart, string?, string?>(
-            new ExternalChart { Name = "标题" }, converter, "源:", TestContext.Current.CancellationToken
+            new ExternalChart { Name = "标题" },
+            converter,
+            "源:",
+            TestContext.Current.CancellationToken
         );
         Chart? captured = null;
         var processed = pipeline.Transform(chart =>
@@ -411,8 +488,10 @@ public sealed class FormatExtensionTests
         captured!.Meta.Name = "外部修改";
         pipeline.ToIr().Meta.Name.Should().Be("源:标题");
         processed.ToIr().Meta.Name.Should().Be("源:标题:处理");
-        processed.To<ExternalChart, string?, string?>(new ExternalChartConverter(), ":目标")
-            .Name.Should().Be("源:标题:处理:目标");
+        processed
+            .To<ExternalChart, string?, string?>(new ExternalChartConverter(), ":目标")
+            .Name.Should()
+            .Be("源:标题:处理:目标");
     }
 
     [Fact]
@@ -420,7 +499,10 @@ public sealed class FormatExtensionTests
     {
         var serializer = new ExternalChartSerializer();
         var descriptor = ChartFormatDescriptor.Create<ExternalChart, string?, string?>(
-            "tests.typed-dry-run", "txt", serializer, () => new ExternalChartConverter()
+            "tests.typed-dry-run",
+            "txt",
+            serializer,
+            () => new ExternalChartConverter()
         );
         var chart = new ExternalChartConverter().ToIr(new ExternalChart { Name = "标题" }, null);
         var path = Path.Combine(Path.GetTempPath(), $"kaedephi-{Guid.NewGuid():N}.txt");
@@ -428,10 +510,14 @@ public sealed class FormatExtensionTests
         {
             await File.WriteAllTextAsync(path, "原文件", TestContext.Current.CancellationToken);
             await descriptor.ExportAsync(
-                chart, path, new ChartWriteSettings { DryRun = true, Indented = true },
+                chart,
+                path,
+                new ChartWriteSettings { DryRun = true, Indented = true },
                 ct: TestContext.Current.CancellationToken
             );
-            (await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken)).Should().Be("原文件");
+            (await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken))
+                .Should()
+                .Be("原文件");
             serializer.LastIndented.Should().BeTrue();
         }
         finally
@@ -446,12 +532,19 @@ public sealed class FormatExtensionTests
     {
         var serializer = new ExternalChartSerializer();
         var descriptor = ChartFormatDescriptor.Create<ExternalChart, string?, string?>(
-            "tests.typed-invalid-path", "txt", serializer, () => new ExternalChartConverter()
+            "tests.typed-invalid-path",
+            "txt",
+            serializer,
+            () => new ExternalChartConverter()
         );
         var chart = new ExternalChartConverter().ToIr(new ExternalChart { Name = "标题" }, null);
-        var export = () => descriptor.ExportAsync(
-            chart, "", new ChartWriteSettings { DryRun = true }, ct: TestContext.Current.CancellationToken
-        );
+        var export = () =>
+            descriptor.ExportAsync(
+                chart,
+                "",
+                new ChartWriteSettings { DryRun = true },
+                ct: TestContext.Current.CancellationToken
+            );
         await export.Should().ThrowAsync<ArgumentException>();
         serializer.LastIndented.Should().BeNull();
     }
@@ -466,6 +559,7 @@ public sealed class FormatExtensionTests
     public async Task Detection_PreservesBuiltInIdentification(string text, string formatId)
     {
         (await ChartGetType.DetectFormatAsync(text, TestContext.Current.CancellationToken))
-            .Should().BeSameAs(ChartFormatRegistry.Get(formatId));
+            .Should()
+            .BeSameAs(ChartFormatRegistry.Get(formatId));
     }
 }

@@ -1,11 +1,8 @@
 using System.CommandLine.Completions;
 using KaedePhi.Tool.App.Cli.Infrastructure;
 using KaedePhi.Tool.App.Config;
-using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter;
-using KaedePhi.Tool.Converter.PhiEdit.Model;
-using KaedePhi.Tool.Converter.PhiFans.Model;
-using KaedePhi.Tool.Converter.Phigros.v3.Model;
+using static KaedePhi.Tool.App.Cli.Infrastructure.SharedOptions;
 
 namespace KaedePhi.Tool.App.Cli.Commands;
 
@@ -17,25 +14,27 @@ public static partial class ConvertCommand
     static ConvertCommand()
     {
         TargetTypeOpt.CompletionSources.Add(_ =>
-            ChartFormatRegistry.ExportableFormats.Select(format => new CompletionItem(format.FormatId))
+            ChartFormatRegistry.ExportableFormats.Select(format => new CompletionItem(
+                format.FormatId
+            ))
         );
     }
 
     #region 共享选项
 
-    private static readonly Option<string?> InputOpt = SharedOptions.CreateInputRpeOption();
-    private static readonly Option<string?> OutputOpt = SharedOptions.CreateOutputAutoOption();
-    private static readonly Option<string?> WorkspaceOpt = SharedOptions.CreateWorkspaceRpeOption();
-    private static readonly Option<double> PrecisionOpt = SharedOptions.PrecisionOption;
-    private static readonly Option<double> ToleranceOpt = SharedOptions.ToleranceOption;
-    private static readonly Option<bool> ClassicOpt = SharedOptions.ClassicOption;
-    private static readonly Option<bool> DryRunOpt = SharedOptions.DryRunOption;
-    private static readonly Option<bool> StreamOpt = SharedOptions.StreamOutputOption;
-    private static readonly Option<bool> FormatOpt = SharedOptions.FormatOutputOption;
+    private static readonly Option<string?> InputOpt = CreateInputRpeOption();
+    private static readonly Option<string?> OutputOpt = CreateOutputAutoOption();
+    private static readonly Option<string?> WorkspaceOpt = CreateWorkspaceRpeOption();
+    private static readonly Option<double> PrecisionOpt = PrecisionOption;
+    private static readonly Option<double> ToleranceOpt = ToleranceOption;
+    private static readonly Option<bool> ClassicOpt = ClassicOption;
+    private static readonly Option<bool> DryRunOpt = DryRunOption;
+    private static readonly Option<bool> StreamOpt = StreamOutputOption;
+    private static readonly Option<bool> FormatOpt = FormatOutputOption;
 
     #endregion
 
-    #region 专属选项
+    #region 目标格式选项
 
     private static readonly Option<string?> TargetTypeOpt = new("--target")
     {
@@ -43,178 +42,175 @@ public static partial class ConvertCommand
         Arity = ArgumentArity.ZeroOrOne,
     };
 
-    private static readonly Option<double> PeTrailingPaddingOpt = new("--pe-trailing-padding")
-    {
-        Description = CliLocalizationString.convert_opt_pe_trailing_padding,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    #endregion
 
-    private static readonly Option<double> PeEasingPrecisionOpt = new("--pe-easing-precision")
-    {
-        Description = CliLocalizationString.convert_opt_pe_easing_precision,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    #region PhiEdit 选项
 
-    private static readonly Option<double> PeXyPrecisionOpt = new("--pe-xy-precision")
-    {
-        Description = CliLocalizationString.convert_opt_pe_xy_precision,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    private static readonly Option<double> PeTrailingPaddingOpt = CreateValueOption<double>(
+        "--pe-trailing-padding",
+        CliLocalizationString.convert_opt_pe_trailing_padding
+    );
 
-    private static readonly Option<double> PeAlphaPrecisionOpt = new("--pe-alpha-precision")
-    {
-        Description = CliLocalizationString.convert_opt_pe_alpha_precision,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    private static readonly Option<double> PeEasingPrecisionOpt = CreateValueOption<double>(
+        "--pe-easing-precision",
+        CliLocalizationString.convert_opt_pe_easing_precision
+    );
 
-    private static readonly Option<double> PeAlphaToleranceOpt = new("--pe-alpha-tolerance")
-    {
-        Description = CliLocalizationString.convert_opt_pe_alpha_tolerance,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    private static readonly Option<double> PeXyPrecisionOpt = CreateValueOption<double>(
+        "--pe-xy-precision",
+        CliLocalizationString.convert_opt_pe_xy_precision
+    );
 
-    private static readonly Option<double> PeSpeedPrecisionOpt = new("--pe-speed-precision")
-    {
-        Description = CliLocalizationString.convert_opt_pe_speed_precision,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    private static readonly Option<double> PeAlphaPrecisionOpt = CreateValueOption<double>(
+        "--pe-alpha-precision",
+        CliLocalizationString.convert_opt_pe_alpha_precision
+    );
 
-    private static readonly Option<double> PhigrosEasingPrecisionOpt = new(
-        "--phigros-easing-precision"
-    )
-    {
-        Description = CliLocalizationString.convert_opt_phigros_easing_precision,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    private static readonly Option<double> PeAlphaToleranceOpt = CreateValueOption<double>(
+        "--pe-alpha-tolerance",
+        CliLocalizationString.convert_opt_pe_alpha_tolerance
+    );
 
-    private static readonly Option<double> PhigrosXyPrecisionOpt = new("--phigros-xy-precision")
-    {
-        Description = CliLocalizationString.convert_opt_phigros_xy_precision,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    private static readonly Option<double> PeSpeedPrecisionOpt = CreateValueOption<double>(
+        "--pe-speed-precision",
+        CliLocalizationString.convert_opt_pe_speed_precision
+    );
 
-    private static readonly Option<double> PhigrosAlphaPrecisionOpt = new(
-        "--phigros-alpha-precision"
-    )
-    {
-        Description = CliLocalizationString.convert_opt_phigros_alpha_precision,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    #endregion
 
-    private static readonly Option<double> PhigrosSpeedPrecisionOpt = new(
-        "--phigros-speed-precision"
-    )
-    {
-        Description = CliLocalizationString.convert_opt_phigros_speed_precision,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    #region PhigrosV3 选项
 
-    private static readonly Option<int> PhiFansEasingPrecisionOpt = new(
-        "--phifans-easing-precision"
-    )
-    {
-        Description = CliLocalizationString.convert_opt_phifans_easing_precision,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    private static readonly Option<double> PhigrosEasingPrecisionOpt = CreateValueOption<double>(
+        "--phigros-easing-precision",
+        CliLocalizationString.convert_opt_phigros_easing_precision
+    );
 
-    private static readonly Option<int> PhiFansDiscontinuityPrecisionOpt = new(
-        "--phifans-discontinuity-precision"
-    )
-    {
-        Description = CliLocalizationString.convert_opt_phifans_discontinuity_precision,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    private static readonly Option<double> PhigrosXyPrecisionOpt = CreateValueOption<double>(
+        "--phigros-xy-precision",
+        CliLocalizationString.convert_opt_phigros_xy_precision
+    );
 
-    private static readonly Option<double> UnbindPrecisionOpt = new("--unbind-precision")
-    {
-        Description = CliLocalizationString.convert_opt_unbind_precision,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    private static readonly Option<double> PhigrosAlphaPrecisionOpt = CreateValueOption<double>(
+        "--phigros-alpha-precision",
+        CliLocalizationString.convert_opt_phigros_alpha_precision
+    );
 
-    private static readonly Option<double> UnbindToleranceOpt = new("--unbind-tolerance")
-    {
-        Description = CliLocalizationString.convert_opt_unbind_tolerance,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    private static readonly Option<double> PhigrosSpeedPrecisionOpt = CreateValueOption<double>(
+        "--phigros-speed-precision",
+        CliLocalizationString.convert_opt_phigros_speed_precision
+    );
 
-    private static readonly Option<double> UnbindMergeToleranceOpt = new("--unbind-merge-tolerance")
-    {
-        Description = CliLocalizationString.convert_opt_unbind_merge_tolerance,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    #endregion
 
-    private static readonly Option<bool> UnbindClassicOpt = new("--unbind-classic")
-    {
-        Description = CliLocalizationString.convert_opt_unbind_classic,
-    };
+    #region PhiFans 选项
 
-    private static readonly Option<double> MergePrecisionOpt = new("--merge-precision")
-    {
-        Description = CliLocalizationString.convert_opt_merge_precision,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    private static readonly Option<int> PhiFansEasingPrecisionOpt = CreateValueOption<int>(
+        "--phifans-easing-precision",
+        CliLocalizationString.convert_opt_phifans_easing_precision
+    );
 
-    private static readonly Option<double> MergeToleranceOpt = new("--merge-tolerance")
-    {
-        Description = CliLocalizationString.convert_opt_merge_tolerance,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    private static readonly Option<int> PhiFansDiscontinuityPrecisionOpt = CreateValueOption<int>(
+        "--phifans-discontinuity-precision",
+        CliLocalizationString.convert_opt_phifans_discontinuity_precision
+    );
 
-    private static readonly Option<bool> MergeClassicOpt = new("--merge-classic")
-    {
-        Description = CliLocalizationString.convert_opt_merge_classic,
-    };
+    #endregion
 
-    private static readonly Option<bool> NoUnbindCompressOpt = new("--no-unbind-compress")
-    {
-        Description = CliLocalizationString.convert_opt_no_unbind_compress,
-    };
+    #region 解绑与合并选项
 
-    private static readonly Option<bool> NoMergeCompressOpt = new("--no-merge-compress")
-    {
-        Description = CliLocalizationString.convert_opt_no_merge_compress,
-    };
+    private static readonly Option<double> UnbindPrecisionOpt = CreateValueOption<double>(
+        "--unbind-precision",
+        CliLocalizationString.convert_opt_unbind_precision
+    );
 
-    private static readonly Option<bool> RemoveAttachUiOpt = new("--remove-attach-ui")
-    {
-        Description = CliLocalizationString.convert_opt_remove_attach_ui,
-    };
+    private static readonly Option<double> UnbindToleranceOpt = CreateValueOption<double>(
+        "--unbind-tolerance",
+        CliLocalizationString.convert_opt_unbind_tolerance
+    );
 
-    private static readonly Option<bool> RemoveTextureOpt = new("--remove-texture")
-    {
-        Description = CliLocalizationString.convert_opt_remove_texture,
-    };
+    private static readonly Option<double> UnbindMergeToleranceOpt = CreateValueOption<double>(
+        "--unbind-merge-tolerance",
+        CliLocalizationString.convert_opt_unbind_merge_tolerance
+    );
 
-    private static readonly Option<bool> FilterFakeNotesOpt = new("--filter-fake-notes")
-    {
-        Description = CliLocalizationString.convert_opt_filter_fake_notes,
-    };
+    private static readonly Option<bool> UnbindClassicOpt = CreateFlagOption(
+        "--unbind-classic",
+        CliLocalizationString.convert_opt_unbind_classic
+    );
 
-    private static readonly Option<bool> NegativeAlphaElevationOpt = new(
-        "--negative-alpha-elevation"
-    )
-    {
-        Description = CliLocalizationString.convert_opt_negative_alpha_elevation,
-    };
+    private static readonly Option<double> MergePrecisionOpt = CreateValueOption<double>(
+        "--merge-precision",
+        CliLocalizationString.convert_opt_merge_precision
+    );
 
-    private static readonly Option<double> NegativeAlphaStepOpt = new("--negative-alpha-step")
-    {
-        Description = CliLocalizationString.convert_opt_negative_alpha_step,
-        Arity = ArgumentArity.ExactlyOne,
-    };
+    private static readonly Option<double> MergeToleranceOpt = CreateValueOption<double>(
+        "--merge-tolerance",
+        CliLocalizationString.convert_opt_merge_tolerance
+    );
+
+    private static readonly Option<bool> MergeClassicOpt = CreateFlagOption(
+        "--merge-classic",
+        CliLocalizationString.convert_opt_merge_classic
+    );
+
+    private static readonly Option<bool> NoUnbindCompressOpt = CreateFlagOption(
+        "--no-unbind-compress",
+        CliLocalizationString.convert_opt_no_unbind_compress
+    );
+
+    private static readonly Option<bool> NoMergeCompressOpt = CreateFlagOption(
+        "--no-merge-compress",
+        CliLocalizationString.convert_opt_no_merge_compress
+    );
+
+    #endregion
+
+    #region 判定线过滤选项
+
+    private static readonly Option<bool> RemoveAttachUiOpt = CreateFlagOption(
+        "--remove-attach-ui",
+        CliLocalizationString.convert_opt_remove_attach_ui
+    );
+
+    private static readonly Option<bool> RemoveTextureOpt = CreateFlagOption(
+        "--remove-texture",
+        CliLocalizationString.convert_opt_remove_texture
+    );
+
+    #endregion
+
+    #region PhigrosV3 音符与透明度选项
+
+    private static readonly Option<bool> FilterFakeNotesOpt = CreateFlagOption(
+        "--filter-fake-notes",
+        CliLocalizationString.convert_opt_filter_fake_notes
+    );
+
+    private static readonly Option<bool> NegativeAlphaElevationOpt = CreateFlagOption(
+        "--negative-alpha-elevation",
+        CliLocalizationString.convert_opt_negative_alpha_elevation
+    );
+
+    private static readonly Option<double> NegativeAlphaStepOpt = CreateValueOption<double>(
+        "--negative-alpha-step",
+        CliLocalizationString.convert_opt_negative_alpha_step
+    );
 
     #endregion
 
     [CliHandler]
     private static async Task<int> HandleAsync(ParseResult result, CancellationToken ct)
     {
-        var input = result.GetValue(InputOpt);
-        var workspace = result.GetValue(WorkspaceOpt);
-        if (string.IsNullOrWhiteSpace(input) && string.IsNullOrWhiteSpace(workspace))
-        {
-            ConsoleWriter.Error(CliLocalizationString.err_input_required);
+        if (
+            !ChartCommandHelper.TryGetInput(
+                result,
+                InputOpt,
+                WorkspaceOpt,
+                out var input,
+                out var workspace
+            )
+        )
             return 1;
-        }
 
         var c = AppConfigService.Instance.Config.Convert;
         var target = ChartFormatRegistry.Get(result.GetValue(TargetTypeOpt) ?? c.TargetType);
@@ -224,223 +220,43 @@ public static partial class ConvertCommand
             return 1;
         }
 
-        var svc = new ChartService();
-        var kpc = await svc.LoadKpcAsync(input, workspace, ct);
-        if (kpc == null)
+        var service = new ChartService();
+        var chart = await service.LoadKpcAsync(input, workspace, ct);
+        if (chart == null)
         {
             ConsoleWriter.Error(CliLocalizationString.err_unimplemented);
             return 1;
         }
 
-        var targetType = target.FormatId;
-        var targetExtension = "." + target.FileExtension;
-        var output = svc.ResolveOutputPath(
+        var output = service.ResolveOutputPath(
             input,
             result.GetValue(OutputOpt),
             workspace,
-            targetExtension
+            "." + target.FileExtension
         );
-        var streamOutput = SharedOptions.GetIfSpecified(result, StreamOpt) ?? c.StreamOutput;
-        var formatOutput = SharedOptions.GetIfSpecified(result, FormatOpt) ?? c.FormatOutput;
-        var dryRun = SharedOptions.GetIfSpecified(result, DryRunOpt) ?? c.DryRun;
-        var disableUnbindCompress = result.GetValue(NoUnbindCompressOpt);
-        var disableMergeCompress = result.GetValue(NoMergeCompressOpt);
-
-        var peOptions = new IrToPhiEditConvertOptions
-        {
-            TrailingBeatPadding =
-                SharedOptions.GetIfSpecified(result, PeTrailingPaddingOpt)
-                ?? c.PeTrailingBeatPadding,
-            Cutting = new IrToPhiEditConvertOptions.CuttingOptions
-            {
-                UnsupportedEasingPrecision =
-                    SharedOptions.GetIfSpecified(result, PeEasingPrecisionOpt)
-                    ?? c.PeUnsupportedEasingPrecision,
-                MisalignedXyEventPrecision =
-                    SharedOptions.GetIfSpecified(result, PeXyPrecisionOpt)
-                    ?? c.PeMisalignedXyEventPrecision,
-            },
-            Alpha = new IrToPhiEditConvertOptions.AlphaOptions
-            {
-                CutPrecision =
-                    SharedOptions.GetIfSpecified(result, PeAlphaPrecisionOpt)
-                    ?? c.PeAlphaCutPrecision,
-                CutCompress = c.PeAlphaCutCompress,
-                CutTolerance =
-                    SharedOptions.GetIfSpecified(result, PeAlphaToleranceOpt)
-                    ?? c.PeAlphaCutTolerance,
-            },
-            Speed = new IrToPhiEditConvertOptions.SpeedOptions
-            {
-                CutPrecision =
-                    SharedOptions.GetIfSpecified(result, PeSpeedPrecisionOpt)
-                    ?? c.PeSpeedCutPrecision,
-            },
-            FatherLineUnbind = new IrToPhiEditConvertOptions.FatherLineUnbindOptions
-            {
-                Precision =
-                    SharedOptions.GetIfSpecified(result, UnbindPrecisionOpt)
-                    ?? SharedOptions.GetIfSpecified(result, PrecisionOpt)
-                    ?? c.UnbindPrecision,
-                Tolerance =
-                    SharedOptions.GetIfSpecified(result, UnbindToleranceOpt)
-                    ?? SharedOptions.GetIfSpecified(result, ToleranceOpt)
-                    ?? c.UnbindTolerance,
-                MergeTolerance =
-                    SharedOptions.GetIfSpecified(result, UnbindMergeToleranceOpt)
-                    ?? c.UnbindMergeTolerance,
-                ClassicMode =
-                    SharedOptions.GetIfSpecified(result, UnbindClassicOpt)
-                    ?? SharedOptions.GetIfSpecified(result, ClassicOpt)
-                    ?? c.UnbindClassicMode,
-                Compress = !disableUnbindCompress,
-            },
-            MultiLayerMerge = new IrToPhiEditConvertOptions.MultiLayerMergeOptions
-            {
-                Precision =
-                    SharedOptions.GetIfSpecified(result, MergePrecisionOpt)
-                    ?? c.MultiLayerMergePrecision,
-                Tolerance =
-                    SharedOptions.GetIfSpecified(result, MergeToleranceOpt)
-                    ?? c.MultiLayerMergeTolerance,
-                ClassicMode =
-                    SharedOptions.GetIfSpecified(result, MergeClassicOpt)
-                    ?? c.MultiLayerMergeClassicMode,
-                Compress = !disableMergeCompress,
-            },
-            LineFilter = new IrToPhiEditConvertOptions.LineFilterOptions
-            {
-                RemoveAttachUiLine = result.GetValue(RemoveAttachUiOpt),
-                RemoveTextureLine = result.GetValue(RemoveTextureOpt),
-            },
-        };
-
-        var phigrosOptions = new IrToPhigrosV3ConvertOptions
-        {
-            Cutting = new IrToPhigrosV3ConvertOptions.CuttingOptions
-            {
-                EasingPrecision =
-                    SharedOptions.GetIfSpecified(result, PhigrosEasingPrecisionOpt)
-                    ?? c.PhigrosEasingPrecision,
-                MisalignedXyEventPrecision =
-                    SharedOptions.GetIfSpecified(result, PhigrosXyPrecisionOpt)
-                    ?? c.PhigrosMisalignedXyEventPrecision,
-            },
-            Alpha = new IrToPhigrosV3ConvertOptions.AlphaOptions
-            {
-                CutPrecision =
-                    SharedOptions.GetIfSpecified(result, PhigrosAlphaPrecisionOpt)
-                    ?? c.PhigrosAlphaCutPrecision,
-            },
-            Speed = new IrToPhigrosV3ConvertOptions.SpeedOptions
-            {
-                CutPrecision =
-                    SharedOptions.GetIfSpecified(result, PhigrosSpeedPrecisionOpt)
-                    ?? c.PhigrosSpeedCutPrecision,
-            },
-            FatherLineUnbind = new IrToPhigrosV3ConvertOptions.FatherLineUnbindOptions
-            {
-                Precision =
-                    SharedOptions.GetIfSpecified(result, UnbindPrecisionOpt)
-                    ?? SharedOptions.GetIfSpecified(result, PrecisionOpt)
-                    ?? c.UnbindPrecision,
-                Tolerance =
-                    SharedOptions.GetIfSpecified(result, UnbindToleranceOpt)
-                    ?? SharedOptions.GetIfSpecified(result, ToleranceOpt)
-                    ?? c.UnbindTolerance,
-                MergeTolerance =
-                    SharedOptions.GetIfSpecified(result, UnbindMergeToleranceOpt)
-                    ?? c.UnbindMergeTolerance,
-                ClassicMode =
-                    SharedOptions.GetIfSpecified(result, UnbindClassicOpt)
-                    ?? SharedOptions.GetIfSpecified(result, ClassicOpt)
-                    ?? c.UnbindClassicMode,
-                Compress = !disableUnbindCompress,
-            },
-            MultiLayerMerge = new IrToPhigrosV3ConvertOptions.MultiLayerMergeOptions
-            {
-                Precision =
-                    SharedOptions.GetIfSpecified(result, MergePrecisionOpt)
-                    ?? c.MultiLayerMergePrecision,
-                Tolerance =
-                    SharedOptions.GetIfSpecified(result, MergeToleranceOpt)
-                    ?? c.MultiLayerMergeTolerance,
-                ClassicMode =
-                    SharedOptions.GetIfSpecified(result, MergeClassicOpt)
-                    ?? c.MultiLayerMergeClassicMode,
-                Compress = !disableMergeCompress,
-            },
-            LineFilter = new IrToPhigrosV3ConvertOptions.LineFilterOptions
-            {
-                RemoveAttachUiLine = result.GetValue(RemoveAttachUiOpt),
-                RemoveTextureLine = result.GetValue(RemoveTextureOpt),
-            },
-            NoteFilter = new IrToPhigrosV3ConvertOptions.NoteFilterOptions
-            {
-                FilterFakeNotes =
-                    SharedOptions.GetIfSpecified(result, FilterFakeNotesOpt)
-                    ?? c.PhigrosFilterFakeNotes,
-            },
-            NegativeAlpha = new IrToPhigrosV3ConvertOptions.NegativeAlphaOptions
-            {
-                Enabled =
-                    SharedOptions.GetIfSpecified(result, NegativeAlphaElevationOpt)
-                    ?? c.PhigrosNegativeAlphaElevation,
-                ElevationStep =
-                    SharedOptions.GetIfSpecified(result, NegativeAlphaStepOpt)
-                    ?? c.PhigrosNegativeAlphaStep,
-            },
-        };
-
-        var phiFansOptions = new IrToPhiFansConvertOptions
-        {
-            Cutting = new IrToPhiFansConvertOptions.CuttingOptions
-            {
-                UnsupportedEasingPrecision =
-                    SharedOptions.GetIfSpecified(result, PhiFansEasingPrecisionOpt)
-                    ?? c.PhiFansUnsupportedEasingPrecision,
-            },
-            DiscontinuityBeatPrecision =
-                SharedOptions.GetIfSpecified(result, PhiFansDiscontinuityPrecisionOpt)
-                ?? c.PhiFansDiscontinuityBeatPrecision,
-            MultiLayerMerge = new IrToPhiFansConvertOptions.MultiLayerMergeOptions
-            {
-                Precision =
-                    SharedOptions.GetIfSpecified(result, MergePrecisionOpt)
-                    ?? c.MultiLayerMergePrecision,
-                Tolerance =
-                    SharedOptions.GetIfSpecified(result, MergeToleranceOpt)
-                    ?? c.MultiLayerMergeTolerance,
-                ClassicMode =
-                    SharedOptions.GetIfSpecified(result, MergeClassicOpt)
-                    ?? c.MultiLayerMergeClassicMode,
-                Compress = !disableMergeCompress,
-            },
-        };
-
-        var saveResult = await ChartService.SaveAsAsync(
-            kpc,
+        var savedPath = await ChartService.SaveAsAsync(
+            chart,
             output,
-            targetType,
+            target.FormatId,
             new SaveAsOptions
             {
-                Stream = streamOutput,
-                Format = formatOutput,
-                DryRun = dryRun,
-                PhiEditOptions = peOptions,
-                PhigrosOptions = phigrosOptions,
-                PhiFansOptions = phiFansOptions,
+                Stream = result.ValueOr(StreamOpt, c.StreamOutput),
+                Format = result.ValueOr(FormatOpt, c.FormatOutput),
+                DryRun = result.ValueOr(DryRunOpt, c.DryRun),
+                PhiEditOptions = BuildPhiEditOptions(result, c),
+                PhigrosOptions = BuildPhigrosOptions(result, c),
+                PhiFansOptions = BuildPhiFansOptions(result, c),
             },
             ct
         );
 
-        if (saveResult is null)
+        if (savedPath is null)
         {
             ConsoleWriter.Error(CliLocalizationString.err_unimplemented);
             return 2;
         }
 
-        ConsoleWriter.Info(string.Format(CliLocalizationString.msg_written, saveResult));
+        ConsoleWriter.Info(string.Format(CliLocalizationString.msg_written, savedPath));
         return 0;
     }
 }

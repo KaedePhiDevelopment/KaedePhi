@@ -11,18 +11,22 @@ namespace KaedePhi.Core.PhiEdit
         /// 获取或设置开始拍。
         /// </summary>
         public float StartBeat { get; set; }
+
         /// <summary>
         /// 获取或设置结束拍。
         /// </summary>
         public float EndBeat { get; set; }
+
         /// <summary>
         /// 获取或设置缓动类型。
         /// </summary>
         public Easing EasingType { get; set; } = new(1);
+
         /// <summary>
         /// 获取或设置结束横坐标数值。
         /// </summary>
         public float EndXValue { get; set; }
+
         /// <summary>
         /// 获取或设置结束纵坐标数值。
         /// </summary>

@@ -38,18 +38,22 @@ namespace KaedePhi.Core.Phigros.v3
             /// 表示顺时针旋转常量。
             /// </summary>
             public const bool ClockwiseRotation = false;
+
             /// <summary>
             /// 表示最大横坐标常量。
             /// </summary>
             public const float MaxX = 1f;
+
             /// <summary>
             /// 表示最小横坐标常量。
             /// </summary>
             public const float MinX = 0f;
+
             /// <summary>
             /// 表示最大纵坐标常量。
             /// </summary>
             public const float MaxY = 1f;
+
             /// <summary>
             /// 表示最小纵坐标常量。
             /// </summary>

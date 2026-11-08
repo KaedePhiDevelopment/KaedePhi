@@ -6,7 +6,9 @@ using KaedePhi.Tool.Converter;
 namespace KaedePhi.Tests.Converter.Extensions;
 
 public sealed class ExternalChartConverter
-    : LoggableBase, IChartConverter<ExternalChart, string?, string?>, ICancellableChartConverter
+    : LoggableBase,
+        IChartConverter<ExternalChart, string?, string?>,
+        ICancellableChartConverter
 {
     private CancellationToken _ct;
 
@@ -19,10 +21,7 @@ public sealed class ExternalChartConverter
         return new Chart
         {
             Meta = new Meta { Name = options + input.Name },
-            JudgeLineList =
-            [
-                new JudgeLine { EventLayers = [new EventLayer(), new EventLayer()] },
-            ],
+            JudgeLineList = [new JudgeLine { EventLayers = [new EventLayer(), new EventLayer()] }],
         };
     }
 

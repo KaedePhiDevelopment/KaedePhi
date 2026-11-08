@@ -52,6 +52,7 @@ namespace KaedePhi.Core.Formats.PhiChain.v6.Model
         /// 表示过渡类型。
         /// </summary>
         Transition,
+
         /// <summary>
         /// 表示常量类型。
         /// </summary>

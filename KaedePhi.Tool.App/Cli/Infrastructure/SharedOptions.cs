@@ -78,4 +78,14 @@ public static class SharedOptions
     {
         return result.GetResult(option) is not null ? result.GetValue(option) : null;
     }
+
+    // 用户在命令行显式指定了该选项时取其值，否则使用回退值（通常来自配置文件）
+    public static T ValueOr<T>(this ParseResult result, Option<T> option, T fallback)
+        where T : struct => GetIfSpecified(result, option) ?? fallback;
+
+    public static Option<T> CreateValueOption<T>(string name, string description) =>
+        new(name) { Description = description, Arity = ArgumentArity.ExactlyOne };
+
+    public static Option<bool> CreateFlagOption(string name, string description) =>
+        new(name) { Description = description };
 }

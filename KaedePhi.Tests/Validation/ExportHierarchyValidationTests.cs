@@ -103,7 +103,8 @@ public class ExportHierarchyValidationTests
     {
         var exporterStarted = false;
         var descriptor = ChartFormatDescriptor.Create(
-            "tests.hierarchy", "test",
+            "tests.hierarchy",
+            "test",
             exporter: (_, _, _, _, _, _) =>
             {
                 exporterStarted = true;

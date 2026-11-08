@@ -13,32 +13,67 @@ internal static class LegacyApi
     internal static Type CoreType(string name) =>
         typeof(Chart).Assembly.GetType(name, throwOnError: true)!;
 
-    internal static object? Invoke(Type type, string name, object? instance, params object?[] arguments)
-        => Invoke(
-            type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
+    internal static object? Invoke(
+        Type type,
+        string name,
+        object? instance,
+        params object?[] arguments
+    ) =>
+        Invoke(
+            type.GetMethods(
+                    BindingFlags.Public
+                        | BindingFlags.NonPublic
+                        | BindingFlags.Instance
+                        | BindingFlags.Static
+                )
                 .Where(method => !method.ContainsGenericParameters),
-            name, instance, arguments
+            name,
+            instance,
+            arguments
         );
 
     internal static object? InvokeGeneric(
-        Type type, string name, Type[] typeArguments, object? instance, params object?[] arguments
-    ) => Invoke(
-        type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
-            .Where(method => method.Name == name && method.IsGenericMethodDefinition
-                && method.GetGenericArguments().Length == typeArguments.Length)
-            .Select(method => method.MakeGenericMethod(typeArguments)),
-        name, instance, arguments
-    );
+        Type type,
+        string name,
+        Type[] typeArguments,
+        object? instance,
+        params object?[] arguments
+    ) =>
+        Invoke(
+            type.GetMethods(
+                    BindingFlags.Public
+                        | BindingFlags.NonPublic
+                        | BindingFlags.Instance
+                        | BindingFlags.Static
+                )
+                .Where(method =>
+                    method.Name == name
+                    && method.IsGenericMethodDefinition
+                    && method.GetGenericArguments().Length == typeArguments.Length
+                )
+                .Select(method => method.MakeGenericMethod(typeArguments)),
+            name,
+            instance,
+            arguments
+        );
 
     private static object? Invoke(
-        IEnumerable<MethodInfo> methods, string name, object? instance, object?[] arguments
+        IEnumerable<MethodInfo> methods,
+        string name,
+        object? instance,
+        object?[] arguments
     )
     {
-        var method = methods
-            .Single(candidate => candidate.Name == name
-                && candidate.GetParameters().Length == arguments.Length
-                && candidate.GetParameters().Zip(arguments)
-                    .All(pair => pair.Second is null || pair.First.ParameterType.IsInstanceOfType(pair.Second)));
+        var method = methods.Single(candidate =>
+            candidate.Name == name
+            && candidate.GetParameters().Length == arguments.Length
+            && candidate
+                .GetParameters()
+                .Zip(arguments)
+                .All(pair =>
+                    pair.Second is null || pair.First.ParameterType.IsInstanceOfType(pair.Second)
+                )
+        );
         return method.Invoke(instance, BindingFlags.DoNotWrapExceptions, null, arguments, null);
     }
 
@@ -51,8 +86,8 @@ internal static class LegacyApi
 
     internal static object ConvertTo(object value, Type type) =>
         JsonConvert.DeserializeObject(
-            JsonConvert.SerializeObject(value), type,
+            JsonConvert.SerializeObject(value),
+            type,
             new JsonSerializerSettings { ObjectCreationHandling = ObjectCreationHandling.Replace }
-        )
-            ?? throw new InvalidOperationException("兼容测试模型转换失败。");
+        ) ?? throw new InvalidOperationException("兼容测试模型转换失败。");
 }

@@ -5,7 +5,9 @@ namespace KaedePhi.Tool.Common;
 /// <summary>
 /// 内置谱面格式的兼容枚举；格式注册与扩展使用字符串标识。
 /// </summary>
-[Obsolete("将在下一个大版本移除；请使用 ChartFormatDescriptor.FormatId 和 ChartFormatCatalog 管理格式。")]
+[Obsolete(
+    "将在下一个大版本移除；请使用 ChartFormatDescriptor.FormatId 和 ChartFormatCatalog 管理格式。"
+)]
 public enum ChartType
 {
     /// <summary>

@@ -83,13 +83,16 @@ public static partial class RenderCommand
     [CliHandler]
     private static async Task<int> HandleAsync(ParseResult result, CancellationToken ct)
     {
-        var input = result.GetValue(InputOpt);
-        var workspace = result.GetValue(WorkspaceOpt);
-        if (string.IsNullOrWhiteSpace(input) && string.IsNullOrWhiteSpace(workspace))
-        {
-            ConsoleWriter.Error(CliLocalizationString.err_input_required);
+        if (
+            !ChartCommandHelper.TryGetInput(
+                result,
+                InputOpt,
+                WorkspaceOpt,
+                out var input,
+                out var workspace
+            )
+        )
             return 1;
-        }
 
         var c = AppConfigService.Instance.Config.Render;
 
@@ -147,9 +150,7 @@ public static partial class RenderCommand
                 opts,
                 lineIndex,
                 layerIndex,
-                ConsoleWriter.Info,
-                ConsoleWriter.Warn,
-                ConsoleWriter.Error,
+                ConsoleWriter.Sink,
                 progress: ConsoleWriter.CreateProgress(),
                 ct: ct
             );

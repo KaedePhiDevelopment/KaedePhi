@@ -18,7 +18,10 @@ public sealed class ExternalChartSerializer : IChartSerializer<ExternalChart>
     }
 
     public async Task WriteAsync(
-        ExternalChart chart, Stream stream, bool indented, CancellationToken ct = default
+        ExternalChart chart,
+        Stream stream,
+        bool indented,
+        CancellationToken ct = default
     )
     {
         LastIndented = indented;

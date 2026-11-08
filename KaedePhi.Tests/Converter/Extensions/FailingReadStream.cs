@@ -14,12 +14,25 @@ public sealed class FailingReadStream : Stream
 
     public override int Read(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException("读取失败");
-    public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
-        throw new NotSupportedException("读取失败");
-    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException("读取失败");
+
+    public override Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    ) => throw new NotSupportedException("读取失败");
+
+    public override ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
+    ) => throw new NotSupportedException("读取失败");
+
     public override void Flush() => throw new NotSupportedException();
+
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
     public override void SetLength(long value) => throw new NotSupportedException();
-    public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+    public override void Write(byte[] buffer, int offset, int count) =>
+        throw new NotSupportedException();
 }

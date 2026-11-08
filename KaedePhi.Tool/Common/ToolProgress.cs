@@ -9,10 +9,12 @@ public readonly struct ToolProgress
     /// 获取当前操作的完成比例。
     /// </summary>
     public double Percentage { get; }
+
     /// <summary>
     /// 获取整体处理流程的完成比例。
     /// </summary>
     public double OverallPercentage { get; }
+
     /// <summary>
     /// 获取当前进度的说明文字。
     /// </summary>

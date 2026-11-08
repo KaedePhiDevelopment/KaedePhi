@@ -11,51 +11,51 @@ public class EasingNumberAnalyzerTests
 {
     private const string KpcEasingStub = """
 
-                                         namespace KaedePhi.Core.Intermediate.Model
-                                         {
-                                             public class Easing
-                                             {
-                                                 public Easing(int easingNumber) { }
-                                             }
-                                         }
+        namespace KaedePhi.Core.Intermediate.Model
+        {
+            public class Easing
+            {
+                public Easing(int easingNumber) { }
+            }
+        }
 
-                                         """;
+        """;
 
     private const string PeEasingStub = """
 
-                                        namespace KaedePhi.Core.Formats.PhiEdit.Model
-                                        {
-                                            public class Easing
-                                            {
-                                                public Easing(int easingNumber) { }
-                                            }
-                                        }
+        namespace KaedePhi.Core.Formats.PhiEdit.Model
+        {
+            public class Easing
+            {
+                public Easing(int easingNumber) { }
+            }
+        }
 
-                                        """;
+        """;
 
     private const string RePhiEditEasingStub = """
 
-                                               namespace KaedePhi.Core.Formats.RePhiEdit.Model
-                                               {
-                                                   public class Easing
-                                                   {
-                                                       public Easing(int easingNumber) { }
-                                                   }
-                                               }
+        namespace KaedePhi.Core.Formats.RePhiEdit.Model
+        {
+            public class Easing
+            {
+                public Easing(int easingNumber) { }
+            }
+        }
 
-                                               """;
+        """;
 
     private const string PhiFansEasingStub = """
 
-                                             namespace KaedePhi.Core.Formats.PhiFans.Model
-                                             {
-                                                 public class Easing
-                                                 {
-                                                     public Easing(int easingNumber) { }
-                                                 }
-                                             }
+        namespace KaedePhi.Core.Formats.PhiFans.Model
+        {
+            public class Easing
+            {
+                public Easing(int easingNumber) { }
+            }
+        }
 
-                                             """;
+        """;
 
     [Fact]
     public async Task KpcEasing_WithinRange_NoDiagnostic()
@@ -63,15 +63,15 @@ public class EasingNumberAnalyzerTests
         const string text =
             """
 
-            class Program
-            {
-                static void Main()
+                class Program
                 {
-                    var easing = new KaedePhi.Core.Intermediate.Model.Easing(31);
+                    static void Main()
+                    {
+                        var easing = new KaedePhi.Core.Intermediate.Model.Easing(31);
+                    }
                 }
-            }
 
-            """ + KpcEasingStub;
+                """ + KpcEasingStub;
 
         await Verifier.VerifyAnalyzerAsync(text);
     }
@@ -82,15 +82,15 @@ public class EasingNumberAnalyzerTests
         const string text =
             """
 
-            class Program
-            {
-                static void Main()
+                class Program
                 {
-                    var easing = new KaedePhi.Core.Intermediate.Model.Easing(32);
+                    static void Main()
+                    {
+                        var easing = new KaedePhi.Core.Intermediate.Model.Easing(32);
+                    }
                 }
-            }
 
-            """ + KpcEasingStub;
+                """ + KpcEasingStub;
 
         var expected = Verifier
             .Diagnostic()
@@ -105,15 +105,15 @@ public class EasingNumberAnalyzerTests
         const string text =
             """
 
-            class Program
-            {
-                static void Main()
+                class Program
                 {
-                    var easing = new KaedePhi.Core.Intermediate.Model.Easing(0);
+                    static void Main()
+                    {
+                        var easing = new KaedePhi.Core.Intermediate.Model.Easing(0);
+                    }
                 }
-            }
 
-            """ + KpcEasingStub;
+                """ + KpcEasingStub;
 
         var expected = Verifier
             .Diagnostic()
@@ -128,15 +128,15 @@ public class EasingNumberAnalyzerTests
         const string text =
             """
 
-            class Program
-            {
-                static void Main()
+                class Program
                 {
-                    var easing = new KaedePhi.Core.Formats.PhiEdit.Model.Easing(29);
+                    static void Main()
+                    {
+                        var easing = new KaedePhi.Core.Formats.PhiEdit.Model.Easing(29);
+                    }
                 }
-            }
 
-            """ + PeEasingStub;
+                """ + PeEasingStub;
 
         await Verifier.VerifyAnalyzerAsync(text);
     }
@@ -147,15 +147,15 @@ public class EasingNumberAnalyzerTests
         const string text =
             """
 
-            class Program
-            {
-                static void Main()
+                class Program
                 {
-                    var easing = new KaedePhi.Core.Formats.PhiEdit.Model.Easing(30);
+                    static void Main()
+                    {
+                        var easing = new KaedePhi.Core.Formats.PhiEdit.Model.Easing(30);
+                    }
                 }
-            }
 
-            """ + PeEasingStub;
+                """ + PeEasingStub;
 
         var expected = Verifier
             .Diagnostic()
@@ -170,15 +170,15 @@ public class EasingNumberAnalyzerTests
         const string text =
             """
 
-            class Program
-            {
-                static void Main()
+                class Program
                 {
-                    var easing = new KaedePhi.Core.Formats.RePhiEdit.Model.Easing(45);
+                    static void Main()
+                    {
+                        var easing = new KaedePhi.Core.Formats.RePhiEdit.Model.Easing(45);
+                    }
                 }
-            }
 
-            """ + RePhiEditEasingStub;
+                """ + RePhiEditEasingStub;
 
         var expected = Verifier
             .Diagnostic()
@@ -193,16 +193,16 @@ public class EasingNumberAnalyzerTests
         const string text =
             """
 
-            class Program
-            {
-                static void Main()
+                class Program
                 {
-                    var count = 32;
-                    var easing = new KaedePhi.Core.Intermediate.Model.Easing(count);
+                    static void Main()
+                    {
+                        var count = 32;
+                        var easing = new KaedePhi.Core.Intermediate.Model.Easing(count);
+                    }
                 }
-            }
 
-            """ + KpcEasingStub;
+                """ + KpcEasingStub;
 
         await Verifier.VerifyAnalyzerAsync(text);
     }
@@ -213,15 +213,15 @@ public class EasingNumberAnalyzerTests
         const string text =
             """
 
-            class Program
-            {
-                static void Main()
+                class Program
                 {
-                    var easing = new KaedePhi.Core.Formats.PhiFans.Model.Easing(30);
+                    static void Main()
+                    {
+                        var easing = new KaedePhi.Core.Formats.PhiFans.Model.Easing(30);
+                    }
                 }
-            }
 
-            """ + PhiFansEasingStub;
+                """ + PhiFansEasingStub;
 
         await Verifier.VerifyAnalyzerAsync(text);
     }
@@ -232,15 +232,15 @@ public class EasingNumberAnalyzerTests
         const string text =
             """
 
-            class Program
-            {
-                static void Main()
+                class Program
                 {
-                    var easing = new KaedePhi.Core.Formats.PhiFans.Model.Easing(31);
+                    static void Main()
+                    {
+                        var easing = new KaedePhi.Core.Formats.PhiFans.Model.Easing(31);
+                    }
                 }
-            }
 
-            """ + PhiFansEasingStub;
+                """ + PhiFansEasingStub;
 
         var expected = Verifier
             .Diagnostic()
@@ -255,15 +255,15 @@ public class EasingNumberAnalyzerTests
         const string text =
             """
 
-            class Program
-            {
-                static void Main()
+                class Program
                 {
-                    var easing = new KaedePhi.Core.Formats.PhiFans.Model.Easing(-1);
+                    static void Main()
+                    {
+                        var easing = new KaedePhi.Core.Formats.PhiFans.Model.Easing(-1);
+                    }
                 }
-            }
 
-            """ + PhiFansEasingStub;
+                """ + PhiFansEasingStub;
 
         var expected = Verifier
             .Diagnostic()

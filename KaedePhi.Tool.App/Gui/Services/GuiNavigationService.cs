@@ -1,6 +1,6 @@
 using KaedePhi.Tool.App.Config;
+using KaedePhi.Tool.App.Gui.Models;
 using KaedePhi.Tool.App.Gui.ViewModels;
-using KaedePhi.Tool.Common;
 using Serilog;
 using static KaedePhi.Tool.Localization.GuiLocalizationString;
 
@@ -40,7 +40,7 @@ internal sealed class GuiNavigationService
         _chart.Clear();
         _main.ClearChartContext();
         Import.UseStream = _config.Config.Convert.StreamImport;
-        _main.SetShellState("import", import_button, app_subtitle, 1);
+        _main.SetShellState(ShellPageKey.Import, import_button, app_subtitle, 1);
         _main.CurrentPage = Import;
         _log.Information(log_navigate_import);
     }
@@ -50,7 +50,7 @@ internal sealed class GuiNavigationService
         ImportOptions.DetectedFormat = formatId;
         ImportOptions.FileName = fileName;
         _main.SetShellState(
-            "options",
+            ShellPageKey.ImportOptions,
             import_options_title,
             import_options_title,
             1,
@@ -65,20 +65,21 @@ internal sealed class GuiNavigationService
     {
         Tool.StatusText = string.Empty;
         Tool.HasUnclearContent = _chart.HasUnclearContent;
-        _main.SetShellState("tool", tool_select_title, tool_options_title, 2);
+        _main.SetShellState(ShellPageKey.Tool, tool_select_title, tool_options_title, 2);
         _main.CurrentPage = Tool;
     }
 
     public void ShowToolForChart(string filePath, string formatId)
     {
-        Tool.CurrentFileName = Path.GetFileName(filePath);
+        var fileName = Path.GetFileName(filePath);
+        Tool.CurrentFileName = fileName;
         Tool.DetectedFormat = formatId;
         _main.SetShellState(
-            "tool",
+            ShellPageKey.Tool,
             tool_select_title,
             tool_options_title,
             2,
-            Path.GetFileName(filePath),
+            fileName,
             formatId,
             true
         );
@@ -92,35 +93,22 @@ internal sealed class GuiNavigationService
 
     public void ShowExport()
     {
-        Export.SourceFormat = Tool.DetectedFormat;
-        Export.RefreshAvailableFormats();
-        if (Export.AvailableFormats.Contains(ChartFormatIds.RePhiEdit))
-            Export.SelectedFormat = ChartFormatIds.RePhiEdit;
-        Export.IndentedOutput = false;
-        Export.StatusText = string.Empty;
-        Export.IsExporting = false;
-        Export.ApplyConversionDefaults(_config.Config.Convert);
-        _main.SetShellState("export", export_title, export_output_format, 3);
+        Export.Prepare(Tool.DetectedFormat, _config.Config.Convert);
+        _main.SetShellState(ShellPageKey.Export, export_title, export_output_format, 3);
         _main.CurrentPage = Export;
     }
 
     public void ShowProcessing()
     {
-        Processing.Progress = 0;
-        Processing.CurrentStep = string.Empty;
-        Processing.StatusMessage = string.Empty;
-        Processing.IsCompleted = false;
-        Processing.HasError = false;
-        Processing.ErrorMessage = string.Empty;
-        Processing.LogFilePath = string.Empty;
-        _main.SetShellState("processing", processing_title, status_processing, 2);
+        Processing.Reset();
+        _main.SetShellState(ShellPageKey.Processing, processing_title, status_processing, 2);
         _main.CurrentPage = Processing;
     }
 
     public void ShowSettings()
     {
         Settings.StatusText = string.Empty;
-        _main.SetShellState("settings", settings_title, settings_title, 0);
+        _main.SetShellState(ShellPageKey.Settings, settings_title, settings_title, 0);
         _main.CurrentPage = Settings;
     }
 

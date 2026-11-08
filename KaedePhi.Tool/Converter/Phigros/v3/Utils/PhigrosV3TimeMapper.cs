@@ -87,9 +87,7 @@ internal sealed class PhigrosV3TimeMapper
         ValidateTailEventBoundary(time);
         var encoded = (float)time;
         if (encoded >= TailEventEndTime)
-            throw new FormatException(
-                ToolResources.phigros_tail_event_sentinel_conflict
-            );
+            throw new FormatException(ToolResources.phigros_tail_event_sentinel_conflict);
         ValidateEncodedTime(encoded, seconds);
         return encoded;
     }
@@ -194,9 +192,7 @@ internal sealed class PhigrosV3TimeMapper
     private static void ValidateTailEventBoundary(long time)
     {
         if (time >= TailEventTime)
-            throw new FormatException(
-                ToolResources.phigros_tail_event_sentinel_conflict
-            );
+            throw new FormatException(ToolResources.phigros_tail_event_sentinel_conflict);
     }
 
     private readonly record struct TempoEntry(IrBpmItem Item, int Index);

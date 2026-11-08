@@ -11,10 +11,12 @@ public class IrToPhigrosV3ConvertOptions
     /// 表示默认精度常量。
     /// </summary>
     public const double DefaultPrecision = Constants.DefaultPrecision;
+
     /// <summary>
     /// 表示默认容差百分比常量。
     /// </summary>
     public const double DefaultTolerancePercent = Constants.DefaultTolerancePercent;
+
     /// <summary>
     /// 表示默认全局节拍速度常量。
     /// </summary>

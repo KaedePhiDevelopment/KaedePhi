@@ -17,13 +17,22 @@ internal sealed class ChartProbeStream(Stream source, long origin) : Stream
     }
 
     public override void Flush() { }
-    public override int Read(byte[] buffer, int offset, int count) => source.Read(buffer, offset, count);
+
+    public override int Read(byte[] buffer, int offset, int count) =>
+        source.Read(buffer, offset, count);
+
     public override int Read(Span<byte> buffer) => source.Read(buffer);
+
     public override Task<int> ReadAsync(
-        byte[] buffer, int offset, int count, CancellationToken cancellationToken
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
     ) => source.ReadAsync(buffer, offset, count, cancellationToken);
+
     public override ValueTask<int> ReadAsync(
-        Memory<byte> buffer, CancellationToken cancellationToken = default
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
     ) => source.ReadAsync(buffer, cancellationToken);
 
     public override long Seek(long offset, SeekOrigin seekOrigin)
@@ -42,5 +51,7 @@ internal sealed class ChartProbeStream(Stream source, long origin) : Stream
     }
 
     public override void SetLength(long value) => throw new NotSupportedException();
-    public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+    public override void Write(byte[] buffer, int offset, int count) =>
+        throw new NotSupportedException();
 }

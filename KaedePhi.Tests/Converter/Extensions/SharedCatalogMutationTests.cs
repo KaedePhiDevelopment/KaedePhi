@@ -16,13 +16,15 @@ public sealed class SharedCatalogMutationTests
         {
             ChartFormatRegistry.UnregisterFormat(id).Should().BeTrue();
             ChartFormatRegistry.Find(id).Should().BeNull();
-            var detect = () => ChartGetType.DetectFormatAsync(input, TestContext.Current.CancellationToken);
+            var detect = () =>
+                ChartGetType.DetectFormatAsync(input, TestContext.Current.CancellationToken);
             await detect.Should().ThrowAsync<NotSupportedException>();
 
             ChartFormatRegistry.RegisterFormat(saved);
             ChartFormatRegistry.Get(ChartFormatIds.PhigrosV1).Should().BeSameAs(saved.Descriptor);
             (await ChartGetType.DetectFormatAsync(input, TestContext.Current.CancellationToken))
-                .Should().BeSameAs(saved.Descriptor);
+                .Should()
+                .BeSameAs(saved.Descriptor);
         }
         finally
         {

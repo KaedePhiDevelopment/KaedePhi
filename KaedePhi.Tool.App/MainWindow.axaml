@@ -11,16 +11,16 @@
         Icon="/Assets/KaedePhiIcon.png">
 
     <Grid x:Name="BackgroundCanvas" Background="{DynamicResource AppBackgroundBrush}" ClipToBounds="True">
-        <Image Source="{Binding BackgroundImage}" IsVisible="{Binding HasBackgroundImage}"
+        <Image Source="{Binding Background.Image}" IsVisible="{Binding Background.HasImage}"
                Stretch="UniformToFill" IsHitTestVisible="False" />
-        <Border Background="{DynamicResource SceneVeilBrush}" IsVisible="{Binding HasBackgroundImage}"
+        <Border Background="{DynamicResource SceneVeilBrush}" IsVisible="{Binding Background.HasImage}"
                 IsHitTestVisible="False" />
-        <Grid x:Name="BackgroundRevealLayer" IsVisible="{Binding HasPendingBackgroundImage}"
+        <Grid x:Name="BackgroundRevealLayer" IsVisible="{Binding Background.HasPendingImage}"
               IsHitTestVisible="False">
             <Grid.Clip>
                 <EllipseGeometry RadiusX="0" RadiusY="0" />
             </Grid.Clip>
-            <Image Source="{Binding PendingBackgroundImage}" Stretch="UniformToFill" />
+            <Image Source="{Binding Background.PendingImage}" Stretch="UniformToFill" />
             <Border Background="{DynamicResource SceneVeilBrush}" />
         </Grid>
 
@@ -157,12 +157,12 @@
                             <TextBlock Text="{Binding CurrentPageTitle}" Classes="page-header" />
                             <TextBlock Text="{Binding CurrentPageDescription}" Classes="muted" FontSize="12" />
                         </StackPanel>
-                        <TextBlock Grid.Column="1" Text="{Binding BackgroundMessage}" Classes="muted"
-                                   IsVisible="{Binding HasBackgroundMessage}" FontSize="11" MaxWidth="280"
+                        <TextBlock Grid.Column="1" Text="{Binding Background.Message}" Classes="muted"
+                                   IsVisible="{Binding Background.HasMessage}" FontSize="11" MaxWidth="280"
                                    TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
-                                   ToolTip.Tip="{Binding BackgroundMessage}" />
+                                   ToolTip.Tip="{Binding Background.Message}" />
                         <Button x:Name="BackgroundRefreshButton" Grid.Column="2" Classes="background-refresh"
-                                Classes.busy="{Binding IsRefreshingBackground}" IsEnabled="{Binding !IsRefreshingBackground}"
+                                Classes.busy="{Binding Background.IsRefreshing}" IsEnabled="{Binding !Background.IsRefreshing}"
                                 Click="OnBackgroundRefreshClick" ToolTip.Tip="{x:Static loc:GuiLocalizationString.ui_background_refresh_hint}"
                                 AutomationProperties.Name="{x:Static loc:GuiLocalizationString.ui_background_refresh}">
                             <TextBlock Text="&#xf2f1;" Classes="fa-icon" FontSize="16"

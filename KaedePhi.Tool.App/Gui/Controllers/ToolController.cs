@@ -1,26 +1,22 @@
 using System.ComponentModel;
 using Avalonia.Controls;
 using KaedePhi.Tool.App.Config;
+using KaedePhi.Tool.App.Gui.Models;
 using KaedePhi.Tool.App.Gui.Services;
 using KaedePhi.Tool.App.Gui.ViewModels;
 using KaedePhi.Tool.App.Gui.Views;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Render.Intermediate;
-using Serilog;
 using static KaedePhi.Tool.Localization.GuiLocalizationString;
+using Chart = KaedePhi.Core.Intermediate.Model.Chart;
 
 namespace KaedePhi.Tool.App.Gui.Controllers;
 
-internal sealed class ToolController
+internal sealed class ToolController : ControllerBase
 {
     private readonly GuiNavigationService _navigation;
     private readonly GuiChartService _chart;
     private readonly AppConfigService _config;
-    private readonly LogService _logService;
-    private readonly ILogger _log;
-    private readonly Window _window;
-
-    private CancellationTokenSource? _cts;
 
     public ToolController(
         GuiNavigationService navigation,
@@ -30,13 +26,11 @@ internal sealed class ToolController
         Window window,
         Action returnToImport
     )
+        : base(logService.ForContext<ToolController>(), logService, window)
     {
         _navigation = navigation;
         _chart = chart;
         _config = config;
-        _logService = logService;
-        _log = logService.ForContext<ToolController>();
-        _window = window;
 
         _navigation.Tool.RequestRun += OnToolRun;
         _navigation.Tool.RequestExport += _navigation.ShowExport;
@@ -46,12 +40,6 @@ internal sealed class ToolController
         _navigation.Processing.RequestReturnToImport += returnToImport;
         _navigation.Processing.RequestGoToExport += _navigation.ShowExport;
         _navigation.Processing.RequestCancel += OnCancelProcessing;
-    }
-
-    public void Cancel()
-    {
-        if (_cts is { IsCancellationRequested: false })
-            _cts.Cancel();
     }
 
     private void OnToolVmPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -74,8 +62,7 @@ internal sealed class ToolController
 
         toolVm.IsProcessing = true;
         toolVm.StatusText = status_processing;
-        _cts = new CancellationTokenSource();
-        var ct = _cts.Token;
+        var ct = BeginOperation();
 
         try
         {
@@ -84,63 +71,53 @@ internal sealed class ToolController
 
             // 渲染为只读操作直接读取当前谱面；其余变更型工具在克隆副本上处理，
             // 保证取消或异常时当前谱面不会被半处理污染
-            var isRender = toolId == "render";
-            var kpcChart = isRender ? currentChart : currentChart.Clone();
+            var isRender = toolId == ToolIds.Render;
+            var workingChart = isRender ? currentChart : currentChart.Clone();
 
-            // 运行工具
             processingVm.SetStep(0, string.Format(log_running_tool, toolId));
             var toolProgress = new Progress<ToolProgress>(p =>
             {
                 var overall = p.OverallPercentage >= 0 ? p.OverallPercentage : p.Percentage;
                 processingVm.SetToolProgress(p.Percentage, overall, p.Detail);
             });
-            await Task.Run(() => RunTool(toolId, kpcChart, toolProgress, ct), ct);
+            await Task.Run(() => RunTool(toolId, workingChart, toolProgress, ct), ct);
 
-            // 校验并提交：变更型工具完成后校验副本，通过后才替换当前谱面
+            // 变更型工具完成后先校验副本，通过后才替换当前谱面
             if (!isRender)
             {
-                IrChartValidator.ValidateJudgeLineHierarchy(kpcChart.JudgeLineList);
-                _chart.CommitChart(kpcChart);
+                IrChartValidator.ValidateJudgeLineHierarchy(workingChart.JudgeLineList);
+                _chart.CommitChart(workingChart);
             }
 
-            _log.Information(log_tool_completed, toolId);
+            Logger.Information(log_tool_completed, toolId);
 
-            // 返回工具页面并显示成功对话框
             _navigation.ShowTool();
             MessageDialog.ShowSuccess(
-                _window,
+                OwnerWindow,
                 tool_success_title,
                 string.Format(log_tool_completed, toolId)
             );
         }
         catch (OperationCanceledException)
         {
-            _log.Information(log_tool_cancelled);
+            Logger.Information(log_tool_cancelled);
             _navigation.ShowTool();
         }
         catch (Exception ex)
         {
-            _log.Error(ex, log_tool_failed);
-
-            // 返回工具页面并显示失败对话框
             _navigation.ShowTool();
-            MessageDialog.ShowError(
-                _window,
-                tool_error_title,
-                string.Format(status_error_with_log, ex.Message, _logService.CurrentLogFile)
-            );
+            ReportFailure(log_tool_failed, tool_error_title, ex);
         }
         finally
         {
             toolVm.IsProcessing = false;
-            _cts?.Dispose();
-            _cts = null;
+            EndOperation();
         }
     }
 
     private void RunTool(
         string toolId,
-        KaedePhi.Core.Intermediate.Model.Chart chart,
+        Chart chart,
         IProgress<ToolProgress> progress,
         CancellationToken ct
     )
@@ -148,7 +125,7 @@ internal sealed class ToolController
         var toolVm = _navigation.Tool;
         switch (toolId)
         {
-            case "unbind":
+            case ToolIds.Unbind:
                 _chart.RunFatherUnbind(
                     chart,
                     toolVm.Precision,
@@ -160,7 +137,7 @@ internal sealed class ToolController
                     ct
                 );
                 break;
-            case "layermerge":
+            case ToolIds.LayerMerge:
                 _chart.RunLayerMerge(
                     chart,
                     toolVm.Precision,
@@ -171,7 +148,7 @@ internal sealed class ToolController
                     ct
                 );
                 break;
-            case "cut":
+            case ToolIds.Cut:
                 _chart.RunCutEvent(
                     chart,
                     toolVm.Precision,
@@ -181,39 +158,44 @@ internal sealed class ToolController
                     ct
                 );
                 break;
-            case "fit":
+            case ToolIds.Fit:
                 _chart.RunFitEvent(chart, toolVm.Tolerance, progress, ct);
                 break;
-            case "render":
-                var renderPaths = _chart.RunRender(
-                    chart,
-                    toolVm.RenderOutputDir,
-                    new IrRenderOptions
-                    {
-                        PixelsPerBeat = toolVm.PixelsPerBeat,
-                        ChannelWidth = toolVm.ChannelWidth,
-                        SamplesPerEvent = toolVm.SamplesPerEvent,
-                        BeatSubdivisions = toolVm.BeatSubdivisions,
-                        RangePaddingRatio = _config.Config.Render.RangePaddingRatio,
-                        RangeSamplesPerEvent = _config.Config.Render.RangeSamplesPerEvent,
-                        SegmentGroupTolerance = _config.Config.Render.SegmentGroupTolerance,
-                        MinValueRangeHalf = _config.Config.Render.MinValueRangeHalf,
-                        MinValueRangeHalfRatio = _config.Config.Render.MinValueRangeHalfRatio,
-                    },
-                    progress,
-                    ct
-                );
-                foreach (var path in renderPaths)
-                    _log.Information(log_tool_render_output, path);
+            case ToolIds.Render:
+                RunRender(chart, progress, ct);
                 break;
         }
     }
 
+    private void RunRender(Chart chart, IProgress<ToolProgress> progress, CancellationToken ct)
+    {
+        var toolVm = _navigation.Tool;
+        var renderConfig = _config.Config.Render;
+        var renderPaths = _chart.RunRender(
+            chart,
+            toolVm.RenderOutputDir,
+            new IrRenderOptions
+            {
+                PixelsPerBeat = toolVm.PixelsPerBeat,
+                ChannelWidth = toolVm.ChannelWidth,
+                SamplesPerEvent = toolVm.SamplesPerEvent,
+                BeatSubdivisions = toolVm.BeatSubdivisions,
+                RangePaddingRatio = renderConfig.RangePaddingRatio,
+                RangeSamplesPerEvent = renderConfig.RangeSamplesPerEvent,
+                SegmentGroupTolerance = renderConfig.SegmentGroupTolerance,
+                MinValueRangeHalf = renderConfig.MinValueRangeHalf,
+                MinValueRangeHalfRatio = renderConfig.MinValueRangeHalfRatio,
+            },
+            progress,
+            ct
+        );
+        foreach (var path in renderPaths)
+            Logger.Information(log_tool_render_output, path);
+    }
+
     private void OnCancelProcessing()
     {
-        if (_cts is not { IsCancellationRequested: false })
-            return;
-        _cts.Cancel();
-        _log.Information(log_tool_cancelled);
+        if (TryCancelOperation())
+            Logger.Information(log_tool_cancelled);
     }
 }

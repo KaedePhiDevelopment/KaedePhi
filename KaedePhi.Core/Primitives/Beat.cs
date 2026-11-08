@@ -60,7 +60,10 @@ namespace KaedePhi.Core.Primitives
         public Beat(double beat)
         {
             if (double.IsNaN(beat) || double.IsInfinity(beat))
-                throw new ArgumentOutOfRangeException(nameof(beat), Resources.illegal_beat_infinity);
+                throw new ArgumentOutOfRangeException(
+                    nameof(beat),
+                    Resources.illegal_beat_infinity
+                );
             if (beat is < int.MinValue or > int.MaxValue)
                 throw new ArgumentOutOfRangeException(
                     nameof(beat),
@@ -102,8 +105,8 @@ namespace KaedePhi.Core.Primitives
                     remaining -= digit;
                     if (
                         Math.Abs(remaining) < Common.CoreConstants.FloatEpsilon
-                        || Math.Abs((double)numerator / denominator - fractionalPart) <
-                        Common.CoreConstants.FloatEpsilon
+                        || Math.Abs((double)numerator / denominator - fractionalPart)
+                            < Common.CoreConstants.FloatEpsilon
                     )
                         break;
 

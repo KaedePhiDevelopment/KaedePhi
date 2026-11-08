@@ -1,53 +1,10 @@
+using KaedePhi.Tool.App.Shared;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter;
-using KaedePhi.Tool.Converter.PhiEdit.Model;
-using KaedePhi.Tool.Converter.PhiFans.Model;
-using KaedePhi.Tool.Converter.Phigros.v3.Model;
 using KaedePhi.Tool.Converter.RePhiEdit.Model;
 using Chart = KaedePhi.Core.Intermediate.Model.Chart;
 
 namespace KaedePhi.Tool.App.Cli.Infrastructure;
-
-/// <summary>
-/// <see cref="ChartService.SaveAsAsync"/> 的导出选项。
-/// </summary>
-public sealed record SaveAsOptions
-{
-    /// <summary>是否使用流式写入（适合大文件）。</summary>
-    public bool Stream { get; init; }
-
-    /// <summary>是否格式化 JSON 输出。</summary>
-    public bool Format { get; init; }
-
-    /// <summary>演习模式：不实际写文件，仅返回目标路径。</summary>
-    public bool DryRun { get; init; }
-
-    /// <summary>PhiEdit 转换选项。</summary>
-    public IrToPhiEditConvertOptions? PhiEditOptions { get; init; }
-
-    /// <summary>Phigros v3 转换选项。</summary>
-    public IrToPhigrosV3ConvertOptions? PhigrosOptions { get; init; }
-
-    /// <summary>PhiFans 转换选项。</summary>
-    public IrToPhiFansConvertOptions? PhiFansOptions { get; init; }
-
-    /// <summary>其他格式的转换选项，按目标格式自行匹配类型。</summary>
-    public object? ExportOptions { get; init; }
-
-    /// <summary>
-    /// 挑选与目标格式匹配的转换选项。
-    /// </summary>
-    /// <param name="target">目标格式</param>
-    /// <returns>选项实例，无匹配时返回 <see langword="null"/> 以使用格式默认值</returns>
-    internal object? ResolveFor(string target) =>
-        target switch
-        {
-            ChartFormatIds.PhiEdit => PhiEditOptions ?? ExportOptions,
-            ChartFormatIds.PhigrosV3 => PhigrosOptions ?? ExportOptions,
-            ChartFormatIds.PhiFans => PhiFansOptions ?? ExportOptions,
-            _ => ExportOptions,
-        };
-}
 
 /// <summary>
 /// 谱面加载、格式检测与导出服务。格式相关的转换细节委托给 <see cref="ChartFormatRegistry"/>。
@@ -78,39 +35,19 @@ public sealed class ChartService
         var path = ResolveInputPath(input, workspace);
         InputFileValidator.Validate(path);
 
-        ChartFormatDescriptor descriptor;
-        await using (
-            var detectStream = new FileStream(
-                path,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read,
-                65536,
-                useAsync: true
-            )
-        )
-        {
-            descriptor = await ChartGetType.DetectFormatAsync(detectStream, ct);
-        }
-
+        var descriptor = await ChartImporter.DetectFormatAsync(path, null, ct);
         if (!descriptor.CanImport)
             return null;
 
-        if (descriptor.CanStreamImport)
-        {
-            await using var inputStream = new FileStream(
-                path,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read,
-                65536,
-                useAsync: true
-            );
-            return await descriptor.ImportStreamIrAsync(inputStream, ct: ct);
-        }
-
-        var text = await File.ReadAllTextAsync(path, ct);
-        return await descriptor.ImportIrAsync(text, ct: ct);
+        return await ChartImporter.ImportAsync(
+            path,
+            descriptor,
+            preferStream: true,
+            importOptions: null,
+            log: null,
+            progress: null,
+            ct
+        );
     }
 
     private string ResolveInputPath(string? input, string? workspace)
@@ -144,14 +81,7 @@ public sealed class ChartService
             var sourcePath = !string.IsNullOrWhiteSpace(workspace)
                 ? _workspace.GetChartPath(workspace)
                 : input;
-            if (
-                sourcePath is not null
-                && string.Equals(
-                    Path.GetFullPath(sourcePath),
-                    Path.GetFullPath(output),
-                    StringComparison.OrdinalIgnoreCase
-                )
-            )
+            if (ChartFiles.IsSamePath(sourcePath, output))
                 throw new InvalidOperationException(CliLocalizationString.err_output_input_same);
             return output;
         }

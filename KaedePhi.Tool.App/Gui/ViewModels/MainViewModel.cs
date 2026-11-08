@@ -1,195 +1,139 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using Avalonia.Media.Imaging;
 using KaedePhi.Tool.App.Gui.Models;
 using KaedePhi.Tool.App.Gui.Services;
-using Serilog;
 using static KaedePhi.Tool.Localization.GuiLocalizationString;
 
 namespace KaedePhi.Tool.App.Gui.ViewModels;
 
-public sealed class MainViewModel : INotifyPropertyChanged
+public sealed class MainViewModel : ViewModelBase
 {
-    private readonly ILogger _log = Log.ForContext<MainViewModel>();
-    private readonly BackgroundSceneService _backgroundScene;
-    private CancellationTokenSource? _backgroundRefreshCancellation = new();
-    private Task? _automaticBackgroundRefresh;
-    private BackgroundImageResource? _currentBackground;
-    private bool _backgroundStopped;
-    private bool _isSavingBackground;
-    private bool _hasChart;
+    private const double ExpandedSidebarWidth = 236;
+    private const double CollapsedSidebarWidth = 72;
 
     public MainViewModel()
-        : this(new BackgroundSceneService()) { }
+        : this(new BackgroundViewModel()) { }
 
     internal MainViewModel(BackgroundSceneService backgroundScene)
+        : this(new BackgroundViewModel(backgroundScene)) { }
+
+    private MainViewModel(BackgroundViewModel background)
     {
-        _backgroundScene = backgroundScene;
+        Background = background;
     }
+
+    public BackgroundViewModel Background { get; }
+
+    #region 侧边栏
 
     public bool IsSidebarExpanded
     {
         get;
         private set
         {
-            field = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(SidebarWidth));
-            OnPropertyChanged(nameof(SidebarToggleIcon));
-            OnPropertyChanged(nameof(SidebarToggleDescription));
+            if (!SetProperty(ref field, value))
+                return;
+            OnPropertiesChanged(
+                nameof(SidebarWidth),
+                nameof(SidebarToggleIcon),
+                nameof(SidebarToggleDescription)
+            );
         }
     } = true;
 
-    public double SidebarWidth => IsSidebarExpanded ? 236 : 72;
+    public double SidebarWidth => IsSidebarExpanded ? ExpandedSidebarWidth : CollapsedSidebarWidth;
+
     public string SidebarToggleIcon => IsSidebarExpanded ? "\uf053" : "\uf054";
 
     public string SidebarToggleDescription =>
         IsSidebarExpanded ? ui_sidebar_collapse : ui_sidebar_expand;
 
-    public Bitmap? BackgroundImage
-    {
-        get;
-        private set
-        {
-            field = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(HasBackgroundImage));
-        }
-    }
+    public void ToggleSidebar() => IsSidebarExpanded = !IsSidebarExpanded;
 
-    public bool HasBackgroundImage => BackgroundImage != null;
+    #endregion
 
-    public Bitmap? PendingBackgroundImage
-    {
-        get;
-        private set
-        {
-            field = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(HasPendingBackgroundImage));
-        }
-    }
-
-    public bool HasPendingBackgroundImage => PendingBackgroundImage != null;
-
-    public bool IsRefreshingBackground
-    {
-        get;
-        private set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public string BackgroundMessage
-    {
-        get;
-        private set
-        {
-            field = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(HasBackgroundMessage));
-        }
-    } = string.Empty;
-
-    public bool HasBackgroundMessage => !string.IsNullOrEmpty(BackgroundMessage);
-
-    internal event Func<CancellationToken, Task>? BackgroundTransitionRequested;
+    #region 页面外壳状态
 
     public object? CurrentPage
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref field, value);
     }
 
-    public string CurrentPageKey
+    public ShellPageKey CurrentPageKey
     {
         get;
         private set
         {
-            field = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(IsImportActive));
-            OnPropertyChanged(nameof(IsToolActive));
-            OnPropertyChanged(nameof(IsExportActive));
-            OnPropertyChanged(nameof(IsSettingsActive));
+            if (!SetProperty(ref field, value))
+                return;
+            OnPropertiesChanged(
+                nameof(IsImportActive),
+                nameof(IsToolActive),
+                nameof(IsExportActive),
+                nameof(IsSettingsActive)
+            );
         }
-    } = "import";
+    } = ShellPageKey.Import;
 
     public string CurrentPageTitle
     {
         get;
-        private set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        private set => SetProperty(ref field, value);
     } = import_button;
 
     public string CurrentPageDescription
     {
         get;
-        private set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        private set => SetProperty(ref field, value);
     } = app_subtitle;
 
     public int CurrentStep
     {
         get;
-        private set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        private set => SetProperty(ref field, value);
     } = 1;
+
+    public bool IsImportActive =>
+        CurrentPageKey is ShellPageKey.Import or ShellPageKey.ImportOptions;
+
+    public bool IsToolActive => CurrentPageKey is ShellPageKey.Tool or ShellPageKey.Processing;
+
+    public bool IsExportActive => CurrentPageKey == ShellPageKey.Export;
+
+    public bool IsSettingsActive => CurrentPageKey == ShellPageKey.Settings;
+
+    #endregion
+
+    #region 当前谱面上下文
 
     public string CurrentFileName
     {
         get;
-        private set
-        {
-            field = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(HasChart));
-            OnPropertyChanged(nameof(CanOpenTools));
-            OnPropertyChanged(nameof(CanOpenExport));
-        }
+        private set => SetProperty(ref field, value);
     } = string.Empty;
 
     public string CurrentFormat
     {
         get;
-        private set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        private set => SetProperty(ref field, value);
     } = string.Empty;
 
-    public bool HasChart => _hasChart;
+    public bool HasChart
+    {
+        get;
+        private set
+        {
+            if (!SetProperty(ref field, value))
+                return;
+            OnPropertiesChanged(nameof(CanOpenTools), nameof(CanOpenExport));
+        }
+    }
+
     public bool CanOpenTools => HasChart;
+
     public bool CanOpenExport => HasChart;
 
-    public bool IsImportActive => CurrentPageKey is "import" or "options";
-    public bool IsToolActive => CurrentPageKey is "tool" or "processing";
-    public bool IsExportActive => CurrentPageKey == "export";
-    public bool IsSettingsActive => CurrentPageKey == "settings";
-
-    public event Action? RequestImport;
-    public event Action? RequestTools;
-    public event Action? RequestExport;
-    public event Action? RequestSettings;
-
     public void SetShellState(
-        string pageKey,
+        ShellPageKey pageKey,
         string pageTitle,
         string pageDescription,
         int step,
@@ -208,23 +152,24 @@ public sealed class MainViewModel : INotifyPropertyChanged
         if (format != null)
             CurrentFormat = format;
         if (hasChart.HasValue)
-        {
-            _hasChart = hasChart.Value;
-            OnPropertyChanged(nameof(HasChart));
-            OnPropertyChanged(nameof(CanOpenTools));
-            OnPropertyChanged(nameof(CanOpenExport));
-        }
+            HasChart = hasChart.Value;
     }
 
     public void ClearChartContext()
     {
-        _hasChart = false;
+        HasChart = false;
         CurrentFileName = string.Empty;
         CurrentFormat = string.Empty;
-        OnPropertyChanged(nameof(HasChart));
-        OnPropertyChanged(nameof(CanOpenTools));
-        OnPropertyChanged(nameof(CanOpenExport));
     }
+
+    #endregion
+
+    #region 导航请求
+
+    public event Action? RequestImport;
+    public event Action? RequestTools;
+    public event Action? RequestExport;
+    public event Action? RequestSettings;
 
     public void OnImportNavigationClicked() => RequestImport?.Invoke();
 
@@ -234,146 +179,5 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public void OnSettingsNavigationClicked() => RequestSettings?.Invoke();
 
-    public void ToggleSidebar() => IsSidebarExpanded = !IsSidebarExpanded;
-
-    public void StartBackgroundRefresh()
-    {
-        if (_backgroundStopped || _automaticBackgroundRefresh != null)
-            return;
-
-        _automaticBackgroundRefresh = RefreshBackgroundAutomaticallyAsync(
-            _backgroundRefreshCancellation!.Token
-        );
-    }
-
-    public void StopBackgroundRefresh()
-    {
-        if (_backgroundStopped)
-            return;
-
-        _backgroundStopped = true;
-        _backgroundRefreshCancellation?.Cancel();
-        _backgroundRefreshCancellation?.Dispose();
-        _backgroundRefreshCancellation = null;
-        PendingBackgroundImage = null;
-        BackgroundImage = null;
-        _currentBackground?.Dispose();
-        _currentBackground = null;
-    }
-
-    public async Task<bool> RefreshBackgroundOnceAsync()
-    {
-        if (_backgroundStopped || IsRefreshingBackground)
-            return false;
-
-        var cancellationToken = _backgroundRefreshCancellation!.Token;
-        IsRefreshingBackground = true;
-        BackgroundMessage = ui_background_refreshing;
-        BackgroundImageResource? incoming = null;
-        try
-        {
-            incoming = await _backgroundScene.FetchResourceAsync(cancellationToken);
-            cancellationToken.ThrowIfCancellationRequested();
-            if (incoming == null)
-            {
-                BackgroundMessage = ui_background_refresh_failed;
-                return false;
-            }
-
-            PendingBackgroundImage = incoming.Image;
-            if (BackgroundTransitionRequested is { } transition)
-                await transition(cancellationToken);
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var previous = _currentBackground;
-            _currentBackground = incoming;
-            incoming = null;
-            BackgroundImage = _currentBackground.Image;
-            PendingBackgroundImage = null;
-            previous?.Dispose();
-            BackgroundMessage = string.Empty;
-            return true;
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            return false;
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, ui_background_refresh_failed);
-            BackgroundMessage = ui_background_refresh_failed;
-
-            return false;
-        }
-        finally
-        {
-            PendingBackgroundImage = null;
-            incoming?.Dispose();
-            IsRefreshingBackground = false;
-        }
-    }
-
-    public async Task<string?> SaveBackgroundAsync(string? directory = null)
-    {
-        if (_backgroundStopped || _isSavingBackground)
-            return null;
-        if (_currentBackground == null)
-        {
-            BackgroundMessage = ui_background_unavailable;
-            return null;
-        }
-
-        var cancellationToken = _backgroundRefreshCancellation!.Token;
-        // 保存原图数据的快照，允许刷新完成后释放旧位图而不影响正在写入的文件。
-        var data = _currentBackground.ImageData;
-        var extension = _currentBackground.Extension;
-        _isSavingBackground = true;
-        try
-        {
-            var path = await BackgroundSceneService.SaveAsync(
-                data,
-                extension,
-                cancellationToken,
-                directory
-            );
-            BackgroundMessage = string.Format(ui_background_saved, path);
-            return path;
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            return null;
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, ui_background_save_failed);
-            BackgroundMessage = ui_background_save_failed;
-            return null;
-        }
-        finally
-        {
-            _isSavingBackground = false;
-        }
-    }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    private void OnPropertyChanged([CallerMemberName] string? name = null) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-
-    private async Task RefreshBackgroundAutomaticallyAsync(CancellationToken cancellationToken)
-    {
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            await RefreshBackgroundOnceAsync();
-
-            try
-            {
-                await Task.Delay(TimeSpan.FromMinutes(30), cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-        }
-    }
+    #endregion
 }

@@ -14,18 +14,22 @@ public abstract class FatherUnbindProcessorBase
     /// 表示缓存。
     /// </summary>
     protected readonly ConcurrentDictionary<FatherUnbindHelpers.UnbindCacheKey, JudgeLine> Cache;
+
     /// <summary>
     /// 表示日志信息。
     /// </summary>
     protected readonly Action<string>? LogInfo;
+
     /// <summary>
     /// 表示日志警告。
     /// </summary>
     protected readonly Action<string>? LogWarning;
+
     /// <summary>
     /// 表示日志错误。
     /// </summary>
     protected readonly Action<string>? LogError;
+
     /// <summary>
     /// 表示日志调试。
     /// </summary>

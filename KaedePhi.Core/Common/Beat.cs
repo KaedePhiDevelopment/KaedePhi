@@ -66,7 +66,10 @@ namespace KaedePhi.Core.Common
         public Beat(double beat)
         {
             if (double.IsNaN(beat) || double.IsInfinity(beat))
-                throw new ArgumentOutOfRangeException(nameof(beat), Resources.illegal_beat_infinity);
+                throw new ArgumentOutOfRangeException(
+                    nameof(beat),
+                    Resources.illegal_beat_infinity
+                );
             if (beat is < int.MinValue or > int.MaxValue)
                 throw new ArgumentOutOfRangeException(
                     nameof(beat),

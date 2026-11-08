@@ -16,7 +16,10 @@ public static class ChartPipeline
     public static ChartPipelineSource FromIr(Ir.Chart chart, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
-        return new ChartPipelineSource(IrChartNormalizer.NormalizeAndValidateNoteEndBeats(chart), ct);
+        return new ChartPipelineSource(
+            IrChartNormalizer.NormalizeAndValidateNoteEndBeats(chart),
+            ct
+        );
     }
 
     /// <summary>

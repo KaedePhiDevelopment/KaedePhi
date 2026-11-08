@@ -1,115 +1,67 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using KaedePhi.Tool.Common;
 
 namespace KaedePhi.Tool.App.Gui.ViewModels;
 
-public sealed class ImportOptionsViewModel : INotifyPropertyChanged
+public sealed class ImportOptionsViewModel : ViewModelBase
 {
-    private string _detectedFormat = string.Empty;
-
     public ImportProgressViewModel Progress { get; } = new();
 
-    /// <summary>
-    /// 检测到的源文件格式
-    /// </summary>
     public string DetectedFormat
-    {
-        get => _detectedFormat;
-        set
-        {
-            _detectedFormat = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(ShowPeOptions));
-            OnPropertyChanged(nameof(ShowPhiChainOptions));
-            OnPropertyChanged(nameof(FormatName));
-        }
-    }
-
-    /// <summary>
-    /// 源文件名
-    /// </summary>
-    public string FileName
     {
         get;
         set
         {
-            field = value;
-            OnPropertyChanged();
+            if (!SetProperty(ref field, value))
+                return;
+            OnPropertiesChanged(
+                nameof(ShowPeOptions),
+                nameof(ShowPhiChainOptions),
+                nameof(FormatName)
+            );
         }
     } = string.Empty;
 
-    /// <summary>
-    /// 是否正在加载
-    /// </summary>
+    public string FileName
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = string.Empty;
+
     public bool IsLoading
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref field, value);
     }
 
-    /// <summary>
-    /// 格式名称（用于显示）
-    /// </summary>
-    public string FormatName => _detectedFormat;
+    public string FormatName => DetectedFormat;
 
-    /// <summary>
-    /// 是否显示 PhiEdit 导入选项
-    /// </summary>
-    public bool ShowPeOptions => _detectedFormat == ChartFormatIds.PhiEdit;
+    public bool ShowPeOptions => DetectedFormat == ChartFormatIds.PhiEdit;
 
-    /// <summary>
-    /// 是否显示 PhiChain 导入选项
-    /// </summary>
-    public bool ShowPhiChainOptions => _detectedFormat == ChartFormatIds.PhiChain;
+    public bool ShowPhiChainOptions => DetectedFormat == ChartFormatIds.PhiChain;
 
     #region PhiEdit 导入选项
 
-    /// <summary>
-    /// PE 帧转事件后持续拍长度（1 / x 拍的分母）
-    /// </summary>
+    // 以下两项均为 1 / x 拍中的分母 x
     public int PeFrameDurationBeat
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref field, value);
     } = 64;
 
-    /// <summary>
-    /// PE 尾部拍填充量（1 / x 拍的分母）
-    /// </summary>
     public int PeTrailingBeatPadding
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref field, value);
     } = 64;
 
     #endregion
 
     #region PhiChain 导入选项
 
-    /// <summary>
-    /// PhiChain 不支持的缓动切段精度
-    /// </summary>
     public int PhiChainUnsupportedEasingPrecision
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref field, value);
     } = 64;
 
     #endregion
@@ -123,9 +75,4 @@ public sealed class ImportOptionsViewModel : INotifyPropertyChanged
     public void OnCancelClicked() => RequestCancel?.Invoke();
 
     public void OnCancelImportClicked() => RequestCancelImport?.Invoke();
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    private void OnPropertyChanged([CallerMemberName] string? name = null) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

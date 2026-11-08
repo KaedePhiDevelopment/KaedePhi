@@ -21,7 +21,10 @@ namespace KaedePhi.Core.Intermediate.Model
             {
                 if (!float.IsFinite(value) || value <= 0)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(Bpm), Resources.illegal_bpm_infinity_or_negative);
+                    throw new ArgumentOutOfRangeException(
+                        nameof(Bpm),
+                        Resources.illegal_bpm_infinity_or_negative
+                    );
                 }
 
                 _bpm = value;

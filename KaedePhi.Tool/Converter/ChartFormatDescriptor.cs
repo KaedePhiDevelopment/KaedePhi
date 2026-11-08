@@ -21,7 +21,11 @@ public sealed class ChartFormatDescriptor
     public ChartFormatDescriptor() { }
 
     [SetsRequiredMembers]
-    internal ChartFormatDescriptor(string formatId, string fileExtension, bool useLegacyType = false)
+    internal ChartFormatDescriptor(
+        string formatId,
+        string fileExtension,
+        bool useLegacyType = false
+    )
     {
         _formatId = formatId;
         _legacyType = useLegacyType ? LegacyChartTypeMapping.ToValue(formatId) : -1;
@@ -69,8 +73,17 @@ public sealed class ChartFormatDescriptor
         string formatId,
         string fileExtension,
         Func<string, object?, ChartLogSink, CancellationToken, Task<Ir.Chart>>? importer = null,
-        Func<Stream, object?, ChartLogSink, CancellationToken, Task<Ir.Chart>>? streamImporter = null,
-        Func<Ir.Chart, string, ChartWriteSettings, object?, ChartLogSink, CancellationToken, Task>? exporter = null,
+        Func<Stream, object?, ChartLogSink, CancellationToken, Task<Ir.Chart>>? streamImporter =
+            null,
+        Func<
+            Ir.Chart,
+            string,
+            ChartWriteSettings,
+            object?,
+            ChartLogSink,
+            CancellationToken,
+            Task
+        >? exporter = null,
         Func<object?>? importOptionsFactory = null,
         Func<object?>? exportOptionsFactory = null
     )
@@ -113,7 +126,10 @@ public sealed class ChartFormatDescriptor
     private static void ValidateExtension(string fileExtension)
     {
         if (fileExtension.StartsWith('.') || fileExtension.Any(c => !char.IsLetterOrDigit(c)))
-            throw new ArgumentException("文件扩展名只能包含字母或数字，且不含点。", nameof(fileExtension));
+            throw new ArgumentException(
+                "文件扩展名只能包含字母或数字，且不含点。",
+                nameof(fileExtension)
+            );
     }
 
     /// <summary>
@@ -156,11 +172,16 @@ public sealed class ChartFormatDescriptor
                 var target = converter.FromIr(chart, ResolveOptions<TOutOptions>(options));
                 ct.ThrowIfCancellationRequested();
                 await ChartFormatRegistry.WriteStreamAsync(
-                    path, write, stream => serializer.WriteAsync(target, stream, write.Indented, ct), ct
+                    path,
+                    write,
+                    stream => serializer.WriteAsync(target, stream, write.Indented, ct),
+                    ct
                 );
                 ct.ThrowIfCancellationRequested();
             },
-            importOptionsFactory: importOptionsFactory is null ? null : () => importOptionsFactory(),
+            importOptionsFactory: importOptionsFactory is null
+                ? null
+                : () => importOptionsFactory(),
             exportOptionsFactory: exportOptionsFactory is null ? null : () => exportOptionsFactory()
         );
     }
@@ -251,7 +272,12 @@ public sealed class ChartFormatDescriptor
             throw new NotSupportedException($"{FormatName} 不支持作为导入源。");
         ArgumentNullException.ThrowIfNull(text);
         ct.ThrowIfCancellationRequested();
-        var chart = await Importer(text, importOptions ?? CreateDefaultImportOptions(), log ?? ChartLogSink.None, ct);
+        var chart = await Importer(
+            text,
+            importOptions ?? CreateDefaultImportOptions(),
+            log ?? ChartLogSink.None,
+            ct
+        );
         ct.ThrowIfCancellationRequested();
         var normalized = IrChartNormalizer.NormalizeAndValidateNoteEndBeats(chart);
         return normalized;
@@ -277,7 +303,12 @@ public sealed class ChartFormatDescriptor
             throw new NotSupportedException($"{FormatName} 不支持流式导入。");
 
         ct.ThrowIfCancellationRequested();
-        var chart = await StreamImporter(stream, importOptions ?? CreateDefaultImportOptions(), log ?? ChartLogSink.None, ct);
+        var chart = await StreamImporter(
+            stream,
+            importOptions ?? CreateDefaultImportOptions(),
+            log ?? ChartLogSink.None,
+            ct
+        );
         ct.ThrowIfCancellationRequested();
         var normalized = IrChartNormalizer.NormalizeAndValidateNoteEndBeats(chart);
         return normalized;

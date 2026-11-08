@@ -29,8 +29,9 @@ public static class ChartFormatRegistry
         ChartGetType.DetectBuiltInFormatAsync;
 
     internal static IReadOnlyList<ChartFormatRegistration> DefaultRegistrations { get; } =
-        [
-            new(new ChartFormatDescriptor(ChartFormatIds.RePhiEdit, "json", useLegacyType: true)
+    [
+        new(
+            new ChartFormatDescriptor(ChartFormatIds.RePhiEdit, "json", useLegacyType: true)
             {
                 ExportOptionsFactory = () => new ConvertOption(),
                 Importer = async (text, _, log, ct) =>
@@ -60,9 +61,15 @@ public static class ChartFormatRegistry
                         ct
                     );
                 },
-            }, DefaultDetector),
-
-            new(new ChartFormatDescriptor(ChartFormatIds.StellateRePhiEditExtended, "json", useLegacyType: true)
+            },
+            DefaultDetector
+        ),
+        new(
+            new ChartFormatDescriptor(
+                ChartFormatIds.StellateRePhiEditExtended,
+                "json",
+                useLegacyType: true
+            )
             {
                 ExportOptionsFactory = () => new ConvertOption(),
                 Importer = async (text, _, log, ct) =>
@@ -92,9 +99,11 @@ public static class ChartFormatRegistry
                         ct
                     );
                 },
-            }, DefaultDetector),
-
-            new(new ChartFormatDescriptor(ChartFormatIds.PhiEdit, "pec", useLegacyType: true)
+            },
+            DefaultDetector
+        ),
+        new(
+            new ChartFormatDescriptor(ChartFormatIds.PhiEdit, "pec", useLegacyType: true)
             {
                 ImportOptionsFactory = () => new PhiEditToIrConvertOptions(),
                 ExportOptionsFactory = () => new IrToPhiEditConvertOptions(),
@@ -131,9 +140,11 @@ public static class ChartFormatRegistry
                         ct
                     );
                 },
-            }, DefaultDetector),
-
-            new(new ChartFormatDescriptor(ChartFormatIds.PhigrosV3, "json", useLegacyType: true)
+            },
+            DefaultDetector
+        ),
+        new(
+            new ChartFormatDescriptor(ChartFormatIds.PhigrosV3, "json", useLegacyType: true)
             {
                 ExportOptionsFactory = () => new IrToPhigrosV3ConvertOptions(),
                 Importer = async (text, _, log, ct) =>
@@ -163,9 +174,11 @@ public static class ChartFormatRegistry
                         ct
                     );
                 },
-            }, DefaultDetector),
-
-            new(new ChartFormatDescriptor(ChartFormatIds.PhiChain, "json", useLegacyType: true)
+            },
+            DefaultDetector
+        ),
+        new(
+            new ChartFormatDescriptor(ChartFormatIds.PhiChain, "json", useLegacyType: true)
             {
                 ImportOptionsFactory = () => new PhiChainToIrConvertOptions(),
                 ExportOptionsFactory = () => new IrToPhiChainConvertOptions(),
@@ -202,9 +215,11 @@ public static class ChartFormatRegistry
                         ct
                     );
                 },
-            }, DefaultDetector),
-
-            new(new ChartFormatDescriptor(ChartFormatIds.PhiFans, "json", useLegacyType: true)
+            },
+            DefaultDetector
+        ),
+        new(
+            new ChartFormatDescriptor(ChartFormatIds.PhiFans, "json", useLegacyType: true)
             {
                 ExportOptionsFactory = () => new IrToPhiFansConvertOptions(),
                 Importer = async (text, _, log, ct) =>
@@ -234,9 +249,14 @@ public static class ChartFormatRegistry
                         ct
                     );
                 },
-            }, DefaultDetector),
-            new(new ChartFormatDescriptor(ChartFormatIds.PhigrosV1, "json", useLegacyType: true), DefaultDetector),
-        ];
+            },
+            DefaultDetector
+        ),
+        new(
+            new ChartFormatDescriptor(ChartFormatIds.PhigrosV1, "json", useLegacyType: true),
+            DefaultDetector
+        ),
+    ];
 
     /// <summary>默认谱面格式注册表。</summary>
     public static ChartFormatCatalog Default { get; } = new(DefaultRegistrations);
@@ -269,7 +289,8 @@ public static class ChartFormatRegistry
     /// 注册谱面格式及其检测配置。
     /// </summary>
     /// <param name="registration">格式注册信息。</param>
-    public static void RegisterFormat(ChartFormatRegistration registration) => Default.Register(registration);
+    public static void RegisterFormat(ChartFormatRegistration registration) =>
+        Default.Register(registration);
 
     /// <summary>
     /// 注册谱面格式及其检测器；检测器接收独立的可读流，匹配时返回真。
@@ -281,15 +302,16 @@ public static class ChartFormatRegistry
         ChartFormatDescriptor descriptor,
         Func<Stream, CancellationToken, ValueTask<bool>> detector,
         int priority = 0
-    )
-        => Default.Register(descriptor, detector, priority);
+    ) => Default.Register(descriptor, detector, priority);
 
     /// <summary>
     /// 取消注册外部格式。
     /// </summary>
     /// <param name="formatId">外部格式的稳定字符串标识。</param>
     /// <returns>是否移除了已注册格式。</returns>
-    [Obsolete("将在下一个大版本移除；请改用 UnregisterFormat 或 ChartFormatCatalog.Unregister，注意新接口也可移除内置格式。")]
+    [Obsolete(
+        "将在下一个大版本移除；请改用 UnregisterFormat 或 ChartFormatCatalog.Unregister，注意新接口也可移除内置格式。"
+    )]
     public static bool Unregister(string formatId) => Default.UnregisterExternal(formatId);
 
     /// <summary>
@@ -306,9 +328,11 @@ public static class ChartFormatRegistry
     /// <returns>格式描述</returns>
     [Obsolete("将在下一个大版本移除；请改用 Get(string)，通过格式标识查询。")]
     public static ChartFormatDescriptor Get(ChartType type) =>
-        (LegacyChartTypeMapping.IsDefined((int)type)
-            ? Find(LegacyChartTypeMapping.ToFormatId((int)type))
-            : null) ?? throw new NotSupportedException($"未注册的谱面格式：{type}");
+        (
+            LegacyChartTypeMapping.IsDefined((int)type)
+                ? Find(LegacyChartTypeMapping.ToFormatId((int)type))
+                : null
+        ) ?? throw new NotSupportedException($"未注册的谱面格式：{type}");
 
     /// <summary>
     /// 按格式标识获取内置或外部格式描述，未注册时抛出异常。
@@ -411,7 +435,10 @@ public static class ChartFormatRegistry
     }
 
     private static async Task<(string FormatId, Ir.Chart Chart)> ImportLegacyIrAsync(
-        string text, object? importOptions, ChartLogSink? log, CancellationToken ct
+        string text,
+        object? importOptions,
+        ChartLogSink? log,
+        CancellationToken ct
     )
     {
         ct.ThrowIfCancellationRequested();
@@ -474,7 +501,9 @@ public static class ChartFormatRegistry
     /// <param name="log">日志回调集合</param>
     /// <param name="ct">取消令牌</param>
     /// <returns>检测到的格式与转换结果</returns>
-    [Obsolete("将在下一个大版本移除；请改用 ImportDetectedIrAsync，并使用返回的格式描述和 IR 谱面。")]
+    [Obsolete(
+        "将在下一个大版本移除；请改用 ImportDetectedIrAsync，并使用返回的格式描述和 IR 谱面。"
+    )]
     public static async Task<(ChartType DetectedType, KpcChart Chart)> ImportAsync(
         string text,
         object? importOptions = null,
@@ -483,7 +512,10 @@ public static class ChartFormatRegistry
     )
     {
         var (formatId, chart) = await ImportLegacyIrAsync(text, importOptions, log, ct);
-        return ((ChartType)LegacyChartTypeMapping.ToValue(formatId), Compatibility.KpcCompatibilityMapper.ToKpc(chart));
+        return (
+            (ChartType)LegacyChartTypeMapping.ToValue(formatId),
+            Compatibility.KpcCompatibilityMapper.ToKpc(chart)
+        );
     }
 
     /// <summary>
@@ -585,7 +617,12 @@ public static class ChartFormatRegistry
         {
             await using (
                 var stream = new FileStream(
-                    temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, useAsync: true
+                    temporaryPath,
+                    FileMode.CreateNew,
+                    FileAccess.Write,
+                    FileShare.None,
+                    4096,
+                    useAsync: true
                 )
             )
             {

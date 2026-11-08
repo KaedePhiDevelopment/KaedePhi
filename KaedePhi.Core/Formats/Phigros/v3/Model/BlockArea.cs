@@ -89,7 +89,10 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
         public BlockAreaPhase GetPhase(float time)
         {
             if (float.IsNaN(time) || float.IsInfinity(time))
-                throw new ArgumentOutOfRangeException(nameof(time), Resources.illegal_time_infinity);
+                throw new ArgumentOutOfRangeException(
+                    nameof(time),
+                    Resources.illegal_time_infinity
+                );
 
             if (time < AppearTime)
                 return BlockAreaPhase.HiddenBefore;

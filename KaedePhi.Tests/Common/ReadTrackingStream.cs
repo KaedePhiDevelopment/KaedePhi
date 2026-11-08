@@ -19,7 +19,10 @@ internal sealed class ReadTrackingStream(byte[] bytes) : MemoryStream(bytes, wri
     }
 
     public override async Task<int> ReadAsync(
-        byte[] buffer, int offset, int count, CancellationToken cancellationToken
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
     )
     {
         var read = await base.ReadAsync(buffer, offset, count, cancellationToken);
@@ -28,7 +31,8 @@ internal sealed class ReadTrackingStream(byte[] bytes) : MemoryStream(bytes, wri
     }
 
     public override async ValueTask<int> ReadAsync(
-        Memory<byte> buffer, CancellationToken cancellationToken = default
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
     )
     {
         var read = await base.ReadAsync(buffer, cancellationToken);

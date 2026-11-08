@@ -1,50 +1,32 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-
 namespace KaedePhi.Tool.App.Gui.ViewModels;
 
-public sealed class ImportProgressViewModel : INotifyPropertyChanged
+public sealed class ImportProgressViewModel : ViewModelBase
 {
-    private bool _isIndeterminate = true;
-    private double _value;
-    private string _percentageText = string.Empty;
-
     public bool IsIndeterminate
     {
-        get => _isIndeterminate;
+        get;
         private set
         {
-            if (_isIndeterminate == value)
-                return;
-
-            _isIndeterminate = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(IsDeterminate));
+            if (SetProperty(ref field, value))
+                OnPropertyChanged(nameof(IsDeterminate));
         }
-    }
+    } = true;
 
     public bool IsDeterminate => !IsIndeterminate;
 
     public double Value
     {
-        get => _value;
-        private set
-        {
-            _value = value;
-            OnPropertyChanged();
-        }
+        get;
+        private set => SetProperty(ref field, value);
     }
 
     public string PercentageText
     {
-        get => _percentageText;
-        private set
-        {
-            _percentageText = value;
-            OnPropertyChanged();
-        }
-    }
+        get;
+        private set => SetProperty(ref field, value);
+    } = string.Empty;
 
+    // 传入 null 表示进度未知，显示为不确定进度
     public void SetProgress(double? progress)
     {
         if (progress is null)
@@ -60,9 +42,4 @@ public sealed class ImportProgressViewModel : INotifyPropertyChanged
     }
 
     public void Reset() => SetProgress(null);
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    private void OnPropertyChanged([CallerMemberName] string? name = null) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

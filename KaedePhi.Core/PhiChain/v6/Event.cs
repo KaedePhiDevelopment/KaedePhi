@@ -52,6 +52,7 @@ namespace KaedePhi.Core.PhiChain.v6
         /// 表示过渡类型。
         /// </summary>
         Transition,
+
         /// <summary>
         /// 表示常量类型。
         /// </summary>

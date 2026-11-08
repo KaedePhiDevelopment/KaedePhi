@@ -1,313 +1,54 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using KaedePhi.Tool.App.Config;
-using KaedePhi.Tool.Common;
 using static KaedePhi.Tool.Localization.GuiLocalizationString;
 
 namespace KaedePhi.Tool.App.Gui.ViewModels;
 
-public sealed class SettingsViewModel : INotifyPropertyChanged
+public sealed class SettingsViewModel : ViewModelBase
 {
     private readonly AppConfigService _config;
-    private string _statusText = string.Empty;
 
     public SettingsViewModel(AppConfigService config)
     {
         _config = config;
-        LoadFromConfig();
+        LoadDraft();
     }
 
-    public int MaxLogFiles { get; set; } = 5;
+    // 设置页编辑的是配置副本，保存成功前不会影响运行中的配置，也不会丢失页面未展示的配置项
+    public AppConfig Draft { get; private set; } = null!;
 
-    #region Unbind
+    public ToolDefaultsViewModel Unbind { get; private set; } = null!;
 
-    public double UnbindPrecision { get; set; } = 64;
-    public double UnbindTolerance { get; set; } = 1;
-    public double UnbindMergeTolerance { get; set; } = 0.1;
+    public ToolDefaultsViewModel LayerMerge { get; private set; } = null!;
 
-    public bool UnbindClassicMode
-    {
-        get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(UnbindDisableCompressEnabled));
-            if (!value)
-                UnbindDisableCompress = false;
-        }
-    }
-
-    public bool UnbindDisableCompress
-    {
-        get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
-    }
-
-    /// <summary>仅在经典模式启用时允许修改"禁用压缩"默认值。</summary>
-    public bool UnbindDisableCompressEnabled => UnbindClassicMode;
-
-    #endregion
-
-    #region LayerMerge
-
-    public double LayerMergePrecision { get; set; } = 64;
-    public double LayerMergeTolerance { get; set; } = 0.1;
-
-    public bool LayerMergeClassicMode
-    {
-        get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(LayerMergeDisableCompressEnabled));
-            if (!value)
-                LayerMergeDisableCompress = false;
-        }
-    }
-
-    public bool LayerMergeDisableCompress
-    {
-        get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
-    }
-
-    /// <summary>仅在经典模式启用时允许修改"禁用压缩"默认值。</summary>
-    public bool LayerMergeDisableCompressEnabled => LayerMergeClassicMode;
-
-    #endregion
-
-    #region Cut
-
-    public double CutPrecision { get; set; } = 64;
-    public double CutTolerance { get; set; } = 0.1;
-    public bool CutDisableCompress { get; set; }
-
-    #endregion
-
-    #region Fit
-
-    public double FitTolerance { get; set; } = 0.1;
-
-    #endregion
-
-    #region Render
-
-    public int RenderPixelsPerBeat { get; set; } = 100;
-    public int RenderChannelWidth { get; set; } = 150;
-    public int RenderSamplesPerEvent { get; set; } = 64;
-    public int RenderBeatSubdivisions { get; set; } = 2;
-    public double RenderRangePaddingRatio { get; set; } = 0.10;
-    public int RenderRangeSamplesPerEvent { get; set; } = 16;
-    public double RenderSegmentGroupTolerance { get; set; } = 1e-6;
-    public double RenderMinValueRangeHalf { get; set; } = 0.1;
-    public double RenderMinValueRangeHalfRatio { get; set; } = 0.15;
-
-    #endregion
-
-    #region Convert (PE)
-
-    public double ConvertPeTrailingBeatPadding { get; set; } = 1d / 64d;
-    public double ConvertPeUnsupportedEasingPrecision { get; set; } = 64d;
-    public double ConvertPeMisalignedXyEventPrecision { get; set; } = 64d;
-    public double ConvertPeAlphaCutPrecision { get; set; } = 64d;
-    public double ConvertPeAlphaCutTolerance { get; set; } = 0.1d;
-    public double ConvertPeSpeedCutPrecision { get; set; } = 64d;
-
-    #endregion
-
-    #region Convert (PhigrosV3)
-
-    public double ConvertPhigrosEasingPrecision { get; set; } = 64d;
-    public double ConvertPhigrosMisalignedXyEventPrecision { get; set; } = 64d;
-    public double ConvertPhigrosAlphaCutPrecision { get; set; } = 64d;
-    public double ConvertPhigrosSpeedCutPrecision { get; set; } = 64d;
-
-    #endregion
-
-    #region Convert (Common)
-
-    public double ConvertUnbindPrecision { get; set; } = 64d;
-    public double ConvertUnbindTolerance { get; set; } = 1d;
-    public double ConvertUnbindMergeTolerance { get; set; } = 0.1d;
-    public bool ConvertUnbindClassicMode { get; set; }
-    public double ConvertMultiLayerMergePrecision { get; set; } = 64d;
-    public double ConvertMultiLayerMergeTolerance { get; set; } = 0.1d;
-    public bool ConvertMultiLayerMergeClassicMode { get; set; }
-    public bool ConvertStreamImport { get; set; }
-    public bool ConvertStreamOutput { get; set; }
-
-    #endregion
+    public ToolDefaultsViewModel Cut { get; private set; } = null!;
 
     public string StatusText
     {
-        get => _statusText;
-        set
-        {
-            _statusText = value;
-            OnPropertyChanged();
-        }
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = string.Empty;
 
     public event Action? RequestReturnToTools;
 
     public void OnReturnClicked() => RequestReturnToTools?.Invoke();
 
-    public void OnSaveClicked()
-    {
-        try
-        {
-            if (MaxLogFiles is < 1 or > 100)
-                throw new ArgumentOutOfRangeException(nameof(MaxLogFiles));
-            NumericParameterValidator.ValidatePrecision(UnbindPrecision);
-            NumericParameterValidator.ValidatePrecision(LayerMergePrecision);
-            NumericParameterValidator.ValidatePrecision(CutPrecision);
-            NumericParameterValidator.ValidateTolerance(UnbindTolerance);
-            NumericParameterValidator.ValidateTolerance(LayerMergeTolerance);
-            NumericParameterValidator.ValidateTolerance(CutTolerance);
-            NumericParameterValidator.ValidateTolerance(FitTolerance);
-            NumericParameterValidator.ValidatePrecision(ConvertPeUnsupportedEasingPrecision);
-            NumericParameterValidator.ValidatePrecision(ConvertPeMisalignedXyEventPrecision);
-            NumericParameterValidator.ValidatePrecision(ConvertPeAlphaCutPrecision);
-            NumericParameterValidator.ValidatePrecision(ConvertPeSpeedCutPrecision);
-            NumericParameterValidator.ValidatePrecision(ConvertPhigrosEasingPrecision);
-            NumericParameterValidator.ValidatePrecision(ConvertPhigrosMisalignedXyEventPrecision);
-            NumericParameterValidator.ValidatePrecision(ConvertPhigrosAlphaCutPrecision);
-            NumericParameterValidator.ValidatePrecision(ConvertPhigrosSpeedCutPrecision);
-            NumericParameterValidator.ValidatePrecision(ConvertUnbindPrecision);
-            NumericParameterValidator.ValidatePrecision(ConvertMultiLayerMergePrecision);
-        }
-        catch (ArgumentOutOfRangeException)
-        {
-            StatusText = settings_save_failed;
-            return;
-        }
-
-        var c = new AppConfig();
-        c.MaxLogFiles = MaxLogFiles;
-
-        c.Unbind.Precision = UnbindPrecision;
-        c.Unbind.Tolerance = UnbindTolerance;
-        c.Unbind.MergeTolerance = UnbindMergeTolerance;
-        c.Unbind.ClassicMode = UnbindClassicMode;
-        c.Unbind.DisableCompress = UnbindDisableCompress;
-
-        c.LayerMerge.Precision = LayerMergePrecision;
-        c.LayerMerge.Tolerance = LayerMergeTolerance;
-        c.LayerMerge.ClassicMode = LayerMergeClassicMode;
-        c.LayerMerge.DisableCompress = LayerMergeDisableCompress;
-
-        c.Cut.Precision = CutPrecision;
-        c.Cut.Tolerance = CutTolerance;
-        c.Cut.DisableCompress = CutDisableCompress;
-
-        c.Fit.Tolerance = FitTolerance;
-
-        c.Render.PixelsPerBeat = RenderPixelsPerBeat;
-        c.Render.ChannelWidth = RenderChannelWidth;
-        c.Render.SamplesPerEvent = RenderSamplesPerEvent;
-        c.Render.BeatSubdivisions = RenderBeatSubdivisions;
-        c.Render.RangePaddingRatio = RenderRangePaddingRatio;
-        c.Render.RangeSamplesPerEvent = RenderRangeSamplesPerEvent;
-        c.Render.SegmentGroupTolerance = RenderSegmentGroupTolerance;
-        c.Render.MinValueRangeHalf = RenderMinValueRangeHalf;
-        c.Render.MinValueRangeHalfRatio = RenderMinValueRangeHalfRatio;
-
-        c.Convert.PeTrailingBeatPadding = ConvertPeTrailingBeatPadding;
-        c.Convert.PeUnsupportedEasingPrecision = ConvertPeUnsupportedEasingPrecision;
-        c.Convert.PeMisalignedXyEventPrecision = ConvertPeMisalignedXyEventPrecision;
-        c.Convert.PeAlphaCutPrecision = ConvertPeAlphaCutPrecision;
-        c.Convert.PeAlphaCutTolerance = ConvertPeAlphaCutTolerance;
-        c.Convert.PeSpeedCutPrecision = ConvertPeSpeedCutPrecision;
-        c.Convert.PhigrosEasingPrecision = ConvertPhigrosEasingPrecision;
-        c.Convert.PhigrosMisalignedXyEventPrecision = ConvertPhigrosMisalignedXyEventPrecision;
-        c.Convert.PhigrosAlphaCutPrecision = ConvertPhigrosAlphaCutPrecision;
-        c.Convert.PhigrosSpeedCutPrecision = ConvertPhigrosSpeedCutPrecision;
-        c.Convert.StreamImport = ConvertStreamImport;
-        c.Convert.StreamOutput = ConvertStreamOutput;
-        c.Convert.UnbindPrecision = ConvertUnbindPrecision;
-        c.Convert.UnbindTolerance = ConvertUnbindTolerance;
-        c.Convert.UnbindMergeTolerance = ConvertUnbindMergeTolerance;
-        c.Convert.UnbindClassicMode = ConvertUnbindClassicMode;
-        c.Convert.MultiLayerMergePrecision = ConvertMultiLayerMergePrecision;
-        c.Convert.MultiLayerMergeTolerance = ConvertMultiLayerMergeTolerance;
-        c.Convert.MultiLayerMergeClassicMode = ConvertMultiLayerMergeClassicMode;
-
-        StatusText = _config.Commit(c) ? settings_saved : settings_save_failed;
-    }
+    public void OnSaveClicked() =>
+        StatusText = _config.Commit(Draft) ? settings_saved : settings_save_failed;
 
     public void OnResetClicked()
     {
         var saved = _config.ResetToDefaults();
-        LoadFromConfig();
-        OnPropertyChanged(string.Empty);
+        LoadDraft();
         StatusText = saved ? settings_reset : settings_save_failed;
     }
 
-    private void LoadFromConfig()
+    private void LoadDraft()
     {
-        var c = _config.Config;
-        MaxLogFiles = c.MaxLogFiles;
-
-        UnbindPrecision = c.Unbind.Precision;
-        UnbindTolerance = c.Unbind.Tolerance;
-        UnbindMergeTolerance = c.Unbind.MergeTolerance;
-        UnbindClassicMode = c.Unbind.ClassicMode;
-        UnbindDisableCompress = c.Unbind.DisableCompress;
-
-        LayerMergePrecision = c.LayerMerge.Precision;
-        LayerMergeTolerance = c.LayerMerge.Tolerance;
-        LayerMergeClassicMode = c.LayerMerge.ClassicMode;
-        LayerMergeDisableCompress = c.LayerMerge.DisableCompress;
-
-        CutPrecision = c.Cut.Precision;
-        CutTolerance = c.Cut.Tolerance;
-        CutDisableCompress = c.Cut.DisableCompress;
-
-        FitTolerance = c.Fit.Tolerance;
-
-        RenderPixelsPerBeat = c.Render.PixelsPerBeat;
-        RenderChannelWidth = c.Render.ChannelWidth;
-        RenderSamplesPerEvent = c.Render.SamplesPerEvent;
-        RenderBeatSubdivisions = c.Render.BeatSubdivisions;
-        RenderRangePaddingRatio = c.Render.RangePaddingRatio;
-        RenderRangeSamplesPerEvent = c.Render.RangeSamplesPerEvent;
-        RenderSegmentGroupTolerance = c.Render.SegmentGroupTolerance;
-        RenderMinValueRangeHalf = c.Render.MinValueRangeHalf;
-        RenderMinValueRangeHalfRatio = c.Render.MinValueRangeHalfRatio;
-
-        ConvertPeTrailingBeatPadding = c.Convert.PeTrailingBeatPadding;
-        ConvertPeUnsupportedEasingPrecision = c.Convert.PeUnsupportedEasingPrecision;
-        ConvertPeMisalignedXyEventPrecision = c.Convert.PeMisalignedXyEventPrecision;
-        ConvertPeAlphaCutPrecision = c.Convert.PeAlphaCutPrecision;
-        ConvertPeAlphaCutTolerance = c.Convert.PeAlphaCutTolerance;
-        ConvertPeSpeedCutPrecision = c.Convert.PeSpeedCutPrecision;
-        ConvertPhigrosEasingPrecision = c.Convert.PhigrosEasingPrecision;
-        ConvertPhigrosMisalignedXyEventPrecision = c.Convert.PhigrosMisalignedXyEventPrecision;
-        ConvertPhigrosAlphaCutPrecision = c.Convert.PhigrosAlphaCutPrecision;
-        ConvertPhigrosSpeedCutPrecision = c.Convert.PhigrosSpeedCutPrecision;
-        ConvertStreamImport = c.Convert.StreamImport;
-        ConvertStreamOutput = c.Convert.StreamOutput;
-        ConvertUnbindPrecision = c.Convert.UnbindPrecision;
-        ConvertUnbindTolerance = c.Convert.UnbindTolerance;
-        ConvertUnbindMergeTolerance = c.Convert.UnbindMergeTolerance;
-        ConvertUnbindClassicMode = c.Convert.UnbindClassicMode;
-        ConvertMultiLayerMergePrecision = c.Convert.MultiLayerMergePrecision;
-        ConvertMultiLayerMergeTolerance = c.Convert.MultiLayerMergeTolerance;
-        ConvertMultiLayerMergeClassicMode = c.Convert.MultiLayerMergeClassicMode;
+        Draft = _config.CreateDraft();
+        Unbind = new ToolDefaultsViewModel(Draft.Unbind, compressRequiresClassicMode: true);
+        LayerMerge = new ToolDefaultsViewModel(Draft.LayerMerge, compressRequiresClassicMode: true);
+        Cut = new ToolDefaultsViewModel(Draft.Cut, compressRequiresClassicMode: false);
+        // 草稿整体被替换，通知所有绑定重新读取
+        OnPropertyChanged(string.Empty);
     }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    private void OnPropertyChanged([CallerMemberName] string? name = null) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

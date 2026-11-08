@@ -79,14 +79,17 @@ namespace KaedePhi.Core.PhiFans
         /// 表示点击音符。
         /// </summary>
         Tap = 1,
+
         /// <summary>
         /// 表示长按音符。
         /// </summary>
         Hold = 3,
+
         /// <summary>
         /// 表示滑动音符。
         /// </summary>
         Flick = 4,
+
         /// <summary>
         /// 表示拖动音符。
         /// </summary>

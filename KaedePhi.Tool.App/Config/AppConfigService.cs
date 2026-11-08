@@ -13,8 +13,8 @@ public sealed class AppConfigService
 {
     private readonly ISerializer _serializer;
     private readonly IDeserializer _deserializer;
-    private static readonly Lazy<AppConfigService> SharedInstance = new(
-        () => new AppConfigService()
+    private static readonly Lazy<AppConfigService> SharedInstance = new(() =>
+        new AppConfigService()
     );
 
     /// <summary>
@@ -70,10 +70,7 @@ public sealed class AppConfigService
                 if (config is null)
                     throw new FormatException("配置文件为空。");
                 Validate(config);
-                if (
-                    !string.Equals(originalYaml, yaml, StringComparison.Ordinal)
-                    && !Save(config)
-                )
+                if (!string.Equals(originalYaml, yaml, StringComparison.Ordinal) && !Save(config))
                     Debug.WriteLine(
                         "[AppConfigService] 无法写回迁移后的配置，继续使用已读取的有效配置。"
                     );
@@ -108,7 +105,7 @@ public sealed class AppConfigService
     }
 
     /// <summary>
-    /// 校验并写入候选配置，仅在成功后将其提交为当前内存配置。
+    /// 校验并写入候选配置，仅在成功后将其副本提交为当前内存配置。
     /// </summary>
     /// <param name="candidate">待校验并提交的候选配置。</param>
     public bool Commit(AppConfig candidate)
@@ -116,9 +113,17 @@ public sealed class AppConfigService
         ArgumentNullException.ThrowIfNull(candidate);
         if (!Save(candidate))
             return false;
-        Config = candidate;
+        Config = Clone(candidate);
         return true;
     }
+
+    /// <summary>
+    /// 创建当前配置的深拷贝，可在其上自由编辑而不影响运行中的配置。
+    /// </summary>
+    public AppConfig CreateDraft() => Clone(Config);
+
+    private AppConfig Clone(AppConfig config) =>
+        _deserializer.Deserialize<AppConfig>(_serializer.Serialize(config));
 
     private bool Save(AppConfig config)
     {
@@ -161,24 +166,27 @@ public sealed class AppConfigService
         if (config.Fit is null || config.Render is null || config.Convert is null)
             throw new FormatException("配置文件缺少必要的配置段。");
         NumericParameterValidator.ValidateTolerance(config.Fit.Tolerance);
-        NumericParameterValidator.ValidatePrecision(config.Render.SamplesPerEvent);
-        if (
-            config.Render.PixelsPerBeat <= 0
-            || config.Render.ChannelWidth <= 0
-            || config.Render.BeatSubdivisions <= 0
-            || config.Render.RangeSamplesPerEvent <= 0
-            || !double.IsFinite(config.Render.RangePaddingRatio)
-            || config.Render.RangePaddingRatio < 0
-            || !double.IsFinite(config.Render.SegmentGroupTolerance)
-            || config.Render.SegmentGroupTolerance < 0
-            || !double.IsFinite(config.Render.MinValueRangeHalf)
-            || config.Render.MinValueRangeHalf < 0
-            || !double.IsFinite(config.Render.MinValueRangeHalfRatio)
-            || config.Render.MinValueRangeHalfRatio < 0
-        )
-            throw new ArgumentOutOfRangeException(nameof(config.Render));
+        ValidateRender(config.Render);
         ValidateConvert(config.Convert);
     }
+
+    private static void ValidateRender(RenderDefaultsConfig render)
+    {
+        NumericParameterValidator.ValidatePrecision(render.SamplesPerEvent);
+        if (
+            render.PixelsPerBeat <= 0
+            || render.ChannelWidth <= 0
+            || render.BeatSubdivisions <= 0
+            || render.RangeSamplesPerEvent <= 0
+            || !IsNonNegativeFinite(render.RangePaddingRatio)
+            || !IsNonNegativeFinite(render.SegmentGroupTolerance)
+            || !IsNonNegativeFinite(render.MinValueRangeHalf)
+            || !IsNonNegativeFinite(render.MinValueRangeHalfRatio)
+        )
+            throw new ArgumentOutOfRangeException(nameof(render));
+    }
+
+    private static bool IsNonNegativeFinite(double value) => double.IsFinite(value) && value >= 0;
 
     private static void ValidateTool(ToolDefaultsConfig? config)
     {

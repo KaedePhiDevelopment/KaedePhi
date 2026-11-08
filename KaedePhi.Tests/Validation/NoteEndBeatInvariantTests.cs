@@ -548,7 +548,8 @@ public class NoteEndBeatInvariantTests
     {
         var importedChart = CreateIrChart(NoteType.Tap, 3, 9);
         var descriptor = ChartFormatDescriptor.Create(
-            "tests.note-end-beat", "test",
+            "tests.note-end-beat",
+            "test",
             importer: (_, _, _, _) => Task.FromResult(importedChart)
         );
 
@@ -567,7 +568,8 @@ public class NoteEndBeatInvariantTests
     {
         var importedChart = CreateIrChart(NoteType.Drag, 3, 9);
         var descriptor = ChartFormatDescriptor.Create(
-            "tests.note-end-beat-stream", "test",
+            "tests.note-end-beat-stream",
+            "test",
             streamImporter: (_, _, _, _) => Task.FromResult(importedChart)
         );
         await using var stream = new MemoryStream();
@@ -588,7 +590,8 @@ public class NoteEndBeatInvariantTests
         var sourceChart = CreateIrChart(NoteType.Flick, 3, 9);
         Ir.Chart? exportedChart = null;
         var descriptor = ChartFormatDescriptor.Create(
-            "tests.note-end-beat-export", "test",
+            "tests.note-end-beat-export",
+            "test",
             exporter: (chart, _, _, _, _, _) =>
             {
                 exportedChart = chart;
@@ -613,7 +616,8 @@ public class NoteEndBeatInvariantTests
     {
         var exporterStarted = false;
         var descriptor = ChartFormatDescriptor.Create(
-            "tests.note-end-beat-hold", "test",
+            "tests.note-end-beat-hold",
+            "test",
             exporter: (_, _, _, _, _, _) =>
             {
                 exporterStarted = true;

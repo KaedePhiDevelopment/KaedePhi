@@ -11,6 +11,7 @@ public class IrToPhiEditConvertOptions
     /// 表示默认精度常量。
     /// </summary>
     public const double DefaultPrecision = Constants.DefaultPrecision;
+
     /// <summary>
     /// 表示默认容差百分比常量。
     /// </summary>

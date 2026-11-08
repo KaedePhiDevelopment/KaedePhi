@@ -78,7 +78,12 @@ public class PhigrosV3JudgeLineBuilderTests
                     MoveYEvents = [DoubleEvent(0, 1, 0.1d, 0.1d)],
                     RotateEvents =
                     [
-                        DoubleEvent(0, 1, rotateWithFather ? 40d : 10d, rotateWithFather ? 40d : 10d),
+                        DoubleEvent(
+                            0,
+                            1,
+                            rotateWithFather ? 40d : 10d,
+                            rotateWithFather ? 40d : 10d
+                        ),
                     ],
                 },
             ],
@@ -98,7 +103,10 @@ public class PhigrosV3JudgeLineBuilderTests
         expected.Should().NotBeNull();
         converted!.JudgeLineMoveEvents[0].Start.Should().Be(expected!.JudgeLineMoveEvents[0].Start);
         converted.JudgeLineMoveEvents[0].Start2.Should().Be(expected.JudgeLineMoveEvents[0].Start2);
-        converted.JudgeLineRotateEvents[0].Start.Should().Be(expected.JudgeLineRotateEvents[0].Start);
+        converted
+            .JudgeLineRotateEvents[0]
+            .Start.Should()
+            .Be(expected.JudgeLineRotateEvents[0].Start);
         warnings.Should().BeEmpty();
         line.Should().BeEquivalentTo(originalLine);
         father.Should().BeEquivalentTo(originalFather);
@@ -159,7 +167,9 @@ public class PhigrosV3JudgeLineBuilderTests
         source.SizeControls.Reverse();
         source.SkewControls.Reverse();
         source.YControls.Reverse();
-        var line = KaedePhi.Tool.Converter.RePhiEdit.Utils.JudgeLineBuilder.ConvertJudgeLine(source);
+        var line = KaedePhi.Tool.Converter.RePhiEdit.Utils.JudgeLineBuilder.ConvertJudgeLine(
+            source
+        );
         var warnings = new List<string>();
         var converter = new global::KaedePhi.Tool.Converter.Phigros.v3.PhigrosV3Converter
         {
@@ -886,7 +896,9 @@ public class PhigrosV3JudgeLineBuilderTests
                 new IrToPhigrosV3ConvertOptions()
             );
 
-        act.Should().Throw<FormatException>().WithMessage("*Phigros mapped time conflicts with the tail-event sentinel*");
+        act.Should()
+            .Throw<FormatException>()
+            .WithMessage("*Phigros mapped time conflicts with the tail-event sentinel*");
     }
 
     [Fact]

@@ -1,59 +1,48 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using KaedePhi.Tool.App.Gui.Models;
 
 namespace KaedePhi.Tool.App.Gui.Views;
 
 public partial class MessageDialog : Window
 {
-    public enum DialogType
-    {
-        Info,
-        Success,
-        Warning,
-        Error,
-    }
-
     public MessageDialog()
     {
         InitializeComponent();
     }
 
     public static MessageDialog ShowInfo(Window owner, string title, string message) =>
-        Show(owner, title, message, DialogType.Info);
+        Show(owner, title, message, MessageDialogType.Info);
 
     public static MessageDialog ShowSuccess(Window owner, string title, string message) =>
-        Show(owner, title, message, DialogType.Success);
+        Show(owner, title, message, MessageDialogType.Success);
 
     public static MessageDialog ShowWarning(Window owner, string title, string message) =>
-        Show(owner, title, message, DialogType.Warning);
+        Show(owner, title, message, MessageDialogType.Warning);
 
     public static MessageDialog ShowError(Window owner, string title, string message) =>
-        Show(owner, title, message, DialogType.Error);
+        Show(owner, title, message, MessageDialogType.Error);
 
-    private static MessageDialog Show(Window owner, string title, string message, DialogType type)
+    private static MessageDialog Show(
+        Window owner,
+        string title,
+        string message,
+        MessageDialogType type
+    )
     {
+        var (glyph, color) = type switch
+        {
+            MessageDialogType.Success => ("\uf058", "#4CAF50"),
+            MessageDialogType.Warning => ("\uf071", "#FF9800"),
+            MessageDialogType.Error => ("\uf057", "#F44336"),
+            _ => ("\uf05a", "#2196F3"),
+        };
         var dialog = new MessageDialog
         {
             TitleText = { Text = title },
             MessageText = { Text = message },
-            IconText =
-            {
-                Text = type switch
-                {
-                    DialogType.Success => "\uf058",
-                    DialogType.Warning => "\uf071",
-                    DialogType.Error => "\uf057",
-                    _ => "\uf05a",
-                },
-                Foreground = type switch
-                {
-                    DialogType.Success => new SolidColorBrush(Color.Parse("#4CAF50")),
-                    DialogType.Warning => new SolidColorBrush(Color.Parse("#FF9800")),
-                    DialogType.Error => new SolidColorBrush(Color.Parse("#F44336")),
-                    _ => new SolidColorBrush(Color.Parse("#2196F3")),
-                },
-            },
+            IconText = { Text = glyph, Foreground = new SolidColorBrush(Color.Parse(color)) },
         };
 
         dialog.ShowDialog(owner);

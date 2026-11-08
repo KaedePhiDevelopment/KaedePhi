@@ -24,11 +24,14 @@ public static class ChartGetType
     /// <param name="ct">取消令牌。</param>
     /// <returns>检测到的格式描述。</returns>
     public static Task<ChartFormatDescriptor> DetectFormatAsync(
-        string chartText, CancellationToken ct = default
+        string chartText,
+        CancellationToken ct = default
     ) => DetectFormatAsync(ChartFormatRegistry.Default, chartText, ct);
 
     internal static Task<ChartFormatDescriptor> DetectFormatAsync(
-        ChartFormatCatalog catalog, string chartText, CancellationToken ct
+        ChartFormatCatalog catalog,
+        string chartText,
+        CancellationToken ct
     )
     {
         ArgumentNullException.ThrowIfNull(chartText);
@@ -44,16 +47,22 @@ public static class ChartGetType
     /// <param name="ct">取消令牌。</param>
     /// <returns>检测到的格式描述。</returns>
     public static Task<ChartFormatDescriptor> DetectFormatAsync(
-        Stream stream, CancellationToken ct = default
+        Stream stream,
+        CancellationToken ct = default
     ) => DetectFormatAsync(ChartFormatRegistry.Default, stream, ct);
 
     internal static async Task<ChartFormatDescriptor> DetectFormatAsync(
-        ChartFormatCatalog catalog, Stream stream, CancellationToken ct
+        ChartFormatCatalog catalog,
+        Stream stream,
+        CancellationToken ct
     )
     {
         ArgumentNullException.ThrowIfNull(stream);
         if (!stream.CanRead || !stream.CanSeek)
-            throw new ArgumentException("检测需要可读取、可定位的流；其他输入可使用流工厂重载。", nameof(stream));
+            throw new ArgumentException(
+                "检测需要可读取、可定位的流；其他输入可使用流工厂重载。",
+                nameof(stream)
+            );
         ct.ThrowIfCancellationRequested();
         var origin = stream.Position;
         try
@@ -81,20 +90,27 @@ public static class ChartGetType
     /// <param name="ct">取消令牌。</param>
     /// <returns>检测到的格式描述。</returns>
     public static Task<ChartFormatDescriptor> DetectFormatAsync(
-        Func<Stream> openRead, CancellationToken ct = default
+        Func<Stream> openRead,
+        CancellationToken ct = default
     ) => DetectFormatAsync(ChartFormatRegistry.Default, openRead, ct);
 
     internal static async Task<ChartFormatDescriptor> DetectFormatAsync(
-        ChartFormatCatalog catalog, Func<Stream> openRead, CancellationToken ct
+        ChartFormatCatalog catalog,
+        Func<Stream> openRead,
+        CancellationToken ct
     )
     {
         ArgumentNullException.ThrowIfNull(openRead);
         ct.ThrowIfCancellationRequested();
-        var registrations = catalog.Registrations.Where(registration => registration.Detector is not null).ToArray();
-        var priorities = registrations.Select(registration => registration.Priority)
+        var registrations = catalog
+            .Registrations.Where(registration => registration.Detector is not null)
+            .ToArray();
+        var priorities = registrations
+            .Select(registration => registration.Priority)
             .Distinct()
             .OrderByDescending(priority => priority);
-        var detectedIds = new Dictionary<Func<Stream, CancellationToken, ValueTask<string?>>, string?>();
+        var detectedIds =
+            new Dictionary<Func<Stream, CancellationToken, ValueTask<string?>>, string?>();
 
         foreach (var priority in priorities)
         {
@@ -109,7 +125,13 @@ public static class ChartGetType
                     detectedId = await detector(stream, ct);
                     detectedIds.Add(detector, detectedId);
                 }
-                if (string.Equals(detectedId, registration.Descriptor.FormatId, StringComparison.OrdinalIgnoreCase))
+                if (
+                    string.Equals(
+                        detectedId,
+                        registration.Descriptor.FormatId,
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
                     matches.Add(registration.Descriptor);
                 ct.ThrowIfCancellationRequested();
             }
@@ -135,7 +157,10 @@ public static class ChartGetType
         throw new InvalidOperationException("流工厂返回的流不可读取。");
     }
 
-    internal static async ValueTask<string?> DetectBuiltInFormatAsync(Stream stream, CancellationToken ct)
+    internal static async ValueTask<string?> DetectBuiltInFormatAsync(
+        Stream stream,
+        CancellationToken ct
+    )
     {
         using var textReader = new StreamReader(stream, Encoding.UTF8, true, 4096, leaveOpen: true);
         using var jsonReader = CreateJsonReader(textReader);
@@ -242,7 +267,8 @@ public static class ChartGetType
         using var jsonReader = CreateJsonReader(textReader);
         try
         {
-            return (ChartType)LegacyChartTypeMapping.ToValue(await ReadBuiltInFormatAsync(jsonReader, ct));
+            return (ChartType)
+                LegacyChartTypeMapping.ToValue(await ReadBuiltInFormatAsync(jsonReader, ct));
         }
         catch (UnrecognizedChartFormatException e)
         {
@@ -343,7 +369,9 @@ public static class ChartGetType
         }
 
         if (hasRePhiEditMeta)
-            return hasStellateTexture ? ChartFormatIds.StellateRePhiEditExtended : ChartFormatIds.RePhiEdit;
+            return hasStellateTexture
+                ? ChartFormatIds.StellateRePhiEditExtended
+                : ChartFormatIds.RePhiEdit;
 
         if (hasFormatVersion)
         {
@@ -360,7 +388,10 @@ public static class ChartGetType
         throw new UnrecognizedChartFormatException(UnsupportedChartMessage);
     }
 
-    private static async Task<string> ReadBuiltInFormatAsync(JsonTextReader reader, CancellationToken ct)
+    private static async Task<string> ReadBuiltInFormatAsync(
+        JsonTextReader reader,
+        CancellationToken ct
+    )
     {
         if (!await ReadNextAsync(reader, ct))
             throw new UnrecognizedChartFormatException(UnsupportedChartMessage);
@@ -447,7 +478,9 @@ public static class ChartGetType
         }
 
         if (hasRePhiEditMeta)
-            return hasStellateTexture ? ChartFormatIds.StellateRePhiEditExtended : ChartFormatIds.RePhiEdit;
+            return hasStellateTexture
+                ? ChartFormatIds.StellateRePhiEditExtended
+                : ChartFormatIds.RePhiEdit;
 
         if (hasFormatVersion)
         {

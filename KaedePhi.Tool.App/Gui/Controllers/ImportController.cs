@@ -1,23 +1,18 @@
 using Avalonia.Controls;
 using KaedePhi.Tool.App.Gui.Services;
-using KaedePhi.Tool.App.Gui.Views;
+using KaedePhi.Tool.App.Gui.ViewModels;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter.PhiChain.Model;
 using KaedePhi.Tool.Converter.PhiEdit.Model;
-using Serilog;
 using static KaedePhi.Tool.Localization.GuiLocalizationString;
 
 namespace KaedePhi.Tool.App.Gui.Controllers;
 
-internal sealed class ImportController
+internal sealed class ImportController : ControllerBase
 {
     private readonly GuiNavigationService _navigation;
     private readonly GuiChartService _chart;
-    private readonly LogService _logService;
-    private readonly ILogger _log;
-    private readonly Window _window;
 
-    private CancellationTokenSource? _cts;
     private bool _isFileProcessing;
     private string? _pendingFilePath;
     private bool _pendingUseStream;
@@ -28,24 +23,16 @@ internal sealed class ImportController
         LogService logService,
         Window window
     )
+        : base(logService.ForContext<ImportController>(), logService, window)
     {
         _navigation = navigation;
         _chart = chart;
-        _logService = logService;
-        _log = logService.ForContext<ImportController>();
-        _window = window;
 
         _navigation.Import.FileSelected += OnFileSelected;
-        _navigation.Import.RequestCancelLoading += OnCancelImport;
+        _navigation.Import.RequestCancelLoading += Cancel;
         _navigation.ImportOptions.RequestConfirm += OnImportOptionsConfirm;
         _navigation.ImportOptions.RequestCancel += ReturnToImport;
-        _navigation.ImportOptions.RequestCancelImport += OnCancelImport;
-    }
-
-    public void Cancel()
-    {
-        if (_cts is { IsCancellationRequested: false })
-            _cts.Cancel();
+        _navigation.ImportOptions.RequestCancelImport += Cancel;
     }
 
     public void ReturnToImport()
@@ -60,59 +47,32 @@ internal sealed class ImportController
     {
         if (_isFileProcessing)
             return;
-        _isFileProcessing = true;
-        _navigation.Import.IsLoading = true;
-        _navigation.Import.Progress.Reset();
-        _cts = new CancellationTokenSource();
-        var ct = _cts.Token;
-        var progress = new Progress<double?>(_navigation.Import.Progress.SetProgress);
 
-        try
-        {
-            await Task.Yield();
-
-            // 先检测格式
-            var format = await Task.Run(
-                () => _chart.DetectChartFormatAsync(filePath, ct, progress),
-                ct
-            );
-            var formatId = format.FormatId;
-
-            // 检查是否需要显示导入选项
-            if (formatId is ChartFormatIds.PhiEdit or ChartFormatIds.PhiChain)
+        var importVm = _navigation.Import;
+        await RunImportAsync(
+            importVm.Progress,
+            loading => importVm.IsLoading = loading,
+            returnToImportOnFailure: false,
+            async (progress, ct) =>
             {
-                // 保存待处理的文件信息
-                _pendingFilePath = filePath;
-                _pendingUseStream = useStream;
-                _navigation.ShowImportOptions(formatId, Path.GetFileName(filePath));
+                // 先检测格式，再判断是否需要用户补充导入选项
+                var format = await Task.Run(
+                    () => _chart.DetectChartFormatAsync(filePath, ct, progress),
+                    ct
+                );
+                var formatId = format.FormatId;
+                if (formatId is ChartFormatIds.PhiEdit or ChartFormatIds.PhiChain)
+                {
+                    _pendingFilePath = filePath;
+                    _pendingUseStream = useStream;
+                    _navigation.ShowImportOptions(formatId, Path.GetFileName(filePath));
+                }
+                else
+                {
+                    await LoadChartAsync(filePath, useStream, formatId, null, progress, ct);
+                }
             }
-            else
-            {
-                // 不需要选项，直接加载
-                await LoadChartWithOptions(filePath, useStream, formatId, null, progress, ct);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            _log.Information(log_import_cancelled);
-            _navigation.ShowImport();
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, log_load_failed);
-            MessageDialog.ShowError(
-                _window,
-                load_error_title,
-                string.Format(status_error_with_log, ex.Message, _logService.CurrentLogFile)
-            );
-        }
-        finally
-        {
-            _isFileProcessing = false;
-            _navigation.Import.IsLoading = false;
-            _cts?.Dispose();
-            _cts = null;
-        }
+        );
     }
 
     private async void OnImportOptionsConfirm()
@@ -120,59 +80,68 @@ internal sealed class ImportController
         if (_pendingFilePath == null || _isFileProcessing)
             return;
 
+        var filePath = _pendingFilePath;
+        var useStream = _pendingUseStream;
+        var optionsVm = _navigation.ImportOptions;
+        await RunImportAsync(
+            optionsVm.Progress,
+            loading => optionsVm.IsLoading = loading,
+            returnToImportOnFailure: true,
+            (progress, ct) =>
+            {
+                var formatId = optionsVm.DetectedFormat;
+                return LoadChartAsync(
+                    filePath,
+                    useStream,
+                    formatId,
+                    BuildImportOptions(formatId),
+                    progress,
+                    ct
+                );
+            }
+        );
+        _pendingFilePath = null;
+    }
+
+    // 统一管理导入流程的占用标记、加载状态、取消令牌与异常处理
+    private async Task RunImportAsync(
+        ImportProgressViewModel progressVm,
+        Action<bool> setLoading,
+        bool returnToImportOnFailure,
+        Func<IProgress<double?>, CancellationToken, Task> operation
+    )
+    {
         _isFileProcessing = true;
-        _navigation.ImportOptions.IsLoading = true;
-        _navigation.ImportOptions.Progress.Reset();
-        _cts = new CancellationTokenSource();
-        var ct = _cts.Token;
-        var progress = new Progress<double?>(_navigation.ImportOptions.Progress.SetProgress);
+        setLoading(true);
+        progressVm.Reset();
+        var ct = BeginOperation();
+        var progress = new Progress<double?>(progressVm.SetProgress);
 
         try
         {
             await Task.Yield();
-
-            var detectedType = _navigation.ImportOptions.DetectedFormat;
-            var importOptions = BuildImportOptions(detectedType);
-            await LoadChartWithOptions(
-                _pendingFilePath,
-                _pendingUseStream,
-                detectedType,
-                importOptions,
-                progress,
-                ct
-            );
+            await operation(progress, ct);
         }
         catch (OperationCanceledException)
         {
-            _log.Information(log_import_cancelled);
+            Logger.Information(log_import_cancelled);
             _navigation.ShowImport();
         }
         catch (Exception ex)
         {
-            _log.Error(ex, log_load_failed);
-            MessageDialog.ShowError(
-                _window,
-                load_error_title,
-                string.Format(status_error_with_log, ex.Message, _logService.CurrentLogFile)
-            );
-            _navigation.ShowImport();
+            ReportFailure(log_load_failed, load_error_title, ex);
+            if (returnToImportOnFailure)
+                _navigation.ShowImport();
         }
         finally
         {
             _isFileProcessing = false;
-            _navigation.ImportOptions.IsLoading = false;
-            _pendingFilePath = null;
-            _cts?.Dispose();
-            _cts = null;
+            setLoading(false);
+            EndOperation();
         }
     }
 
-    private void OnCancelImport()
-    {
-        Cancel();
-    }
-
-    private async Task LoadChartWithOptions(
+    private async Task LoadChartAsync(
         string filePath,
         bool useStream,
         string formatId,

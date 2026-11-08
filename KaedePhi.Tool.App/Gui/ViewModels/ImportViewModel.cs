@@ -1,47 +1,25 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-
 namespace KaedePhi.Tool.App.Gui.ViewModels;
 
-public sealed class ImportViewModel : INotifyPropertyChanged
+public sealed class ImportViewModel : ViewModelBase
 {
-    private bool _useStream;
-    private bool _isLoading;
-
     public ImportProgressViewModel Progress { get; } = new();
 
     public bool UseStream
     {
-        get => _useStream;
-        set
-        {
-            _useStream = value;
-            OnPropertyChanged();
-        }
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public bool IsLoading
     {
-        get => _isLoading;
-        set
-        {
-            _isLoading = value;
-            OnPropertyChanged();
-        }
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public event Action<string, bool>? FileSelected;
     public event Action? RequestCancelLoading;
 
-    public void OnFileSelected(string filePath)
-    {
-        FileSelected?.Invoke(filePath, UseStream);
-    }
+    public void OnFileSelected(string filePath) => FileSelected?.Invoke(filePath, UseStream);
 
     public void OnCancelLoadingClicked() => RequestCancelLoading?.Invoke();
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    private void OnPropertyChanged([CallerMemberName] string? name = null) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

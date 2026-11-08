@@ -19,10 +19,7 @@ public sealed class ChartFormatRegistryExtensionTests
             "simple",
             importer: (text, _, _, _) =>
             {
-                var chart = new Ir.Chart
-                {
-                    Meta = new Ir.Meta { Name = text },
-                };
+                var chart = new Ir.Chart { Meta = new Ir.Meta { Name = text } };
                 return Task.FromResult(chart);
             },
             exporter: async (chart, path, _, _, _, ct) =>
@@ -36,22 +33,20 @@ public sealed class ChartFormatRegistryExtensionTests
         {
             ChartFormatRegistry.Find(formatId).Should().BeSameAs(descriptor);
 
-            var imported = await ChartFormatRegistry.Get(formatId).ImportIrAsync(
-                "external-chart",
-                ct: TestContext.Current.CancellationToken
-            );
+            var imported = await ChartFormatRegistry
+                .Get(formatId)
+                .ImportIrAsync("external-chart", ct: TestContext.Current.CancellationToken);
             imported.Meta.Name.Should().Be("external-chart");
 
             var path = Path.Combine(Path.GetTempPath(), $"kaedephi-{Guid.NewGuid():N}.simple");
             try
             {
-                await ChartFormatRegistry.Get(formatId).ExportAsync(
-                    imported,
-                    path,
-                    ct: TestContext.Current.CancellationToken
-                );
+                await ChartFormatRegistry
+                    .Get(formatId)
+                    .ExportAsync(imported, path, ct: TestContext.Current.CancellationToken);
                 (await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken))
-                    .Should().Be("external-chart");
+                    .Should()
+                    .Be("external-chart");
             }
             finally
             {
@@ -75,18 +70,23 @@ public sealed class ChartFormatRegistryExtensionTests
     public void ExternalFormat_RejectsDuplicateIdAndCanBeEnumerated()
     {
         const string formatId = "tests.duplicate";
-        var descriptor = ChartFormatDescriptor.Create(formatId, "simple", importer: (_, _, _, _) =>
-            Task.FromResult(new Ir.Chart()));
+        var descriptor = ChartFormatDescriptor.Create(
+            formatId,
+            "simple",
+            importer: (_, _, _, _) => Task.FromResult(new Ir.Chart())
+        );
 
         ChartFormatRegistry.Register(descriptor);
         try
         {
-            var duplicate = () => ChartFormatRegistry.Register(
-                ChartFormatDescriptor.Create(
-                    formatId,
-                    "simple",
-                    importer: (_, _, _, _) => Task.FromResult(new Ir.Chart())
-                ));
+            var duplicate = () =>
+                ChartFormatRegistry.Register(
+                    ChartFormatDescriptor.Create(
+                        formatId,
+                        "simple",
+                        importer: (_, _, _, _) => Task.FromResult(new Ir.Chart())
+                    )
+                );
 
             duplicate.Should().Throw<InvalidOperationException>();
             ChartFormatRegistry.Formats.Should().Contain(descriptor);
@@ -110,7 +110,10 @@ public sealed class ChartFormatRegistryExtensionTests
                 using var reader = new StreamReader(stream, leaveOpen: true);
                 return new Ir.Chart
                 {
-                    Meta = new Ir.Meta { Name = (string)options! + await reader.ReadToEndAsync(ct) },
+                    Meta = new Ir.Meta
+                    {
+                        Name = (string)options! + await reader.ReadToEndAsync(ct),
+                    },
                 };
             },
             importOptionsFactory: () => "prefix:"
@@ -120,7 +123,10 @@ public sealed class ChartFormatRegistryExtensionTests
         {
             using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes("title"));
             var chart = await ChartFormatRegistry.ImportExternalStreamIrAsync(
-                formatId, stream, ct: TestContext.Current.CancellationToken);
+                formatId,
+                stream,
+                ct: TestContext.Current.CancellationToken
+            );
             chart.Meta.Name.Should().Be("prefix:title");
             stream.CanRead.Should().BeTrue();
             ChartFormatRegistry.ImportableFormats.Should().Contain(descriptor);
@@ -138,7 +144,10 @@ public sealed class ChartFormatRegistryExtensionTests
     {
         var builtIn = ChartFormatRegistry.Get(ChartFormatIds.RePhiEdit);
         var descriptor = ChartFormatDescriptor.Create(
-            "rephiedit", "txt", importer: (_, _, _, _) => Task.FromResult(new Ir.Chart()));
+            "rephiedit",
+            "txt",
+            importer: (_, _, _, _) => Task.FromResult(new Ir.Chart())
+        );
         var register = () => ChartFormatRegistry.Register(descriptor);
         register.Should().Throw<InvalidOperationException>();
         ChartFormatRegistry.Get(ChartFormatIds.RePhiEdit).Should().BeSameAs(builtIn);
@@ -150,11 +159,14 @@ public sealed class ChartFormatRegistryExtensionTests
     {
         var invoked = false;
         var descriptor = ChartFormatDescriptor.Create(
-            "tests.cancelled", "txt", importer: (_, _, _, _) =>
+            "tests.cancelled",
+            "txt",
+            importer: (_, _, _, _) =>
             {
                 invoked = true;
                 return Task.FromResult(new Ir.Chart());
-            });
+            }
+        );
         var import = () => descriptor.ImportIrAsync("title", ct: new CancellationToken(true));
         await import.Should().ThrowAsync<OperationCanceledException>();
         invoked.Should().BeFalse();

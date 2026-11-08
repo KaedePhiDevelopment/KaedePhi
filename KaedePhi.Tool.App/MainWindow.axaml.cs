@@ -13,7 +13,7 @@ namespace KaedePhi.Tool.App;
 
 public partial class MainWindow : Window
 {
-    private MainViewModel? _backgroundViewModel;
+    private BackgroundViewModel? _background;
     private int _backgroundSavePressCount;
     private long _lastBackgroundSavePress;
     private bool _isBackgroundSaveKeyDown;
@@ -60,21 +60,21 @@ public partial class MainWindow : Window
     protected override void OnOpened(EventArgs e)
     {
         base.OnOpened(e);
-        _backgroundViewModel = DataContext as MainViewModel;
-        if (_backgroundViewModel == null)
+        _background = (DataContext as MainViewModel)?.Background;
+        if (_background == null)
             return;
 
-        _backgroundViewModel.BackgroundTransitionRequested += AnimateBackgroundRevealAsync;
-        _backgroundViewModel.StartBackgroundRefresh();
+        _background.TransitionRequested += AnimateBackgroundRevealAsync;
+        _background.StartAutoRefresh();
     }
 
     protected override void OnClosed(EventArgs e)
     {
-        if (_backgroundViewModel != null)
+        if (_background != null)
         {
-            _backgroundViewModel.StopBackgroundRefresh();
-            _backgroundViewModel.BackgroundTransitionRequested -= AnimateBackgroundRevealAsync;
-            _backgroundViewModel = null;
+            _background.Stop();
+            _background.TransitionRequested -= AnimateBackgroundRevealAsync;
+            _background = null;
         }
 
         base.OnClosed(e);
@@ -82,38 +82,38 @@ public partial class MainWindow : Window
 
     private void OnImportNavigationClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is Gui.ViewModels.MainViewModel vm)
+        if (DataContext is MainViewModel vm)
             vm.OnImportNavigationClicked();
     }
 
     private void OnToolsNavigationClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is Gui.ViewModels.MainViewModel vm)
+        if (DataContext is MainViewModel vm)
             vm.OnToolsNavigationClicked();
     }
 
     private void OnExportNavigationClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is Gui.ViewModels.MainViewModel vm)
+        if (DataContext is MainViewModel vm)
             vm.OnExportNavigationClicked();
     }
 
     private void OnSettingsNavigationClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is Gui.ViewModels.MainViewModel vm)
+        if (DataContext is MainViewModel vm)
             vm.OnSettingsNavigationClicked();
     }
 
     private void OnSidebarToggleClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is Gui.ViewModels.MainViewModel vm)
+        if (DataContext is MainViewModel vm)
             vm.ToggleSidebar();
     }
 
     private async void OnBackgroundRefreshClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is MainViewModel vm)
-            await vm.RefreshBackgroundOnceAsync();
+            await vm.Background.RefreshOnceAsync();
     }
 
     private async Task AnimateBackgroundRevealAsync(CancellationToken cancellationToken)
@@ -207,7 +207,7 @@ public partial class MainWindow : Window
 
         _backgroundSavePressCount = 0;
         if (DataContext is MainViewModel vm)
-            await vm.SaveBackgroundAsync();
+            await vm.Background.SaveAsync();
     }
 
     private void OnBackgroundShortcutKeyUp(object? sender, KeyEventArgs e)

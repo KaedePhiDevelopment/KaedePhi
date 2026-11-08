@@ -14,7 +14,10 @@ public class ChartGetTypeTests
         string expected
     )
     {
-        var format = await new ChartFormatCatalog().DetectFormatAsync(chartText, TestContext.Current.CancellationToken);
+        var format = await new ChartFormatCatalog().DetectFormatAsync(
+            chartText,
+            TestContext.Current.CancellationToken
+        );
         format.FormatId.Should().Be(expected);
     }
 
@@ -23,9 +26,15 @@ public class ChartGetTypeTests
     [InlineData("{\"formatVersion\":\"3\"}")]
     [InlineData("{\"formatVersion\":null}")]
     [InlineData("{\"formatVersion\":2}")]
-    public async Task DetectFormat_WithInvalidFormatVersion_ThrowsNotSupportedException(string chartText)
+    public async Task DetectFormat_WithInvalidFormatVersion_ThrowsNotSupportedException(
+        string chartText
+    )
     {
-        var act = () => new ChartFormatCatalog().DetectFormatAsync(chartText, TestContext.Current.CancellationToken);
+        var act = () =>
+            new ChartFormatCatalog().DetectFormatAsync(
+                chartText,
+                TestContext.Current.CancellationToken
+            );
 
         await act.Should().ThrowAsync<NotSupportedException>();
     }
@@ -48,7 +57,10 @@ public class ChartGetTypeTests
         string expected
     )
     {
-        var format = await new ChartFormatCatalog().DetectFormatAsync(chartText, TestContext.Current.CancellationToken);
+        var format = await new ChartFormatCatalog().DetectFormatAsync(
+            chartText,
+            TestContext.Current.CancellationToken
+        );
         format.FormatId.Should().Be(expected);
     }
 
@@ -74,7 +86,10 @@ public class ChartGetTypeTests
         var chartText = $"{{\"info\":{{}},\"lines\":[\"{largePayload}\"]}}";
         await using var stream = new ReadTrackingStream(Encoding.UTF8.GetBytes(chartText));
 
-        var format = await new ChartFormatCatalog().DetectFormatAsync(stream, TestContext.Current.CancellationToken);
+        var format = await new ChartFormatCatalog().DetectFormatAsync(
+            stream,
+            TestContext.Current.CancellationToken
+        );
         format.FormatId.Should().Be(ChartFormatIds.PhiFans);
         stream.FarthestReadPosition.Should().BeInRange(1, stream.Length - 1);
         stream.Position.Should().Be(0);
@@ -87,7 +102,10 @@ public class ChartGetTypeTests
         var chartText = $"{{\"format\":6,\"bpm_list\":[\"{largePayload}\"]}}";
         await using var stream = new ReadTrackingStream(Encoding.UTF8.GetBytes(chartText));
 
-        var format = await new ChartFormatCatalog().DetectFormatAsync(stream, TestContext.Current.CancellationToken);
+        var format = await new ChartFormatCatalog().DetectFormatAsync(
+            stream,
+            TestContext.Current.CancellationToken
+        );
         format.FormatId.Should().Be(ChartFormatIds.PhiChain);
         stream.FarthestReadPosition.Should().BeInRange(1, stream.Length - 1);
         stream.Position.Should().Be(0);
@@ -103,7 +121,10 @@ public class ChartGetTypeTests
             + "\"}]}";
         await using var stream = new ReadTrackingStream(Encoding.UTF8.GetBytes(chartText));
 
-        var format = await new ChartFormatCatalog().DetectFormatAsync(stream, TestContext.Current.CancellationToken);
+        var format = await new ChartFormatCatalog().DetectFormatAsync(
+            stream,
+            TestContext.Current.CancellationToken
+        );
         format.FormatId.Should().Be(ChartFormatIds.StellateRePhiEditExtended);
         stream.FarthestReadPosition.Should().BeInRange(1, stream.Length - 1);
         stream.Position.Should().Be(0);

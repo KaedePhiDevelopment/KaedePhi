@@ -9,7 +9,9 @@ public sealed class ChartFormatCatalogTests
 {
     private static ChartFormatDescriptor CreateDescriptor(string id) =>
         ChartFormatDescriptor.Create(
-            id, "txt", importer: (text, _, _, _) =>
+            id,
+            "txt",
+            importer: (text, _, _, _) =>
                 Task.FromResult(new Chart { Meta = new Meta { Name = text } })
         );
 
@@ -17,12 +19,18 @@ public sealed class ChartFormatCatalogTests
     public async Task DefaultFormats_AreRegisteredAndCanBeRemovedAndRestored()
     {
         var catalog = new ChartFormatCatalog();
-        foreach (var formatId in new[]
-        {
-            ChartFormatIds.PhiEdit, ChartFormatIds.RePhiEdit, ChartFormatIds.PhigrosV1,
-            ChartFormatIds.PhigrosV3, ChartFormatIds.PhiChain, ChartFormatIds.PhiFans,
-            ChartFormatIds.StellateRePhiEditExtended,
-        })
+        foreach (
+            var formatId in new[]
+            {
+                ChartFormatIds.PhiEdit,
+                ChartFormatIds.RePhiEdit,
+                ChartFormatIds.PhigrosV1,
+                ChartFormatIds.PhigrosV3,
+                ChartFormatIds.PhiChain,
+                ChartFormatIds.PhiFans,
+                ChartFormatIds.StellateRePhiEditExtended,
+            }
+        )
         {
             var descriptor = catalog.Get(formatId);
             var registration = catalog.FindRegistration(formatId);
@@ -37,13 +45,15 @@ public sealed class ChartFormatCatalogTests
         var saved = catalog.FindRegistration("RePhiEdit")!;
         catalog.Unregister("rephiedit").Should().BeTrue();
         catalog.Find(ChartFormatIds.RePhiEdit).Should().BeNull();
-        var detectWithoutFormat = () => catalog.DetectFormatAsync(text, TestContext.Current.CancellationToken);
+        var detectWithoutFormat = () =>
+            catalog.DetectFormatAsync(text, TestContext.Current.CancellationToken);
         await detectWithoutFormat.Should().ThrowAsync<NotSupportedException>();
         ChartFormatRegistry.Get(ChartFormatIds.RePhiEdit).Should().BeSameAs(saved.Descriptor);
 
         catalog.Register(saved);
         (await catalog.DetectFormatAsync(text, TestContext.Current.CancellationToken))
-            .Should().BeSameAs(saved.Descriptor);
+            .Should()
+            .BeSameAs(saved.Descriptor);
         catalog.Get(ChartFormatIds.RePhiEdit).Should().BeSameAs(saved.Descriptor);
     }
 
@@ -54,27 +64,39 @@ public sealed class ChartFormatCatalogTests
         var original = catalog.FindRegistration("PhigrosV3")!;
         catalog.Unregister("PhigrosV3").Should().BeTrue();
         var replacement = CreateDescriptor("PhigrosV3");
-        catalog.Register(replacement, async (stream, ct) =>
-        {
-            using var reader = new StreamReader(stream, leaveOpen: true);
-            return await reader.ReadLineAsync(ct) == "替代格式";
-        });
+        catalog.Register(
+            replacement,
+            async (stream, ct) =>
+            {
+                using var reader = new StreamReader(stream, leaveOpen: true);
+                return await reader.ReadLineAsync(ct) == "替代格式";
+            }
+        );
 
         var (format, chart) = await catalog.ImportDetectedIrAsync(
-            "替代格式\n内容", ct: TestContext.Current.CancellationToken
+            "替代格式\n内容",
+            ct: TestContext.Current.CancellationToken
         );
         format.Should().BeSameAs(replacement);
         chart.Meta.Name.Should().Be("替代格式\n内容");
         catalog.Get(ChartFormatIds.PhigrosV3).Should().BeSameAs(replacement);
-        var originalInput = () => catalog.DetectFormatAsync(
-            "{\"formatVersion\":3}", TestContext.Current.CancellationToken
-        );
+        var originalInput = () =>
+            catalog.DetectFormatAsync(
+                "{\"formatVersion\":3}",
+                TestContext.Current.CancellationToken
+            );
         await originalInput.Should().ThrowAsync<NotSupportedException>();
 
         catalog.Unregister("PhigrosV3").Should().BeTrue();
         catalog.Register(original);
-        (await catalog.DetectFormatAsync("{\"formatVersion\":3}", TestContext.Current.CancellationToken))
-            .Should().BeSameAs(original.Descriptor);
+        (
+            await catalog.DetectFormatAsync(
+                "{\"formatVersion\":3}",
+                TestContext.Current.CancellationToken
+            )
+        )
+            .Should()
+            .BeSameAs(original.Descriptor);
     }
 
     [Fact]
@@ -82,17 +104,25 @@ public sealed class ChartFormatCatalogTests
     {
         var empty = new ChartFormatCatalog(includeBuiltInFormats: false);
         empty.Formats.Should().BeEmpty();
-        var missing = () => empty.DetectFormatAsync(
-            "{\"formatVersion\":3}", TestContext.Current.CancellationToken
-        );
+        var missing = () =>
+            empty.DetectFormatAsync("{\"formatVersion\":3}", TestContext.Current.CancellationToken);
         await missing.Should().ThrowAsync<NotSupportedException>();
 
         var registration = ChartFormatRegistry.Default.FindRegistration("PhigrosV3")!;
         empty.Register(registration);
-        (await empty.DetectFormatAsync("{\"formatVersion\":3}", TestContext.Current.CancellationToken))
-            .Should().BeSameAs(registration.Descriptor);
+        (
+            await empty.DetectFormatAsync(
+                "{\"formatVersion\":3}",
+                TestContext.Current.CancellationToken
+            )
+        )
+            .Should()
+            .BeSameAs(registration.Descriptor);
         empty.Unregister("PhigrosV3").Should().BeTrue();
-        ChartFormatRegistry.Find(ChartFormatIds.PhigrosV3).Should().BeSameAs(registration.Descriptor);
+        ChartFormatRegistry
+            .Find(ChartFormatIds.PhigrosV3)
+            .Should()
+            .BeSameAs(registration.Descriptor);
     }
 
     [Fact]
@@ -119,7 +149,8 @@ public sealed class ChartFormatCatalogTests
             return new MemoryStream(Encoding.UTF8.GetBytes("TESTS.SHARED-SECOND\n内容"));
         }
         (await catalog.DetectFormatAsync(Open, TestContext.Current.CancellationToken))
-            .Should().BeSameAs(second);
+            .Should()
+            .BeSameAs(second);
         calls.Should().Be(1);
         opens.Should().Be(1);
 
@@ -129,7 +160,8 @@ public sealed class ChartFormatCatalogTests
         await unknown.Should().ThrowAsync<NotSupportedException>();
         catalog.Register(captured);
         (await catalog.DetectFormatAsync(Open, TestContext.Current.CancellationToken))
-            .Should().BeSameAs(second);
+            .Should()
+            .BeSameAs(second);
     }
 
     [Fact]
@@ -152,18 +184,26 @@ public sealed class ChartFormatCatalogTests
     {
         var catalog = new ChartFormatCatalog();
         var descriptor = ChartFormatDescriptor.CreateDetectionOnly("tests.detect-only", "chart");
-        catalog.Register(descriptor, async (stream, ct) =>
-        {
-            using var reader = new StreamReader(stream, leaveOpen: true);
-            return await reader.ReadLineAsync(ct) == "仅检测";
-        });
+        catalog.Register(
+            descriptor,
+            async (stream, ct) =>
+            {
+                using var reader = new StreamReader(stream, leaveOpen: true);
+                return await reader.ReadLineAsync(ct) == "仅检测";
+            }
+        );
         var (formatId, builtIn) = ("PhigrosV1", catalog.Get(ChartFormatIds.PhigrosV1));
         catalog.Find(formatId).Should().BeSameAs(builtIn);
         descriptor.CanImport.Should().Be(builtIn.CanImport).And.BeFalse();
         descriptor.CanExport.Should().Be(builtIn.CanExport).And.BeFalse();
         (await catalog.DetectFormatAsync("仅检测\n内容", TestContext.Current.CancellationToken))
-            .Should().BeSameAs(descriptor);
-        var import = () => catalog.ImportDetectedIrAsync("仅检测\n内容", ct: TestContext.Current.CancellationToken);
+            .Should()
+            .BeSameAs(descriptor);
+        var import = () =>
+            catalog.ImportDetectedIrAsync(
+                "仅检测\n内容",
+                ct: TestContext.Current.CancellationToken
+            );
         await import.Should().ThrowAsync<NotSupportedException>();
         catalog.Unregister(descriptor.FormatId).Should().BeTrue();
     }

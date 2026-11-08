@@ -122,13 +122,19 @@ public sealed class AppConfigServiceTests : IDisposable
         var service = new AppConfigService(_configDir);
 
         service.Config.Convert.PhigrosSpeedCutPrecision.Should().Be(64d);
-        var backup = Directory.GetFiles(_configDir, "config.yaml.invalid.*")
-            .Should().ContainSingle().Which;
+        var backup = Directory
+            .GetFiles(_configDir, "config.yaml.invalid.*")
+            .Should()
+            .ContainSingle()
+            .Which;
         File.ReadAllText(backup).Should().Be(yaml);
         File.ReadAllText(ConfigPath).Should().NotContain("unrecognizedOption");
     }
 
-    [Fact(SkipUnless = nameof(IsWindows), Skip = "仅 Windows 的文件共享锁会阻止替换已打开的配置文件。")]
+    [Fact(
+        SkipUnless = nameof(IsWindows),
+        Skip = "仅 Windows 的文件共享锁会阻止替换已打开的配置文件。"
+    )]
     public void Load_WhenMigrationWriteFails_KeepsValidSettingsAndOriginalFile()
     {
         const string yaml = """
@@ -139,7 +145,14 @@ public sealed class AppConfigServiceTests : IDisposable
         WriteConfig(yaml);
         AppConfigService service;
 
-        using (var lockedFile = new FileStream(ConfigPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+        using (
+            var lockedFile = new FileStream(
+                ConfigPath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read
+            )
+        )
         {
             service = new AppConfigService(_configDir);
 

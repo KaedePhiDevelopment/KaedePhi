@@ -52,23 +52,53 @@ public class ControlDefaultCheckerTests
     public void NonDefaultValues_DoNotHaveDefaultEffect(float value)
     {
         ControlDefaultChecker
-            .HasDefaultEffect(new List<XControl> { new(), new() { Pos = value } })
+            .HasDefaultEffect(
+                new List<XControl>
+                {
+                    new(),
+                    new() { Pos = value },
+                }
+            )
             .Should()
             .BeFalse();
         ControlDefaultChecker
-            .HasDefaultEffect(new List<AlphaControl> { new(), new() { Alpha = value } })
+            .HasDefaultEffect(
+                new List<AlphaControl>
+                {
+                    new(),
+                    new() { Alpha = value },
+                }
+            )
             .Should()
             .BeFalse();
         ControlDefaultChecker
-            .HasDefaultEffect(new List<SizeControl> { new(), new() { Size = value } })
+            .HasDefaultEffect(
+                new List<SizeControl>
+                {
+                    new(),
+                    new() { Size = value },
+                }
+            )
             .Should()
             .BeFalse();
         ControlDefaultChecker
-            .HasDefaultEffect(new List<SkewControl> { new() { Skew = 0f }, new() { Skew = value } })
+            .HasDefaultEffect(
+                new List<SkewControl>
+                {
+                    new() { Skew = 0f },
+                    new() { Skew = value },
+                }
+            )
             .Should()
             .BeFalse();
         ControlDefaultChecker
-            .HasDefaultEffect(new List<YControl> { new(), new() { Y = value } })
+            .HasDefaultEffect(
+                new List<YControl>
+                {
+                    new(),
+                    new() { Y = value },
+                }
+            )
             .Should()
             .BeFalse();
     }

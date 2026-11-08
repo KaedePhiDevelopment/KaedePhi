@@ -3,27 +3,17 @@ using Avalonia.Platform.Storage;
 using KaedePhi.Tool.App.Gui.Services;
 using KaedePhi.Tool.App.Gui.ViewModels;
 using KaedePhi.Tool.App.Gui.Views;
+using KaedePhi.Tool.App.Shared;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter;
-using KaedePhi.Tool.Converter.PhiChain.Model;
-using KaedePhi.Tool.Converter.PhiEdit.Model;
-using KaedePhi.Tool.Converter.PhiFans.Model;
-using KaedePhi.Tool.Converter.Phigros.v3.Model;
-using KaedePhi.Tool.Converter.RePhiEdit.Model;
-using Serilog;
 using static KaedePhi.Tool.Localization.GuiLocalizationString;
 
 namespace KaedePhi.Tool.App.Gui.Controllers;
 
-internal sealed class ExportController
+internal sealed class ExportController : ControllerBase
 {
     private readonly GuiNavigationService _navigation;
     private readonly GuiChartService _chart;
-    private readonly LogService _logService;
-    private readonly ILogger _log;
-    private readonly Window _window;
-
-    private CancellationTokenSource? _cts;
 
     public ExportController(
         GuiNavigationService navigation,
@@ -32,37 +22,14 @@ internal sealed class ExportController
         Window window,
         Action returnToImport
     )
+        : base(logService.ForContext<ExportController>(), logService, window)
     {
         _navigation = navigation;
         _chart = chart;
-        _logService = logService;
-        _log = logService.ForContext<ExportController>();
-        _window = window;
 
         _navigation.Export.RequestExport += OnExportExecute;
         _navigation.Export.RequestReturnToImport += returnToImport;
         _navigation.Export.RequestCancelExport += OnCancelExport;
-    }
-
-    public void Cancel()
-    {
-        if (_cts is { IsCancellationRequested: false })
-            _cts.Cancel();
-    }
-
-    private static (string Extension, string TypeLabel) GetFormatFileInfo(string formatId)
-    {
-        var format = ChartFormatRegistry.Get(formatId);
-        var label = format.FormatId switch
-        {
-            ChartFormatIds.PhiEdit => file_type_pe_chart,
-            ChartFormatIds.RePhiEdit or ChartFormatIds.StellateRePhiEditExtended => file_type_rpe_json,
-            ChartFormatIds.PhigrosV3 => file_type_phigros_json,
-            ChartFormatIds.PhiFans => file_type_phifans_json,
-            ChartFormatIds.PhiChain => file_type_phichain_json,
-            _ => format.FormatId,
-        };
-        return (format.FileExtension, label);
     }
 
     private async void OnExportExecute()
@@ -73,266 +40,127 @@ internal sealed class ExportController
 
         try
         {
-            var topLevel = TopLevel.GetTopLevel(_window);
-            if (topLevel == null)
+            var targetFormat =
+                exportVm.SelectedFormat ?? throw new InvalidOperationException("未选择导出格式。");
+            var outputPath = await PickOutputPathAsync(exportVm, targetFormat);
+            if (outputPath == null)
+                return;
+
+            if (ChartFiles.IsSamePath(_chart.SourceFilePath, outputPath))
             {
-                exportVm.StatusText = status_cannot_access_picker;
+                exportVm.StatusText = export_same_file_error;
                 return;
             }
 
-            var targetFormat = exportVm.SelectedFormat
-                ?? throw new InvalidOperationException("未选择导出格式。");
-            var formatName = targetFormat;
-            var (ext, typeLabel) = GetFormatFileInfo(targetFormat);
-
-            var file = await topLevel.StorageProvider.SaveFilePickerAsync(
-                new FilePickerSaveOptions
-                {
-                    Title = export_title,
-                    SuggestedFileName = $"export_{formatName}.{ext}",
-                    DefaultExtension = ext,
-                    FileTypeChoices =
-                    [
-                        new FilePickerFileType(typeLabel) { Patterns = [$"*.{ext}"] },
-                    ],
-                }
-            );
-
-            if (file != null)
-            {
-                var outputPath = file.TryGetLocalPath();
-                if (string.IsNullOrEmpty(outputPath))
-                    return;
-                // 用户已选择文件，此时再显示导出动画
-                exportVm.IsExporting = true;
-                exportVm.StatusText = status_exporting;
-                _cts = new CancellationTokenSource();
-                var cts = _cts;
-                var ct = cts.Token;
-
-                // 若 OS 未自动附加扩展名，则手动补全
-                var expectedExt = $".{ext}";
-                if (!outputPath.EndsWith(expectedExt, StringComparison.OrdinalIgnoreCase))
-                    outputPath += expectedExt;
-                if (
-                    _chart.SourceFilePath is not null
-                    && string.Equals(
-                        Path.GetFullPath(_chart.SourceFilePath),
-                        Path.GetFullPath(outputPath),
-                        StringComparison.OrdinalIgnoreCase
-                    )
-                )
-                {
-                    exportVm.StatusText = export_same_file_error;
-                    return;
-                }
-
-                // 在后台线程执行耗时的导出操作，避免阻塞 UI
-                var exportOptions = BuildExportOptions(targetFormat, exportVm);
-                var useStream = exportVm.UseStream;
-                var indented = exportVm.IndentedOutput;
-
-                await Task.Run(
-                    () =>
-                        _chart.ExportChartAsync(
-                            targetFormat,
-                            outputPath,
-                            useStream,
-                            indented,
-                            exportOptions,
-                            ct
-                        ),
-                    ct
-                );
-
-                exportVm.StatusText = string.Format(status_exported_to, outputPath);
-                _log.Information(log_export_done);
-                MessageDialog.ShowSuccess(
-                    _window,
-                    export_success_title,
-                    string.Format(status_exported_to, outputPath)
-                );
-            }
-            else
-            {
-                exportVm.StatusText = status_export_cancelled;
-                _log.Information(log_export_cancelled);
-            }
+            await ExportAsync(exportVm, targetFormat, outputPath);
         }
         catch (OperationCanceledException)
         {
-            exportVm.StatusText = status_export_cancelled;
-            _log.Information(log_export_cancelled);
+            ReportCancelled(exportVm);
         }
         catch (Exception ex)
         {
-            _log.Error(ex, log_export_failed);
-            exportVm.StatusText = string.Format(
-                status_error_with_log,
-                ex.Message,
-                _logService.CurrentLogFile
-            );
-            MessageDialog.ShowError(
-                _window,
-                export_error_title,
-                string.Format(status_error_with_log, ex.Message, _logService.CurrentLogFile)
-            );
+            exportVm.StatusText = ReportFailure(log_export_failed, export_error_title, ex);
         }
         finally
         {
             exportVm.IsExporting = false;
-            _cts?.Dispose();
-            _cts = null;
+            EndOperation();
         }
     }
 
     private void OnCancelExport()
     {
-        if (_cts is not { IsCancellationRequested: false })
-            return;
-        _cts.Cancel();
-        _navigation.Export.StatusText = status_export_cancelled;
-        _log.Information(log_export_cancelled);
+        if (TryCancelOperation())
+            ReportCancelled(_navigation.Export);
     }
 
-    private static object? BuildExportOptions(string targetFormat, ExportViewModel vm)
+    // 返回用户选择的输出路径；无法选择或用户取消时返回 null，并已更新状态文本
+    private async Task<string?> PickOutputPathAsync(ExportViewModel exportVm, string targetFormat)
     {
-        return targetFormat switch
+        var topLevel = TopLevel.GetTopLevel(OwnerWindow);
+        if (topLevel == null)
         {
-            ChartFormatIds.PhiEdit => BuildPhiEditOptions(vm),
-            ChartFormatIds.PhigrosV3 => BuildPhigrosV3Options(vm),
-            ChartFormatIds.PhiChain => BuildPhiChainOptions(vm),
-            ChartFormatIds.RePhiEdit => BuildRePhiEditOptions(vm),
-            ChartFormatIds.StellateRePhiEditExtended => BuildRePhiEditOptions(vm),
-            ChartFormatIds.PhiFans => BuildPhiFansOptions(vm),
-            _ => null,
-        };
+            exportVm.StatusText = status_cannot_access_picker;
+            return null;
+        }
+
+        var (ext, typeLabel) = GetFormatFileInfo(targetFormat);
+        var file = await topLevel.StorageProvider.SaveFilePickerAsync(
+            new FilePickerSaveOptions
+            {
+                Title = export_title,
+                SuggestedFileName = $"export_{targetFormat}.{ext}",
+                DefaultExtension = ext,
+                FileTypeChoices = [new FilePickerFileType(typeLabel) { Patterns = [$"*.{ext}"] }],
+            }
+        );
+        if (file == null)
+        {
+            ReportCancelled(exportVm);
+            return null;
+        }
+
+        var outputPath = file.TryGetLocalPath();
+        if (string.IsNullOrEmpty(outputPath))
+            return null;
+
+        // 若 OS 未自动附加扩展名，则手动补全
+        var expectedExt = $".{ext}";
+        return outputPath.EndsWith(expectedExt, StringComparison.OrdinalIgnoreCase)
+            ? outputPath
+            : outputPath + expectedExt;
     }
 
-    private static IrToPhigrosV3ConvertOptions BuildPhigrosV3Options(ExportViewModel vm) =>
-        new()
-        {
-            Cutting = new IrToPhigrosV3ConvertOptions.CuttingOptions
-            {
-                EasingPrecision = vm.PhigrosEasingPrecision,
-                MisalignedXyEventPrecision = vm.PhigrosMisalignedXyEventPrecision,
-            },
-            Alpha = new IrToPhigrosV3ConvertOptions.AlphaOptions
-            {
-                CutPrecision = vm.PhigrosAlphaCutPrecision,
-            },
-            Speed = new IrToPhigrosV3ConvertOptions.SpeedOptions
-            {
-                CutPrecision = vm.PhigrosSpeedCutPrecision,
-            },
-            FatherLineUnbind = new IrToPhigrosV3ConvertOptions.FatherLineUnbindOptions
-            {
-                Precision = vm.UnbindPrecision,
-                Tolerance = vm.UnbindTolerance,
-                MergeTolerance = vm.UnbindMergeTolerance,
-                ClassicMode = vm.UnbindClassicMode,
-                Compress = vm.UnbindCompress,
-            },
-            MultiLayerMerge = new IrToPhigrosV3ConvertOptions.MultiLayerMergeOptions
-            {
-                Precision = vm.MultiLayerMergePrecision,
-                Tolerance = vm.MultiLayerMergeTolerance,
-                ClassicMode = vm.MultiLayerMergeClassicMode,
-                Compress = vm.MultiLayerMergeCompress,
-            },
-            LineFilter = new IrToPhigrosV3ConvertOptions.LineFilterOptions
-            {
-                RemoveAttachUiLine = vm.RemoveAttachUiLine,
-                RemoveTextureLine = vm.RemoveTextureLine,
-            },
-            NoteFilter = new IrToPhigrosV3ConvertOptions.NoteFilterOptions
-            {
-                FilterFakeNotes = vm.FilterFakeNotes,
-            },
-            NegativeAlpha = new IrToPhigrosV3ConvertOptions.NegativeAlphaOptions
-            {
-                Enabled = vm.NegativeAlphaElevation,
-                ElevationStep = vm.NegativeAlphaStep,
-            },
-        };
+    private async Task ExportAsync(ExportViewModel exportVm, string targetFormat, string outputPath)
+    {
+        exportVm.IsExporting = true;
+        exportVm.StatusText = status_exporting;
+        var ct = BeginOperation();
 
-    private static IrToPhiEditConvertOptions BuildPhiEditOptions(ExportViewModel vm) =>
-        new()
-        {
-            TrailingBeatPadding = vm.PeTrailingBeatPadding,
-            Cutting = new IrToPhiEditConvertOptions.CuttingOptions
-            {
-                UnsupportedEasingPrecision = vm.PeUnsupportedEasingPrecision,
-                MisalignedXyEventPrecision = vm.PeMisalignedXyEventPrecision,
-            },
-            Alpha = new IrToPhiEditConvertOptions.AlphaOptions
-            {
-                CutPrecision = vm.PeAlphaCutPrecision,
-                CutTolerance = vm.PeAlphaCutTolerance,
-            },
-            Speed = new IrToPhiEditConvertOptions.SpeedOptions
-            {
-                CutPrecision = vm.PeSpeedCutPrecision,
-            },
-            FatherLineUnbind = new IrToPhiEditConvertOptions.FatherLineUnbindOptions
-            {
-                Precision = vm.UnbindPrecision,
-                Tolerance = vm.UnbindTolerance,
-                MergeTolerance = vm.UnbindMergeTolerance,
-                ClassicMode = vm.UnbindClassicMode,
-                Compress = vm.UnbindCompress,
-            },
-            MultiLayerMerge = new IrToPhiEditConvertOptions.MultiLayerMergeOptions
-            {
-                Precision = vm.MultiLayerMergePrecision,
-                Tolerance = vm.MultiLayerMergeTolerance,
-                ClassicMode = vm.MultiLayerMergeClassicMode,
-                Compress = vm.MultiLayerMergeCompress,
-            },
-            LineFilter = new IrToPhiEditConvertOptions.LineFilterOptions
-            {
-                RemoveAttachUiLine = vm.RemoveAttachUiLine,
-                RemoveTextureLine = vm.RemoveTextureLine,
-            },
-        };
+        var exportOptions = ExportOptionsBuilder.Build(targetFormat, exportVm);
+        var useStream = exportVm.UseStream;
+        var indented = exportVm.IndentedOutput;
 
-    private static IrToPhiChainConvertOptions BuildPhiChainOptions(ExportViewModel vm) =>
-        new()
-        {
-            UnbindNonRotatingChildren = vm.PhiChainUnbindNonRotatingChildren,
-            UnbindPrecision = vm.PhiChainUnbindPrecision,
-            UnbindTolerance = vm.PhiChainUnbindTolerance,
-            UnbindMergeTolerance = vm.PhiChainUnbindMergeTolerance,
-            UnbindClassicMode = vm.PhiChainUnbindClassicMode,
-            MultiLayerMergePrecision = vm.PhiChainMultiLayerMergePrecision,
-            MultiLayerMergeTolerance = vm.PhiChainMultiLayerMergeTolerance,
-            MultiLayerMergeClassicMode = vm.PhiChainMultiLayerMergeClassicMode,
-            EasingCutPrecision = vm.PhiChainEasingCutPrecision,
-        };
+        // 在后台线程执行耗时的导出操作，避免阻塞 UI
+        await Task.Run(
+            () =>
+                _chart.ExportChartAsync(
+                    targetFormat,
+                    outputPath,
+                    useStream,
+                    indented,
+                    exportOptions,
+                    ct
+                ),
+            ct
+        );
 
-    private static ConvertOption BuildRePhiEditOptions(ExportViewModel vm) =>
-        new()
-        {
-            Cutting = new ConvertOption.CuttingOptions
-            {
-                UnsupportedEasingPrecision = vm.RePhiEditUnsupportedEasingPrecision,
-            },
-        };
+        var message = string.Format(status_exported_to, outputPath);
+        exportVm.StatusText = message;
+        Logger.Information(log_export_done);
+        MessageDialog.ShowSuccess(OwnerWindow, export_success_title, message);
+    }
 
-    private static IrToPhiFansConvertOptions BuildPhiFansOptions(ExportViewModel vm) =>
-        new()
+    private void ReportCancelled(ExportViewModel exportVm)
+    {
+        exportVm.StatusText = status_export_cancelled;
+        Logger.Information(log_export_cancelled);
+    }
+
+    private static (string Extension, string TypeLabel) GetFormatFileInfo(string formatId)
+    {
+        var format = ChartFormatRegistry.Get(formatId);
+        var label = format.FormatId switch
         {
-            Cutting = new IrToPhiFansConvertOptions.CuttingOptions
-            {
-                UnsupportedEasingPrecision = vm.PhiFansUnsupportedEasingPrecision,
-            },
-            DiscontinuityBeatPrecision = vm.PhiFansDiscontinuityBeatPrecision,
-            MultiLayerMerge = new IrToPhiFansConvertOptions.MultiLayerMergeOptions
-            {
-                Precision = vm.MultiLayerMergePrecision,
-                Tolerance = vm.MultiLayerMergeTolerance,
-                ClassicMode = vm.MultiLayerMergeClassicMode,
-                Compress = vm.MultiLayerMergeCompress,
-            },
+            ChartFormatIds.PhiEdit => file_type_pe_chart,
+            ChartFormatIds.RePhiEdit or ChartFormatIds.StellateRePhiEditExtended =>
+                file_type_rpe_json,
+            ChartFormatIds.PhigrosV3 => file_type_phigros_json,
+            ChartFormatIds.PhiFans => file_type_phifans_json,
+            ChartFormatIds.PhiChain => file_type_phichain_json,
+            _ => format.FormatId,
         };
+        return (format.FileExtension, label);
+    }
 }

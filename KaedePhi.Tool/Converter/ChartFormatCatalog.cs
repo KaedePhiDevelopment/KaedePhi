@@ -10,17 +10,16 @@ namespace KaedePhi.Tool.Converter;
 public sealed class ChartFormatCatalog
 {
     private readonly object _lock = new();
-    private readonly Dictionary<string, ChartFormatRegistration> _registrations =
-        new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, ChartFormatRegistration> _registrations = new(
+        StringComparer.OrdinalIgnoreCase
+    );
 
     /// <summary>
     /// 创建独立注册表，可选择是否注册默认格式。
     /// </summary>
     /// <param name="includeBuiltInFormats">是否注册默认内置格式。</param>
     public ChartFormatCatalog(bool includeBuiltInFormats = true)
-        : this(includeBuiltInFormats ? ChartFormatRegistry.DefaultRegistrations : [])
-    {
-    }
+        : this(includeBuiltInFormats ? ChartFormatRegistry.DefaultRegistrations : []) { }
 
     internal ChartFormatCatalog(IEnumerable<ChartFormatRegistration> registrations)
     {
@@ -39,7 +38,9 @@ public sealed class ChartFormatCatalog
         lock (_lock)
         {
             if (!_registrations.TryAdd(registration.Descriptor.FormatId, registration))
-                throw new InvalidOperationException($"格式标识已注册：{registration.Descriptor.FormatId}");
+                throw new InvalidOperationException(
+                    $"格式标识已注册：{registration.Descriptor.FormatId}"
+                );
         }
     }
 
@@ -135,9 +136,11 @@ public sealed class ChartFormatCatalog
     /// <returns>格式描述。</returns>
     [Obsolete("将在下一个大版本移除；请改用 Get(string)，通过格式标识查询。")]
     public ChartFormatDescriptor Get(ChartType type) =>
-        (LegacyChartTypeMapping.IsDefined((int)type)
-            ? Find(LegacyChartTypeMapping.ToFormatId((int)type))
-            : null) ?? throw new NotSupportedException($"未注册的谱面格式：{type}");
+        (
+            LegacyChartTypeMapping.IsDefined((int)type)
+                ? Find(LegacyChartTypeMapping.ToFormatId((int)type))
+                : null
+        ) ?? throw new NotSupportedException($"未注册的谱面格式：{type}");
 
     /// <summary>已注册格式及检测配置的快照。</summary>
     public IReadOnlyList<ChartFormatRegistration> Registrations
@@ -154,10 +157,12 @@ public sealed class ChartFormatCatalog
         Registrations.Select(registration => registration.Descriptor).ToArray();
 
     /// <summary>所有支持导入的格式。</summary>
-    public IEnumerable<ChartFormatDescriptor> ImportableFormats => Formats.Where(format => format.CanImport);
+    public IEnumerable<ChartFormatDescriptor> ImportableFormats =>
+        Formats.Where(format => format.CanImport);
 
     /// <summary>所有支持导出的格式。</summary>
-    public IEnumerable<ChartFormatDescriptor> ExportableFormats => Formats.Where(format => format.CanExport);
+    public IEnumerable<ChartFormatDescriptor> ExportableFormats =>
+        Formats.Where(format => format.CanExport);
 
     /// <summary>
     /// 检测谱面文本的已注册格式。
@@ -165,8 +170,10 @@ public sealed class ChartFormatCatalog
     /// <param name="text">待检测的谱面文本。</param>
     /// <param name="ct">取消令牌。</param>
     /// <returns>检测到的格式描述。</returns>
-    public Task<ChartFormatDescriptor> DetectFormatAsync(string text, CancellationToken ct = default) =>
-        ChartGetType.DetectFormatAsync(this, text, ct);
+    public Task<ChartFormatDescriptor> DetectFormatAsync(
+        string text,
+        CancellationToken ct = default
+    ) => ChartGetType.DetectFormatAsync(this, text, ct);
 
     /// <summary>
     /// 从可定位流的当前位置检测已注册格式，并在结束时恢复位置。
@@ -174,8 +181,10 @@ public sealed class ChartFormatCatalog
     /// <param name="stream">可读取、可定位的谱面输入流。</param>
     /// <param name="ct">取消令牌。</param>
     /// <returns>检测到的格式描述。</returns>
-    public Task<ChartFormatDescriptor> DetectFormatAsync(Stream stream, CancellationToken ct = default) =>
-        ChartGetType.DetectFormatAsync(this, stream, ct);
+    public Task<ChartFormatDescriptor> DetectFormatAsync(
+        Stream stream,
+        CancellationToken ct = default
+    ) => ChartGetType.DetectFormatAsync(this, stream, ct);
 
     /// <summary>
     /// 使用流工厂检测已注册格式，支持不可定位的输入。
@@ -183,8 +192,10 @@ public sealed class ChartFormatCatalog
     /// <param name="openRead">每次返回从谱面起点开始的独立可读流，使用后关闭。</param>
     /// <param name="ct">取消令牌。</param>
     /// <returns>检测到的格式描述。</returns>
-    public Task<ChartFormatDescriptor> DetectFormatAsync(Func<Stream> openRead, CancellationToken ct = default) =>
-        ChartGetType.DetectFormatAsync(this, openRead, ct);
+    public Task<ChartFormatDescriptor> DetectFormatAsync(
+        Func<Stream> openRead,
+        CancellationToken ct = default
+    ) => ChartGetType.DetectFormatAsync(this, openRead, ct);
 
     /// <summary>
     /// 检测谱面文本并转换为 IR。
@@ -195,7 +206,10 @@ public sealed class ChartFormatCatalog
     /// <param name="ct">取消令牌。</param>
     /// <returns>检测到的格式描述与 IR 谱面。</returns>
     public async Task<(ChartFormatDescriptor Format, Ir.Chart Chart)> ImportDetectedIrAsync(
-        string text, object? importOptions = null, ChartLogSink? log = null, CancellationToken ct = default
+        string text,
+        object? importOptions = null,
+        ChartLogSink? log = null,
+        CancellationToken ct = default
     )
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -217,7 +231,10 @@ public sealed class ChartFormatCatalog
     /// <param name="ct">取消令牌。</param>
     /// <returns>检测到的格式描述与 IR 谱面。</returns>
     public async Task<(ChartFormatDescriptor Format, Ir.Chart Chart)> ImportDetectedIrAsync(
-        Stream stream, object? importOptions = null, ChartLogSink? log = null, CancellationToken ct = default
+        Stream stream,
+        object? importOptions = null,
+        ChartLogSink? log = null,
+        CancellationToken ct = default
     )
     {
         var format = await DetectFormatAsync(stream, ct);
@@ -233,7 +250,10 @@ public sealed class ChartFormatCatalog
     /// <param name="ct">取消令牌。</param>
     /// <returns>检测到的格式描述与 IR 谱面。</returns>
     public async Task<(ChartFormatDescriptor Format, Ir.Chart Chart)> ImportDetectedIrAsync(
-        Func<Stream> openRead, object? importOptions = null, ChartLogSink? log = null, CancellationToken ct = default
+        Func<Stream> openRead,
+        object? importOptions = null,
+        ChartLogSink? log = null,
+        CancellationToken ct = default
     )
     {
         var format = await DetectFormatAsync(openRead, ct);
@@ -243,7 +263,11 @@ public sealed class ChartFormatCatalog
     }
 
     private static async Task<Ir.Chart> ImportStreamAsync(
-        ChartFormatDescriptor format, Stream stream, object? options, ChartLogSink? log, CancellationToken ct
+        ChartFormatDescriptor format,
+        Stream stream,
+        object? options,
+        ChartLogSink? log,
+        CancellationToken ct
     )
     {
         if (format.CanStreamImport)
