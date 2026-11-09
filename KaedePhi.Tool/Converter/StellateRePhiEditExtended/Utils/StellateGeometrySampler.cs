@@ -1,7 +1,7 @@
-using System.Runtime.ExceptionServices;
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Converter.Phigros.v3.Utils;
 using KaedePhi.Tool.Converter.StellateRePhiEditExtended.Model;
+using static KaedePhi.Tool.Converter.StellateRePhiEditExtended.Utils.StellateGeometryConstants;
 using IrBpmItem = KaedePhi.Core.Intermediate.Model.BpmItem;
 using RpeChart = KaedePhi.Core.Formats.RePhiEdit.Model.Chart;
 using RpeEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<float>;
@@ -77,41 +77,6 @@ public sealed class StellateGeometrySampler
         double defaultValue
     ) => CurveValue(events, _timeMapper.ToMusicTime(beat), rightSide, defaultValue);
 
-    private void PrepareCurveIndexes(int lineIndex, HashSet<int> visited, bool includeScale)
-    {
-        if (!visited.Add(lineIndex))
-            return;
-
-        var line = _source.JudgeLineList[lineIndex];
-        if (line.EventLayers is not null)
-        {
-            foreach (var layer in line.EventLayers.OfType<RpeEventLayer>())
-            {
-                AddCurveIndex(layer.MoveXEvents);
-                AddCurveIndex(layer.MoveYEvents);
-                AddCurveIndex(layer.RotateEvents);
-            }
-        }
-
-        if (includeScale)
-        {
-            AddCurveIndex(line.Extended?.ScaleXEvents);
-            AddCurveIndex(line.Extended?.ScaleYEvents);
-        }
-
-        if (line.Father >= 0 && line.Father < _source.JudgeLineList.Count)
-            PrepareCurveIndexes(line.Father, visited, includeScale: false);
-    }
-
-    private void AddCurveIndex(List<RpeEvent>? events)
-    {
-        if (events is { Count: > 0 } && !_curveIndexes.ContainsKey(events))
-            _curveIndexes.Add(
-                events,
-                new StellateCurveIndex(events, _timeMapper, _curveIndexes.Count)
-            );
-    }
-
     /// <summary>
     /// 为指定判定线及其父级准备曲线索引。
     /// </summary>
@@ -163,7 +128,7 @@ public sealed class StellateGeometrySampler
         }
 
         if (
-            beats.Length < StellateGeometryConstants.ParallelSampleThreshold
+            beats.Length < ParallelSampleThreshold
             || maxDegreeOfParallelism <= 1
             || Environment.ProcessorCount <= 1
         )
@@ -176,8 +141,7 @@ public sealed class StellateGeometrySampler
             return samples;
         }
 
-        try
-        {
+        StellateParallel.Run(() =>
             Parallel.For(
                 0,
                 beats.Length,
@@ -197,18 +161,94 @@ public sealed class StellateGeometrySampler
                     return state;
                 },
                 _ => { }
-            );
-        }
-        catch (AggregateException exception)
-        {
-            var failures = exception.Flatten().InnerExceptions;
-            if (failures.Count == 1)
-                ExceptionDispatchInfo.Capture(failures[0]).Throw();
-
-            throw;
-        }
+            )
+        );
 
         return samples;
+    }
+
+    /// <summary>
+    /// 收集判定线及其父级的位置和旋转事件边界。
+    /// </summary>
+    /// <param name="lineIndex">判定线索引</param>
+    /// <param name="beats">接收事件边界的拍数集合</param>
+    /// <param name="visited">记录已处理判定线的集合</param>
+    public void CollectPoseBreaks(int lineIndex, SortedSet<Beat> beats, HashSet<int> visited) =>
+        CollectBreaks(lineIndex, beats, visited, rotationOnly: false);
+
+    /// <summary>
+    /// 收集影响判定线旋转的事件边界。
+    /// </summary>
+    /// <param name="lineIndex">判定线索引</param>
+    /// <param name="beats">接收事件边界的拍数集合</param>
+    /// <param name="visited">记录已处理判定线的集合</param>
+    public void CollectRotationBreaks(int lineIndex, SortedSet<Beat> beats, HashSet<int> visited) =>
+        CollectBreaks(lineIndex, beats, visited, rotationOnly: true);
+
+    private void PrepareCurveIndexes(int lineIndex, HashSet<int> visited, bool includeScale)
+    {
+        if (!visited.Add(lineIndex))
+            return;
+
+        var line = _source.JudgeLineList[lineIndex];
+        if (line.EventLayers is not null)
+        {
+            foreach (var layer in line.EventLayers.OfType<RpeEventLayer>())
+            {
+                AddCurveIndex(layer.MoveXEvents);
+                AddCurveIndex(layer.MoveYEvents);
+                AddCurveIndex(layer.RotateEvents);
+            }
+        }
+
+        if (includeScale)
+        {
+            AddCurveIndex(line.Extended?.ScaleXEvents);
+            AddCurveIndex(line.Extended?.ScaleYEvents);
+        }
+
+        if (HasFather(line))
+            PrepareCurveIndexes(line.Father, visited, includeScale: false);
+    }
+
+    private void AddCurveIndex(List<RpeEvent>? events)
+    {
+        if (events is { Count: > 0 } && !_curveIndexes.ContainsKey(events))
+            _curveIndexes.Add(
+                events,
+                new StellateCurveIndex(events, _timeMapper, _curveIndexes.Count)
+            );
+    }
+
+    private bool HasFather(RpeJudgeLine line) =>
+        line.Father >= 0 && line.Father < _source.JudgeLineList.Count;
+
+    // 沿父级链收集事件边界；仅收集旋转时，只有随父级旋转的判定线才继续向上
+    private void CollectBreaks(
+        int lineIndex,
+        SortedSet<Beat> beats,
+        HashSet<int> visited,
+        bool rotationOnly
+    )
+    {
+        while (visited.Add(lineIndex))
+        {
+            var line = _source.JudgeLineList[lineIndex];
+            foreach (var layer in line.EventLayers.OfType<RpeEventLayer>())
+            {
+                if (!rotationOnly)
+                {
+                    StellateBlockAreaPathBuilder.AddCurveBoundaries(layer.MoveXEvents, beats);
+                    StellateBlockAreaPathBuilder.AddCurveBoundaries(layer.MoveYEvents, beats);
+                }
+
+                StellateBlockAreaPathBuilder.AddCurveBoundaries(layer.RotateEvents, beats);
+            }
+
+            if (!HasFather(line) || (rotationOnly && !line.RotateWithFather))
+                return;
+            lineIndex = line.Father;
+        }
     }
 
     private StellateBlockAreaGeometry GetGeometry(
@@ -221,33 +261,21 @@ public sealed class StellateGeometrySampler
     {
         var pose = GetPose(lineIndex, musicTime, rightSide, visiting, curveValues);
         var line = _source.JudgeLineList[lineIndex];
-        var scaleX = StellateGeometryConstants.FiniteOr(
+        var scaleX = FiniteOr(
             CurveValue(line.Extended?.ScaleXEvents, musicTime, rightSide, 1d, curveValues),
             1d
         );
-        var scaleY = StellateGeometryConstants.FiniteOr(
+        var scaleY = FiniteOr(
             CurveValue(line.Extended?.ScaleYEvents, musicTime, rightSide, 1d, curveValues),
             1d
         );
 
-        var imageWidth =
-            StellateGeometryConstants.TextureWidth
-            * scaleX
-            * StellateGeometryConstants.AspectWidth
-            / 1350d;
-        var imageHeight =
-            StellateGeometryConstants.TextureHeight
-            * scaleY
-            * StellateGeometryConstants.AspectWidth
-            / 1350d;
+        var imageWidth = TextureWidth * scaleX * AspectWidth / RenderWidth;
+        var imageHeight = TextureHeight * scaleY * AspectWidth / RenderWidth;
         var anchorX = line.Anchor is { Length: >= 2 } ? line.Anchor[0] : 0.5d;
         var anchorY = line.Anchor is { Length: >= 2 } ? line.Anchor[1] : 0.5d;
-        var lineScreenX =
-            StellateGeometryConstants.AspectWidth * 0.5d
-            + pose.X * StellateGeometryConstants.AspectWidth / 1350d;
-        var lineScreenY =
-            StellateGeometryConstants.AspectHeight * 0.5d
-            - pose.Y * StellateGeometryConstants.AspectHeight / 900d;
+        var lineScreenX = AspectWidth * 0.5d + pose.X * AspectWidth / RenderWidth;
+        var lineScreenY = AspectHeight * 0.5d - pose.Y * AspectHeight / RenderHeight;
         var deltaX = (0.5d - anchorX) * imageWidth;
         var deltaY = (anchorY - 0.5d) * imageHeight;
         var radians = pose.Rotation * Math.PI / 180d;
@@ -255,10 +283,10 @@ public sealed class StellateGeometrySampler
         var shiftY = deltaX * Math.Sin(radians) + deltaY * Math.Cos(radians);
 
         return new StellateBlockAreaGeometry(
-            (lineScreenX + shiftX) / StellateGeometryConstants.AspectWidth,
-            1d - (lineScreenY + shiftY) / StellateGeometryConstants.AspectHeight,
-            Math.Abs(imageWidth / StellateGeometryConstants.AspectWidth),
-            Math.Abs(imageHeight / StellateGeometryConstants.AspectHeight),
+            (lineScreenX + shiftX) / AspectWidth,
+            1d - (lineScreenY + shiftY) / AspectHeight,
+            Math.Abs(imageWidth / AspectWidth),
+            Math.Abs(imageHeight / AspectHeight),
             -pose.Rotation
         );
     }
@@ -277,46 +305,37 @@ public sealed class StellateGeometrySampler
         try
         {
             var line = _source.JudgeLineList[lineIndex];
-            var x = StellateGeometryConstants.FiniteOr(
-                SumLayerCurve(
-                    line,
-                    musicTime,
-                    rightSide,
-                    static layer => layer.MoveXEvents,
-                    curveValues
-                ),
-                0d
+            var x = FiniteLayerSum(
+                line,
+                musicTime,
+                rightSide,
+                static layer => layer.MoveXEvents,
+                curveValues
             );
-            var y = StellateGeometryConstants.FiniteOr(
-                SumLayerCurve(
-                    line,
-                    musicTime,
-                    rightSide,
-                    static layer => layer.MoveYEvents,
-                    curveValues
-                ),
-                0d
+            var y = FiniteLayerSum(
+                line,
+                musicTime,
+                rightSide,
+                static layer => layer.MoveYEvents,
+                curveValues
             );
-            var rotation = StellateGeometryConstants.FiniteOr(
-                SumLayerCurve(
-                    line,
-                    musicTime,
-                    rightSide,
-                    static layer => layer.RotateEvents,
-                    curveValues
-                ),
-                0d
+            var rotation = FiniteLayerSum(
+                line,
+                musicTime,
+                rightSide,
+                static layer => layer.RotateEvents,
+                curveValues
             );
 
-            if (line.Father < 0 || line.Father >= _source.JudgeLineList.Count)
+            if (!HasFather(line))
                 return (x, y, rotation);
             var father = GetPose(line.Father, musicTime, rightSide, visiting, curveValues);
             x += father.X;
             y += father.Y;
-            var parentPhysicalX = father.X * StellateGeometryConstants.AspectWidth / 1350d;
-            var parentPhysicalY = father.Y * StellateGeometryConstants.AspectHeight / 900d;
-            var childPhysicalX = x * StellateGeometryConstants.AspectWidth / 1350d;
-            var childPhysicalY = y * StellateGeometryConstants.AspectHeight / 900d;
+            var parentPhysicalX = father.X * AspectWidth / RenderWidth;
+            var parentPhysicalY = father.Y * AspectHeight / RenderHeight;
+            var childPhysicalX = x * AspectWidth / RenderWidth;
+            var childPhysicalY = y * AspectHeight / RenderHeight;
             (childPhysicalX, childPhysicalY) = RotatePoint(
                 childPhysicalX,
                 childPhysicalY,
@@ -324,8 +343,8 @@ public sealed class StellateGeometrySampler
                 parentPhysicalY,
                 -father.Rotation * Math.PI / 180d
             );
-            x = childPhysicalX * 1350d / StellateGeometryConstants.AspectWidth;
-            y = childPhysicalY * 900d / StellateGeometryConstants.AspectHeight;
+            x = childPhysicalX * RenderWidth / AspectWidth;
+            y = childPhysicalY * RenderHeight / AspectHeight;
             if (line.RotateWithFather)
                 rotation += father.Rotation;
 
@@ -355,12 +374,12 @@ public sealed class StellateGeometrySampler
         );
     }
 
-    private double SumLayerCurve(
+    private double FiniteLayerSum(
         RpeJudgeLine line,
         double musicTime,
         bool rightSide,
         Func<RpeEventLayer, List<RpeEvent>?> selector,
-        StellateCurveValueCache? curveValues = null
+        StellateCurveValueCache curveValues
     )
     {
         var total = 0d;
@@ -370,7 +389,7 @@ public sealed class StellateGeometrySampler
                 total += CurveValue(selector(layer), musicTime, rightSide, 0d, curveValues);
         }
 
-        return total;
+        return FiniteOr(total, 0d);
     }
 
     private double CurveValue(
@@ -385,48 +404,46 @@ public sealed class StellateGeometrySampler
             return defaultValue;
 
         if (!_curveIndexes.TryGetValue(events, out var curveIndex))
-            throw new InvalidOperationException("扩展曲线索引未初始化。");
+            throw StellateExceptions.CurveIndexMissing();
 
         if (curveValues is not null && curveValues.TryGetValue(curveIndex, out var cachedValue))
             return cachedValue;
 
         var (dominantIndex, previousIndex) = curveIndex.FindDominant(
             musicTime,
-            StellateGeometryConstants.CurveStartTimeEpsilon
+            CurveStartTimeEpsilon
         );
         if (dominantIndex < 0)
         {
-            var value = EventValueAtMusicTime(
+            return CacheValue(
+                curveValues,
                 curveIndex,
-                curveIndex.FirstIndex,
-                musicTime,
-                allowExtrapolation: true
+                EventValueAtMusicTime(
+                    curveIndex,
+                    curveIndex.FirstIndex,
+                    musicTime,
+                    allowExtrapolation: true
+                )
             );
-            curveValues?.SetValue(curveIndex, value);
-            return value;
         }
 
-        var dominant = curveIndex.GetEvent(dominantIndex);
         var dominantStartTime = curveIndex.GetStartTime(dominantIndex);
-        if (
-            !(
-                Math.Abs(musicTime - dominantStartTime)
-                <= StellateGeometryConstants.CurveStartTimeEpsilon
-            )
-        )
+        if (!(Math.Abs(musicTime - dominantStartTime) <= CurveStartTimeEpsilon))
         {
-            var value = EventValueAtMusicTime(
+            return CacheValue(
+                curveValues,
                 curveIndex,
-                dominantIndex,
-                musicTime,
-                allowExtrapolation: false
+                EventValueAtMusicTime(
+                    curveIndex,
+                    dominantIndex,
+                    musicTime,
+                    allowExtrapolation: false
+                )
             );
-            curveValues?.SetValue(curveIndex, value);
-            return value;
         }
-        if (rightSide)
-            return EventValueAtStart(curveIndex, dominantIndex);
-        return previousIndex < 0
+
+        // 恰好落在事件起点时，左侧取前一个事件的值，右侧取当前事件的起始值
+        return rightSide || previousIndex < 0
             ? EventValueAtStart(curveIndex, dominantIndex)
             : EventValueAtMusicTime(
                 curveIndex,
@@ -434,6 +451,16 @@ public sealed class StellateGeometrySampler
                 musicTime,
                 allowExtrapolation: false
             );
+    }
+
+    private static double CacheValue(
+        StellateCurveValueCache? curveValues,
+        StellateCurveIndex curveIndex,
+        double value
+    )
+    {
+        curveValues?.SetValue(curveIndex, value);
+        return value;
     }
 
     private static double EventValueAtStart(StellateCurveIndex curveIndex, int eventIndex)
@@ -463,68 +490,5 @@ public sealed class StellateGeometrySampler
         var progress = (time - startTime) / (endTime - startTime);
         var easedProgress = StellateRePhiEditEasing.Evaluate(evt, progress, !allowExtrapolation);
         return evt.StartValue + (evt.EndValue - evt.StartValue) * easedProgress;
-    }
-
-    /// <summary>
-    /// 收集判定线及其父级的位置和旋转事件边界。
-    /// </summary>
-    /// <param name="lineIndex">判定线索引</param>
-    /// <param name="beats">接收事件边界的拍数集合</param>
-    /// <param name="visited">记录已处理判定线的集合</param>
-    public void CollectPoseBreaks(int lineIndex, SortedSet<Beat> beats, HashSet<int> visited)
-    {
-        while (true)
-        {
-            if (!visited.Add(lineIndex))
-                return;
-            var line = _source.JudgeLineList[lineIndex];
-            foreach (var layer in line.EventLayers.OfType<RpeEventLayer>())
-            {
-                StellateBlockAreaPathBuilder.AddCurveBoundaries(layer.MoveXEvents, beats);
-                StellateBlockAreaPathBuilder.AddCurveBoundaries(layer.MoveYEvents, beats);
-                StellateBlockAreaPathBuilder.AddCurveBoundaries(layer.RotateEvents, beats);
-            }
-
-            if (line.Father >= 0 && line.Father < _source.JudgeLineList.Count)
-            {
-                lineIndex = line.Father;
-                continue;
-            }
-
-            break;
-        }
-    }
-
-    /// <summary>
-    /// 收集影响判定线旋转的事件边界。
-    /// </summary>
-    /// <param name="lineIndex">判定线索引</param>
-    /// <param name="beats">接收事件边界的拍数集合</param>
-    /// <param name="visited">记录已处理判定线的集合</param>
-    public void CollectRotationBreaks(int lineIndex, SortedSet<Beat> beats, HashSet<int> visited)
-    {
-        while (true)
-        {
-            if (!visited.Add(lineIndex))
-                return;
-
-            var line = _source.JudgeLineList[lineIndex];
-            foreach (var layer in line.EventLayers.OfType<RpeEventLayer>())
-            {
-                StellateBlockAreaPathBuilder.AddCurveBoundaries(layer.RotateEvents, beats);
-            }
-
-            if (
-                line.RotateWithFather
-                && line.Father >= 0
-                && line.Father < _source.JudgeLineList.Count
-            )
-            {
-                lineIndex = line.Father;
-                continue;
-            }
-
-            break;
-        }
     }
 }

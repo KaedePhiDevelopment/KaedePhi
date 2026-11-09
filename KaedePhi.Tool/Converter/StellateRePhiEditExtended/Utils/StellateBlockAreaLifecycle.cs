@@ -125,12 +125,7 @@ public static class StellateBlockAreaLifecycle
             }
 
             foreach (var note in line.Notes ?? [])
-            {
-                if (note.StartBeat > endBeat)
-                    endBeat = note.StartBeat;
-                if (note.EndBeat > endBeat)
-                    endBeat = note.EndBeat;
-            }
+                ExtendEndBeat(note.StartBeat, note.EndBeat, ref endBeat);
         }
 
         return endBeat;
@@ -142,11 +137,14 @@ public static class StellateBlockAreaLifecycle
         if (events is null)
             return;
         foreach (var evt in events)
-        {
-            if (evt.StartBeat > endBeat)
-                endBeat = evt.StartBeat;
-            if (evt.EndBeat > endBeat)
-                endBeat = evt.EndBeat;
-        }
+            ExtendEndBeat(evt.StartBeat, evt.EndBeat, ref endBeat);
+    }
+
+    private static void ExtendEndBeat(Beat startBeat, Beat candidateEndBeat, ref Beat endBeat)
+    {
+        if (startBeat > endBeat)
+            endBeat = startBeat;
+        if (candidateEndBeat > endBeat)
+            endBeat = candidateEndBeat;
     }
 }

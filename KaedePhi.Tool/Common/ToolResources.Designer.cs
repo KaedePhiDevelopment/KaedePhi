@@ -139,5 +139,338 @@ namespace KaedePhi.Tool.Common {
                 return ResourceManager.GetString("phigros_tail_event_sentinel_conflict", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域 {0} 的锚点变换后位置不是有限数值。.
+        /// </summary>
+        internal static string stellate_error_anchor_position_not_finite {
+            get {
+                return ResourceManager.GetString("stellate_error_anchor_position_not_finite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域 {0} 的锚点采样点超过上限 {1}。.
+        /// </summary>
+        internal static string stellate_error_anchor_samples_exceeded {
+            get {
+                return ResourceManager.GetString("stellate_error_anchor_samples_exceeded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域 {0} 的锚点采样步长无法推进。.
+        /// </summary>
+        internal static string stellate_error_anchor_step_stalled {
+            get {
+                return ResourceManager.GetString("stellate_error_anchor_step_stalled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域 {0} 的锚点事件时间无法转换。.
+        /// </summary>
+        internal static string stellate_error_anchor_time_invalid {
+            get {
+                return ResourceManager.GetString("stellate_error_anchor_time_invalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域列表不能包含 null。.
+        /// </summary>
+        internal static string stellate_error_block_area_null {
+            get {
+                return ResourceManager.GetString("stellate_error_block_area_null", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域 {0} 的中心坐标无法转换。.
+        /// </summary>
+        internal static string stellate_error_center_not_convertible {
+            get {
+                return ResourceManager.GetString("stellate_error_center_not_convertible", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域坐标必须是有限数值。.
+        /// </summary>
+        internal static string stellate_error_coordinates_not_finite {
+            get {
+                return ResourceManager.GetString("stellate_error_coordinates_not_finite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 扩展曲线索引未初始化。.
+        /// </summary>
+        internal static string stellate_error_curve_index_missing {
+            get {
+                return ResourceManager.GetString("stellate_error_curve_index_missing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 无法转换已验证的“{0}”噪域事件。.
+        /// </summary>
+        internal static string stellate_error_direct_curve_convert_failed {
+            get {
+                return ResourceManager.GetString("stellate_error_direct_curve_convert_failed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域 {0} 的{1}贝塞尔控制点无效。.
+        /// </summary>
+        internal static string stellate_error_event_bezier_invalid {
+            get {
+                return ResourceManager.GetString("stellate_error_event_bezier_invalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域 {0} 的{1}缓动类型不能为空。.
+        /// </summary>
+        internal static string stellate_error_event_easing_null {
+            get {
+                return ResourceManager.GetString("stellate_error_event_easing_null", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域 {0} 的{1}缓动范围必须是有限数值。.
+        /// </summary>
+        internal static string stellate_error_event_easing_range_not_finite {
+            get {
+                return ResourceManager.GetString("stellate_error_event_easing_range_not_finite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域 {0} 的{1}事件结束拍早于开始拍。.
+        /// </summary>
+        internal static string stellate_error_event_end_before_start {
+            get {
+                return ResourceManager.GetString("stellate_error_event_end_before_start", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域 {0} 的{1}事件值必须是有限数值。.
+        /// </summary>
+        internal static string stellate_error_event_value_not_finite {
+            get {
+                return ResourceManager.GetString("stellate_error_event_value_not_finite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域 {0} 的{1}事件值超出 RePhiEdit 可编码范围。.
+        /// </summary>
+        internal static string stellate_error_event_value_out_of_range {
+            get {
+                return ResourceManager.GetString("stellate_error_event_value_out_of_range", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RePhiEdit 判定线父级关系存在循环。.
+        /// </summary>
+        internal static string stellate_error_father_cycle {
+            get {
+                return ResourceManager.GetString("stellate_error_father_cycle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RePhiEdit 判定线 {0} 的父线索引无效。.
+        /// </summary>
+        internal static string stellate_error_father_index_invalid {
+            get {
+                return ResourceManager.GetString("stellate_error_father_index_invalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RePhiEdit 判定线 {0} 的父线索引无法映射。.
+        /// </summary>
+        internal static string stellate_error_father_unmapped {
+            get {
+                return ResourceManager.GetString("stellate_error_father_unmapped", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域 {0} 的显示阶段顺序无效，无法转换为 StellateRePhiEditExtended。.
+        /// </summary>
+        internal static string stellate_error_lifecycle_order_invalid {
+            get {
+                return ResourceManager.GetString("stellate_error_lifecycle_order_invalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域尺寸超出 RePhiEdit 可编码范围。.
+        /// </summary>
+        internal static string stellate_error_size_out_of_range {
+            get {
+                return ResourceManager.GetString("stellate_error_size_out_of_range", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域 {0} 的{1}事件列表不能包含 null。.
+        /// </summary>
+        internal static string stellate_error_track_event_null {
+            get {
+                return ResourceManager.GetString("stellate_error_track_event_null", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域 {0} 的{1}超出 RePhiEdit 可编码范围。.
+        /// </summary>
+        internal static string stellate_error_value_out_of_range {
+            get {
+                return ResourceManager.GetString("stellate_error_value_out_of_range", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to X 轴移动.
+        /// </summary>
+        internal static string stellate_track_move_x {
+            get {
+                return ResourceManager.GetString("stellate_track_move_x", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Y 轴移动.
+        /// </summary>
+        internal static string stellate_track_move_y {
+            get {
+                return ResourceManager.GetString("stellate_track_move_y", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 旋转.
+        /// </summary>
+        internal static string stellate_track_rotate {
+            get {
+                return ResourceManager.GetString("stellate_track_rotate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to X 轴旋转锚点.
+        /// </summary>
+        internal static string stellate_track_rotate_anchor_x {
+            get {
+                return ResourceManager.GetString("stellate_track_rotate_anchor_x", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Y 轴旋转锚点.
+        /// </summary>
+        internal static string stellate_track_rotate_anchor_y {
+            get {
+                return ResourceManager.GetString("stellate_track_rotate_anchor_y", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to X 轴缩放锚点.
+        /// </summary>
+        internal static string stellate_track_scale_anchor_x {
+            get {
+                return ResourceManager.GetString("stellate_track_scale_anchor_x", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Y 轴缩放锚点.
+        /// </summary>
+        internal static string stellate_track_scale_anchor_y {
+            get {
+                return ResourceManager.GetString("stellate_track_scale_anchor_y", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to X 轴缩放.
+        /// </summary>
+        internal static string stellate_track_scale_x {
+            get {
+                return ResourceManager.GetString("stellate_track_scale_x", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Y 轴缩放.
+        /// </summary>
+        internal static string stellate_track_scale_y {
+            get {
+                return ResourceManager.GetString("stellate_track_scale_y", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 高度.
+        /// </summary>
+        internal static string stellate_value_height {
+            get {
+                return ResourceManager.GetString("stellate_value_height", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 宽度.
+        /// </summary>
+        internal static string stellate_value_width {
+            get {
+                return ResourceManager.GetString("stellate_value_width", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 噪域 {0} 的锚点变换已按每拍 {1} 段采样并烘焙到位置事件；锚点事件本身不会保留。.
+        /// </summary>
+        internal static string stellate_warning_anchor_baked {
+            get {
+                return ResourceManager.GetString("stellate_warning_anchor_baked", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IR 判定线 {0} 使用了噪域标记纹理，导出后重新导入时会被转换为噪域。.
+        /// </summary>
+        internal static string stellate_warning_marker_texture_reimport {
+            get {
+                return ResourceManager.GetString("stellate_warning_marker_texture_reimport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to StellateRePhiEditExtended 判定线 {0} 的音符因转换为噪域而被忽略。.
+        /// </summary>
+        internal static string stellate_warning_notes_ignored {
+            get {
+                return ResourceManager.GetString("stellate_warning_notes_ignored", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to StellateRePhiEditExtended 判定线 {0} 的父级已转换为噪域，其父子变换无法保留。.
+        /// </summary>
+        internal static string stellate_warning_parent_converted {
+            get {
+                return ResourceManager.GetString("stellate_warning_parent_converted", resourceCulture);
+            }
+        }
     }
 }

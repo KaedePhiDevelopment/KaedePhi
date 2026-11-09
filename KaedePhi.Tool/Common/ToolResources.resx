@@ -38,4 +38,115 @@
   <data name="phigros_tail_event_sentinel_conflict" xml:space="preserve">
     <value>Phigros 映射时间与尾事件哨兵冲突。</value>
   </data>
+  <data name="stellate_warning_notes_ignored" xml:space="preserve">
+    <value>StellateRePhiEditExtended 判定线 {0} 的音符因转换为噪域而被忽略。</value>
+  </data>
+  <data name="stellate_warning_parent_converted" xml:space="preserve">
+    <value>StellateRePhiEditExtended 判定线 {0} 的父级已转换为噪域，其父子变换无法保留。</value>
+  </data>
+  <data name="stellate_warning_marker_texture_reimport" xml:space="preserve">
+    <value>IR 判定线 {0} 使用了噪域标记纹理，导出后重新导入时会被转换为噪域。</value>
+  </data>
+  <data name="stellate_warning_anchor_baked" xml:space="preserve">
+    <value>IR 噪域 {0} 的锚点变换已按每拍 {1} 段采样并烘焙到位置事件；锚点事件本身不会保留。</value>
+  </data>
+  <data name="stellate_error_block_area_null" xml:space="preserve">
+    <value>IR 噪域列表不能包含 null。</value>
+  </data>
+  <data name="stellate_error_father_index_invalid" xml:space="preserve">
+    <value>RePhiEdit 判定线 {0} 的父线索引无效。</value>
+  </data>
+  <data name="stellate_error_father_cycle" xml:space="preserve">
+    <value>RePhiEdit 判定线父级关系存在循环。</value>
+  </data>
+  <data name="stellate_error_father_unmapped" xml:space="preserve">
+    <value>RePhiEdit 判定线 {0} 的父线索引无法映射。</value>
+  </data>
+  <data name="stellate_error_anchor_position_not_finite" xml:space="preserve">
+    <value>IR 噪域 {0} 的锚点变换后位置不是有限数值。</value>
+  </data>
+  <data name="stellate_error_anchor_time_invalid" xml:space="preserve">
+    <value>IR 噪域 {0} 的锚点事件时间无法转换。</value>
+  </data>
+  <data name="stellate_error_anchor_step_stalled" xml:space="preserve">
+    <value>IR 噪域 {0} 的锚点采样步长无法推进。</value>
+  </data>
+  <data name="stellate_error_anchor_samples_exceeded" xml:space="preserve">
+    <value>IR 噪域 {0} 的锚点采样点超过上限 {1}。</value>
+  </data>
+  <data name="stellate_error_track_event_null" xml:space="preserve">
+    <value>IR 噪域 {0} 的{1}事件列表不能包含 null。</value>
+  </data>
+  <data name="stellate_error_event_end_before_start" xml:space="preserve">
+    <value>IR 噪域 {0} 的{1}事件结束拍早于开始拍。</value>
+  </data>
+  <data name="stellate_error_event_value_not_finite" xml:space="preserve">
+    <value>IR 噪域 {0} 的{1}事件值必须是有限数值。</value>
+  </data>
+  <data name="stellate_error_event_easing_range_not_finite" xml:space="preserve">
+    <value>IR 噪域 {0} 的{1}缓动范围必须是有限数值。</value>
+  </data>
+  <data name="stellate_error_event_easing_null" xml:space="preserve">
+    <value>IR 噪域 {0} 的{1}缓动类型不能为空。</value>
+  </data>
+  <data name="stellate_error_event_bezier_invalid" xml:space="preserve">
+    <value>IR 噪域 {0} 的{1}贝塞尔控制点无效。</value>
+  </data>
+  <data name="stellate_error_event_value_out_of_range" xml:space="preserve">
+    <value>IR 噪域 {0} 的{1}事件值超出 RePhiEdit 可编码范围。</value>
+  </data>
+  <data name="stellate_error_value_out_of_range" xml:space="preserve">
+    <value>IR 噪域 {0} 的{1}超出 RePhiEdit 可编码范围。</value>
+  </data>
+  <data name="stellate_error_center_not_convertible" xml:space="preserve">
+    <value>IR 噪域 {0} 的中心坐标无法转换。</value>
+  </data>
+  <data name="stellate_error_coordinates_not_finite" xml:space="preserve">
+    <value>IR 噪域坐标必须是有限数值。</value>
+  </data>
+  <data name="stellate_error_size_out_of_range" xml:space="preserve">
+    <value>IR 噪域尺寸超出 RePhiEdit 可编码范围。</value>
+  </data>
+  <data name="stellate_error_lifecycle_order_invalid" xml:space="preserve">
+    <value>IR 噪域 {0} 的显示阶段顺序无效，无法转换为 StellateRePhiEditExtended。</value>
+  </data>
+  <data name="stellate_error_curve_index_missing" xml:space="preserve">
+    <value>扩展曲线索引未初始化。</value>
+  </data>
+  <data name="stellate_error_direct_curve_convert_failed" xml:space="preserve">
+    <value>无法转换已验证的“{0}”噪域事件。</value>
+  </data>
+  <data name="stellate_track_move_x" xml:space="preserve">
+    <value>X 轴移动</value>
+  </data>
+  <data name="stellate_track_move_y" xml:space="preserve">
+    <value>Y 轴移动</value>
+  </data>
+  <data name="stellate_track_rotate" xml:space="preserve">
+    <value>旋转</value>
+  </data>
+  <data name="stellate_track_rotate_anchor_x" xml:space="preserve">
+    <value>X 轴旋转锚点</value>
+  </data>
+  <data name="stellate_track_rotate_anchor_y" xml:space="preserve">
+    <value>Y 轴旋转锚点</value>
+  </data>
+  <data name="stellate_track_scale_x" xml:space="preserve">
+    <value>X 轴缩放</value>
+  </data>
+  <data name="stellate_track_scale_y" xml:space="preserve">
+    <value>Y 轴缩放</value>
+  </data>
+  <data name="stellate_track_scale_anchor_x" xml:space="preserve">
+    <value>X 轴缩放锚点</value>
+  </data>
+  <data name="stellate_track_scale_anchor_y" xml:space="preserve">
+    <value>Y 轴缩放锚点</value>
+  </data>
+  <data name="stellate_value_width" xml:space="preserve">
+    <value>宽度</value>
+  </data>
+  <data name="stellate_value_height" xml:space="preserve">
+    <value>高度</value>
+  </data>
 </root>

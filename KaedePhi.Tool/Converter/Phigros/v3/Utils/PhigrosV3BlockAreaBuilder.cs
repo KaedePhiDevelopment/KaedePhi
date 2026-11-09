@@ -491,7 +491,7 @@ internal static class PhigrosV3BlockAreaBuilder
     private static bool ValuesEqual(double left, double right) =>
         Math.Abs(left - right) <= Constants.FloatEpsilon;
 
-    private static bool TryToAreaEase(IrEasing easing, out PhigrosAreaEaseType areaEaseType)
+    internal static bool TryToAreaEase(IrEasing easing, out PhigrosAreaEaseType areaEaseType)
     {
         areaEaseType = (int)easing switch
         {

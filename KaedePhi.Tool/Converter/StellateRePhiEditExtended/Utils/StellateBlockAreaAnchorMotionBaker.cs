@@ -31,59 +31,30 @@ public static class StellateBlockAreaAnchorMotionBaker
     {
         var baseCenterX = source.TopRightX / 2d + source.BottomLeftX / 2d;
         var baseCenterY = source.TopRightY / 2d + source.BottomLeftY / 2d;
-        var moveX = PrepareSamplingEvents(
-            source.MoveXEvents,
-            blockAreaIndex,
-            "X 轴移动",
-            cancellationToken
-        );
-        var moveY = PrepareSamplingEvents(
-            source.MoveYEvents,
-            blockAreaIndex,
-            "Y 轴移动",
-            cancellationToken
-        );
-        var rotate = PrepareSamplingEvents(
-            source.RotateEvents,
-            blockAreaIndex,
-            "旋转",
-            cancellationToken
-        );
-        var rotateAnchorX = PrepareSamplingEvents(
+
+        List<IrEvent> Prepare(List<IrEvent>? events, string trackName) =>
+            PrepareSamplingEvents(events, blockAreaIndex, trackName, cancellationToken);
+
+        var moveX = Prepare(source.MoveXEvents, ToolResources.stellate_track_move_x);
+        var moveY = Prepare(source.MoveYEvents, ToolResources.stellate_track_move_y);
+        var rotate = Prepare(source.RotateEvents, ToolResources.stellate_track_rotate);
+        var rotateAnchorX = Prepare(
             source.RotateAnchorXEvents,
-            blockAreaIndex,
-            "X 轴旋转锚点",
-            cancellationToken
+            ToolResources.stellate_track_rotate_anchor_x
         );
-        var rotateAnchorY = PrepareSamplingEvents(
+        var rotateAnchorY = Prepare(
             source.RotateAnchorYEvents,
-            blockAreaIndex,
-            "Y 轴旋转锚点",
-            cancellationToken
+            ToolResources.stellate_track_rotate_anchor_y
         );
-        var scaleX = PrepareSamplingEvents(
-            source.ScaleXEvents,
-            blockAreaIndex,
-            "X 轴缩放",
-            cancellationToken
-        );
-        var scaleY = PrepareSamplingEvents(
-            source.ScaleYEvents,
-            blockAreaIndex,
-            "Y 轴缩放",
-            cancellationToken
-        );
-        var scaleAnchorX = PrepareSamplingEvents(
+        var scaleX = Prepare(source.ScaleXEvents, ToolResources.stellate_track_scale_x);
+        var scaleY = Prepare(source.ScaleYEvents, ToolResources.stellate_track_scale_y);
+        var scaleAnchorX = Prepare(
             source.ScaleAnchorXEvents,
-            blockAreaIndex,
-            "X 轴缩放锚点",
-            cancellationToken
+            ToolResources.stellate_track_scale_anchor_x
         );
-        var scaleAnchorY = PrepareSamplingEvents(
+        var scaleAnchorY = Prepare(
             source.ScaleAnchorYEvents,
-            blockAreaIndex,
-            "Y 轴缩放锚点",
-            cancellationToken
+            ToolResources.stellate_track_scale_anchor_y
         );
         var tracks = new[]
         {
@@ -116,7 +87,7 @@ public static class StellateBlockAreaAnchorMotionBaker
             var scaleAnchorValueX = EvaluateAnchor(scaleAnchorX, beat, baseCenterX, rightSide);
             var scaleAnchorValueY = EvaluateAnchor(scaleAnchorY, beat, baseCenterY, rightSide);
 
-            // 锚点为绝对坐标：先变换原始中心，再叠加移动中心相对原始中心的偏移。
+            // 锚点为绝对坐标：先变换原始中心，再叠加移动中心相对原始中心的偏移
             var scaledCenterX = scaleAnchorValueX + (baseCenterX - scaleAnchorValueX) * scaleValueX;
             var scaledCenterY = scaleAnchorValueY + (baseCenterY - scaleAnchorValueY) * scaleValueY;
             var rotatedOffset = CoordinateGeometry.RotateIrOffset(
@@ -127,9 +98,7 @@ public static class StellateBlockAreaAnchorMotionBaker
             var centerX = rotationAnchorValueX + rotatedOffset.X + moveCenterX - baseCenterX;
             var centerY = rotationAnchorValueY + rotatedOffset.Y + moveCenterY - baseCenterY;
             if (!double.IsFinite(centerX) || !double.IsFinite(centerY))
-                throw new FormatException(
-                    $"IR 噪域 {blockAreaIndex} 的锚点变换后位置不是有限数值。"
-                );
+                throw StellateExceptions.AnchorPositionNotFinite(blockAreaIndex);
 
             return (centerX, centerY);
         }
@@ -168,19 +137,16 @@ public static class StellateBlockAreaAnchorMotionBaker
     )
     {
         var beats = new SortedSet<Beat> { StellateBlockAreaConstants.ZeroBeat };
-        foreach (var events in tracks)
+        foreach (var evt in tracks.SelectMany(events => events))
         {
-            foreach (var evt in events)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                AddBoundary(evt.StartBeat);
-                AddBoundary(evt.EndBeat);
-            }
+            cancellationToken.ThrowIfCancellationRequested();
+            AddBoundary(evt.StartBeat);
+            AddBoundary(evt.EndBeat);
         }
 
         var endBeat = (double)beats.Max;
         if (!double.IsFinite(endBeat))
-            throw new FormatException($"IR 噪域 {blockAreaIndex} 的锚点事件时间无法转换。");
+            throw StellateExceptions.AnchorTimeInvalid(blockAreaIndex);
 
         var step = 1d / samplingPrecision;
         var currentBeat = 0d;
@@ -189,12 +155,9 @@ public static class StellateBlockAreaAnchorMotionBaker
             cancellationToken.ThrowIfCancellationRequested();
             var nextBeat = Math.Min(currentBeat + step, endBeat);
             if (!double.IsFinite(nextBeat) || nextBeat <= currentBeat)
-                throw new FormatException($"IR 噪域 {blockAreaIndex} 的锚点采样步长无法推进。");
+                throw StellateExceptions.AnchorStepStalled(blockAreaIndex);
             beats.Add(new Beat(nextBeat));
-            if (beats.Count > StellateBlockAreaConstants.MaximumAnchorSamples)
-                throw new FormatException(
-                    $"IR 噪域 {blockAreaIndex} 的锚点采样点超过上限 {StellateBlockAreaConstants.MaximumAnchorSamples}。"
-                );
+            EnsureSampleLimit();
             currentBeat = nextBeat;
         }
 
@@ -202,13 +165,16 @@ public static class StellateBlockAreaAnchorMotionBaker
 
         void AddBoundary(Beat beat)
         {
-            if (
-                beat > StellateBlockAreaConstants.ZeroBeat
-                && beats.Add(beat)
-                && beats.Count > StellateBlockAreaConstants.MaximumAnchorSamples
-            )
-                throw new FormatException(
-                    $"IR 噪域 {blockAreaIndex} 的锚点采样点超过上限 {StellateBlockAreaConstants.MaximumAnchorSamples}。"
+            if (beat > StellateBlockAreaConstants.ZeroBeat && beats.Add(beat))
+                EnsureSampleLimit();
+        }
+
+        void EnsureSampleLimit()
+        {
+            if (beats.Count > StellateBlockAreaConstants.MaximumAnchorSamples)
+                throw StellateExceptions.AnchorSamplesExceeded(
+                    blockAreaIndex,
+                    StellateBlockAreaConstants.MaximumAnchorSamples
                 );
         }
     }
@@ -272,30 +238,22 @@ public static class StellateBlockAreaAnchorMotionBaker
         int blockAreaIndex,
         string trackName,
         CancellationToken cancellationToken
-    )
-    {
-        if (source is not { Count: > 0 })
-            return [];
-
-        var ordered = new List<(IrEvent Event, int Index)>(source.Count);
-        for (var index = 0; index < source.Count; index++)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var evt = source[index];
-            if (evt is null)
-                throw new FormatException(
-                    $"IR 噪域 {blockAreaIndex} 的{trackName}事件列表不能包含 null。"
-                );
-            StellateBlockAreaEventConverter.ValidateEventFields(evt, blockAreaIndex, trackName);
-            ordered.Add((evt, index));
-        }
-
-        return ordered
-            .OrderBy(item => item.Event.StartBeat)
-            .ThenBy(item => item.Index)
-            .Select(item => item.Event)
-            .ToList();
-    }
+    ) =>
+        source is not { Count: > 0 }
+            ? []
+            : StellateBlockAreaEventConverter.ValidateAndSort(
+                source,
+                blockAreaIndex,
+                trackName,
+                evt =>
+                    StellateBlockAreaEventConverter.ValidateEventFields(
+                        evt,
+                        blockAreaIndex,
+                        trackName
+                    ),
+                thenByEndBeat: false,
+                cancellationToken
+            );
 
     private static double EvaluateAnchor(
         IReadOnlyList<IrEvent> events,

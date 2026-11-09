@@ -1,4 +1,3 @@
-using System.Runtime.ExceptionServices;
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter.Phigros.v3.Utils;
@@ -47,118 +46,9 @@ public sealed class StellateRePhiEditExtendedConverter
         foreach (var item in blockAreaLines)
             isBlockAreaLine[item.Index] = true;
 
-        var baseSource = new RpeChart
-        {
-            BpmList = source.BpmList,
-            Meta = source.Meta,
-            JudgeLineList =
-            [
-                .. sourceLines.Select(
-                    (line, index) =>
-                        isBlockAreaLine[index] ? new RpeJudgeLine { Father = line.Father } : line
-                ),
-            ],
-        };
-        var baseConverter = new RePhiEditConverter
-        {
-            OnInfo = OnInfo,
-            OnWarning = OnWarning,
-            OnError = OnError,
-            OnDebug = OnDebug,
-        };
-        baseConverter.SetCancellationToken(_ct);
-        var converted = baseConverter.ToIr(baseSource, null);
-        var convertedLines = converted.JudgeLineList;
-
-        var beatMapper = CreateBeatMapper(converted);
-        var geometryConverter = new StellateRePhiEditGeometry(source, beatMapper, _ct);
-        var blockAreas = new List<IrBlockArea>(blockAreaLines.Count);
-        foreach (var item in blockAreaLines)
-        {
-            _ct.ThrowIfCancellationRequested();
-            geometryConverter.PrepareLine(item.Index);
-            if (item.Line.Notes is { Count: > 0 })
-                LogWarning(
-                    $"StellateRePhiEditExtended 判定线 {item.Index} 的音符因转换为噪域而被忽略。"
-                );
-        }
-
-        switch (blockAreaLines.Count)
-        {
-            case 1:
-                blockAreas.AddRange(geometryConverter.ConvertLine(blockAreaLines[0].Index));
-                break;
-            case > 1:
-            {
-                var convertedBlockAreas = new List<IrBlockArea>[blockAreaLines.Count];
-                var sampleParallelism = Math.Max(
-                    1,
-                    Environment.ProcessorCount / blockAreaLines.Count
-                );
-                try
-                {
-                    Parallel.For(
-                        0,
-                        blockAreaLines.Count,
-                        new ParallelOptions
-                        {
-                            CancellationToken = _ct,
-                            MaxDegreeOfParallelism = Environment.ProcessorCount,
-                        },
-                        index =>
-                        {
-                            convertedBlockAreas[index] = geometryConverter.ConvertLine(
-                                blockAreaLines[index].Index,
-                                sampleParallelism
-                            );
-                        }
-                    );
-                }
-                catch (AggregateException exception)
-                {
-                    var failures = exception.Flatten().InnerExceptions;
-                    if (failures.Count == 1)
-                        ExceptionDispatchInfo.Capture(failures[0]).Throw();
-
-                    throw;
-                }
-
-                foreach (var convertedBlockArea in convertedBlockAreas)
-                    blockAreas.AddRange(convertedBlockArea);
-                break;
-            }
-        }
-
-        var oldToNewIndex = new int[sourceLines.Count];
-        Array.Fill(oldToNewIndex, -1);
-        var retainedLines = new List<Ir.JudgeLine>(sourceLines.Count - blockAreaLines.Count);
-        var retainedSourceIndices = new List<int>(retainedLines.Capacity);
-        for (var index = 0; index < convertedLines.Count; index++)
-        {
-            _ct.ThrowIfCancellationRequested();
-            if (isBlockAreaLine[index])
-                continue;
-            oldToNewIndex[index] = retainedLines.Count;
-            retainedSourceIndices.Add(index);
-            retainedLines.Add(convertedLines[index]);
-        }
-
-        for (var index = 0; index < retainedLines.Count; index++)
-        {
-            _ct.ThrowIfCancellationRequested();
-            var sourceIndex = retainedSourceIndices[index];
-            retainedLines[index].Father = MapFather(
-                sourceLines,
-                isBlockAreaLine,
-                oldToNewIndex,
-                sourceIndex,
-                out var skippedBlockAreaParent
-            );
-            if (skippedBlockAreaParent)
-                LogWarning(
-                    $"StellateRePhiEditExtended 判定线 {sourceIndex} 的父级已转换为噪域，其父子变换无法保留。"
-                );
-        }
+        var converted = ConvertRegularLines(source, isBlockAreaLine);
+        var blockAreas = ConvertBlockAreaLines(source, blockAreaLines, CreateBeatMapper(converted));
+        var retainedLines = RetainJudgeLines(sourceLines, isBlockAreaLine, converted.JudgeLineList);
 
         return IrChartNormalizer.NormalizeAndValidateNoteEndBeats(
             new IrChart
@@ -192,15 +82,7 @@ public sealed class StellateRePhiEditExtendedConverter
         _ct.ThrowIfCancellationRequested();
 
         var normalized = IrChartNormalizer.NormalizeAndValidateNoteEndBeats(input);
-        var baseConverter = new RePhiEditConverter
-        {
-            OnInfo = OnInfo,
-            OnWarning = OnWarning,
-            OnError = OnError,
-            OnDebug = OnDebug,
-        };
-        baseConverter.SetCancellationToken(_ct);
-        var converted = baseConverter.FromIr(normalized, options);
+        var converted = CreateBaseConverter().FromIr(normalized, options);
 
         for (var index = 0; index < normalized.JudgeLineList.Count; index++)
         {
@@ -211,17 +93,16 @@ public sealed class StellateRePhiEditExtendedConverter
                 )
             )
                 LogWarning(
-                    $"IR 判定线 {index} 使用了噪域标记纹理，导出后重新导入时会被转换为噪域。"
+                    string.Format(ToolResources.stellate_warning_marker_texture_reimport, index)
                 );
         }
 
         for (var index = 0; index < normalized.BlockAreaList.Count; index++)
         {
             _ct.ThrowIfCancellationRequested();
-            var blockArea = normalized.BlockAreaList[index];
-            if (blockArea is null)
-                throw new FormatException("IR 噪域列表不能包含 null。");
-
+            var blockArea =
+                normalized.BlockAreaList[index]
+                ?? throw StellateExceptions.BlockAreaListContainsNull();
             converted.JudgeLineList.Add(
                 StellateRePhiEditExtendedBlockAreaBuilder.ConvertBlockArea(
                     blockArea,
@@ -236,6 +117,123 @@ public sealed class StellateRePhiEditExtendedConverter
         return converted;
     }
 
+    private RePhiEditConverter CreateBaseConverter()
+    {
+        var converter = new RePhiEditConverter
+        {
+            OnInfo = OnInfo,
+            OnWarning = OnWarning,
+            OnError = OnError,
+            OnDebug = OnDebug,
+        };
+        converter.SetCancellationToken(_ct);
+        return converter;
+    }
+
+    // 噪域标记判定线以空判定线占位，普通判定线交给 RePhiEdit 转换器处理
+    private IrChart ConvertRegularLines(RpeChart source, bool[] isBlockAreaLine)
+    {
+        var regularSource = new RpeChart
+        {
+            BpmList = source.BpmList,
+            Meta = source.Meta,
+            JudgeLineList =
+            [
+                .. source.JudgeLineList.Select(
+                    (line, index) =>
+                        isBlockAreaLine[index] ? new RpeJudgeLine { Father = line.Father } : line
+                ),
+            ],
+        };
+        return CreateBaseConverter().ToIr(regularSource, null);
+    }
+
+    private List<IrBlockArea> ConvertBlockAreaLines(
+        RpeChart source,
+        List<(RpeJudgeLine Line, int Index)> blockAreaLines,
+        PhigrosV3TimeMapper beatMapper
+    )
+    {
+        var geometryConverter = new StellateRePhiEditGeometry(source, beatMapper, _ct);
+        foreach (var (line, index) in blockAreaLines)
+        {
+            _ct.ThrowIfCancellationRequested();
+            geometryConverter.PrepareLine(index);
+            if (line.Notes is { Count: > 0 })
+                LogWarning(string.Format(ToolResources.stellate_warning_notes_ignored, index));
+        }
+
+        if (blockAreaLines.Count <= 1)
+            return
+            [
+                .. blockAreaLines.SelectMany(item => geometryConverter.ConvertLine(item.Index)),
+            ];
+
+        var convertedBlockAreas = new List<IrBlockArea>[blockAreaLines.Count];
+        var sampleParallelism = Math.Max(1, Environment.ProcessorCount / blockAreaLines.Count);
+        StellateParallel.Run(() =>
+            Parallel.For(
+                0,
+                blockAreaLines.Count,
+                new ParallelOptions
+                {
+                    CancellationToken = _ct,
+                    MaxDegreeOfParallelism = Environment.ProcessorCount,
+                },
+                index =>
+                {
+                    convertedBlockAreas[index] = geometryConverter.ConvertLine(
+                        blockAreaLines[index].Index,
+                        sampleParallelism
+                    );
+                }
+            )
+        );
+
+        return [.. convertedBlockAreas.SelectMany(blockAreas => blockAreas)];
+    }
+
+    // 移除噪域标记判定线，并把保留判定线的父级重新映射到新索引
+    private List<Ir.JudgeLine> RetainJudgeLines(
+        List<RpeJudgeLine> sourceLines,
+        bool[] isBlockAreaLine,
+        List<Ir.JudgeLine> convertedLines
+    )
+    {
+        var oldToNewIndex = new int[sourceLines.Count];
+        Array.Fill(oldToNewIndex, -1);
+        var retainedLines = new List<Ir.JudgeLine>();
+        var retainedSourceIndices = new List<int>();
+        for (var index = 0; index < convertedLines.Count; index++)
+        {
+            _ct.ThrowIfCancellationRequested();
+            if (isBlockAreaLine[index])
+                continue;
+            oldToNewIndex[index] = retainedLines.Count;
+            retainedSourceIndices.Add(index);
+            retainedLines.Add(convertedLines[index]);
+        }
+
+        for (var index = 0; index < retainedLines.Count; index++)
+        {
+            _ct.ThrowIfCancellationRequested();
+            var sourceIndex = retainedSourceIndices[index];
+            var (father, skippedBlockAreaParent) = MapFather(
+                sourceLines,
+                isBlockAreaLine,
+                oldToNewIndex,
+                sourceIndex
+            );
+            retainedLines[index].Father = father;
+            if (skippedBlockAreaParent)
+                LogWarning(
+                    string.Format(ToolResources.stellate_warning_parent_converted, sourceIndex)
+                );
+        }
+
+        return retainedLines;
+    }
+
     private static PhigrosV3TimeMapper CreateBeatMapper(IrChart chart)
     {
         var bpmList =
@@ -245,34 +243,37 @@ public sealed class StellateRePhiEditExtendedConverter
         return new PhigrosV3TimeMapper(bpmList);
     }
 
-    private static int MapFather(
+    private static (int Father, bool SkippedBlockAreaParent) MapFather(
         List<RpeJudgeLine> sourceLines,
         bool[] isBlockAreaLine,
         int[] oldToNewIndex,
-        int sourceIndex,
-        out bool skippedBlockAreaParent
+        int sourceIndex
     )
     {
-        skippedBlockAreaParent = false;
-        var father = sourceLines[sourceIndex].Father;
-        if (father < -1 || father >= sourceLines.Count)
-            throw new FormatException($"RePhiEdit 判定线 {sourceIndex} 的父线索引无效。");
-
+        var father = GetFather(sourceIndex);
+        var skippedBlockAreaParent = false;
         var visited = new HashSet<int>();
         while (father >= 0 && isBlockAreaLine[father])
         {
             if (!visited.Add(father))
-                throw new FormatException("RePhiEdit 判定线父级关系存在循环。");
+                throw StellateExceptions.FatherCycle();
             skippedBlockAreaParent = true;
-            father = sourceLines[father].Father;
-            if (father < -1 || father >= sourceLines.Count)
-                throw new FormatException($"RePhiEdit 判定线 {sourceIndex} 的父线索引无效。");
+            father = GetFather(father);
         }
 
         if (father < 0)
-            return -1;
+            return (-1, skippedBlockAreaParent);
         if (oldToNewIndex[father] < 0)
-            throw new FormatException($"RePhiEdit 判定线 {sourceIndex} 的父线索引无法映射。");
-        return oldToNewIndex[father];
+            throw StellateExceptions.FatherUnmapped(sourceIndex);
+        return (oldToNewIndex[father], skippedBlockAreaParent);
+
+        // 父线索引无效时始终报告起始判定线，便于定位问题
+        int GetFather(int lineIndex)
+        {
+            var value = sourceLines[lineIndex].Father;
+            return value < -1 || value >= sourceLines.Count
+                ? throw StellateExceptions.InvalidFatherIndex(sourceIndex)
+                : value;
+        }
     }
 }

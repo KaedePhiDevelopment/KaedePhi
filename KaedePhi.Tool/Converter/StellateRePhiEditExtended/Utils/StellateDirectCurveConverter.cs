@@ -1,6 +1,5 @@
 using KaedePhi.Core.Primitives;
 using IrEvent = KaedePhi.Core.Intermediate.Model.Events.Event<double>;
-using RpeEasing = KaedePhi.Core.Formats.RePhiEdit.Model.Easing;
 using RpeEasingConverter = KaedePhi.Tool.Converter.RePhiEdit.Utils.EasingConverter;
 using RpeEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<float>;
 using RpeEventBuilder = KaedePhi.Tool.Converter.RePhiEdit.Utils.EventBuilder;
@@ -72,43 +71,8 @@ public static class StellateDirectCurveConverter
         if (!CanConvertDirectCurve(events))
             return false;
 
-        var result = events
-            .Select((evt, index) => (Event: evt, Index: index))
-            .OrderBy(item => item.Event.StartBeat)
-            .ThenBy(item => item.Event.EndBeat)
-            .ThenBy(item => item.Index)
-            .Select(item =>
-            {
-                var evt = item.Event;
-                if (evt.BezierPoints is null)
-                {
-                    evt = new RpeEvent
-                    {
-                        IsBezier = false,
-                        BezierPoints = [],
-                        Easing = evt.Easing,
-                        EasingLeft = evt.EasingLeft,
-                        EasingRight = evt.EasingRight,
-                        StartValue = evt.StartValue,
-                        EndValue = evt.EndValue,
-                        StartBeat = new Beat((int[])evt.StartBeat),
-                        EndBeat = new Beat((int[])evt.EndBeat),
-                        Font = evt.Font,
-                    };
-                }
-
-                var convertedEvent = RpeEventBuilder.ConvertFloatToDoubleEvent(evt, valueTransform);
-                convertedEvent.IsBezier = false;
-                convertedEvent.EasingLeft = 0f;
-                convertedEvent.EasingRight = 1f;
-                convertedEvent.Easing = new Ir.Easing(
-                    RpeEasingConverter.MapToIr(
-                        new RpeEasing(StellateRePhiEditEasing.NormalizeType((int)evt.Easing))
-                    )
-                );
-                return convertedEvent;
-            })
-            .ToList();
+        var result = OrderEvents(events)
+            .ConvertAll(evt => ConvertDirectEvent(evt, valueTransform));
         if (
             result.Any(evt =>
                 Math.Abs(evt.StartValue - initialValue) > StellateGeometryConstants.ValueEpsilon
@@ -149,21 +113,16 @@ public static class StellateDirectCurveConverter
         if (!CanPreserveNativeEasings(events))
             return false;
 
-        var ordered = events
-            .Select((evt, index) => (Event: evt, Index: index))
-            .OrderBy(item => item.Event.StartBeat)
-            .ThenBy(item => item.Event.EndBeat)
-            .ThenBy(item => item.Index)
-            .ToList();
-        if (ordered[0].Event.StartBeat > new Beat(0))
+        var ordered = OrderEvents(events);
+        if (ordered[0].StartBeat > StellateBlockAreaConstants.ZeroBeat)
             return false;
 
         for (var index = 0; index < ordered.Count; index++)
         {
-            var current = ordered[index].Event;
+            var current = ordered[index];
             if (current.StartBeat > current.EndBeat)
                 return false;
-            if (index > 0 && current.StartBeat < ordered[index - 1].Event.EndBeat)
+            if (index > 0 && current.StartBeat < ordered[index - 1].EndBeat)
                 return false;
         }
 
@@ -190,27 +149,22 @@ public static class StellateDirectCurveConverter
         if (events is not { Count: > 1 })
             return events;
 
-        var ordered = events
-            .Select((evt, index) => (Event: evt, Index: index))
-            .OrderBy(item => item.Event.StartBeat)
-            .ThenBy(item => item.Event.EndBeat)
-            .ThenBy(item => item.Index)
-            .ToList();
+        var ordered = OrderEvents(events);
         var result = new List<RpeEvent>(ordered.Count);
         for (var index = 0; index < ordered.Count; index++)
         {
-            var current = ordered[index].Event;
+            var current = ordered[index];
             var isRedundantConstant =
                 Math.Abs(current.StartValue - current.EndValue)
                     <= StellateGeometryConstants.ValueEpsilon
                 && ordered
                     .Skip(index + 1)
-                    .Any(item =>
-                        item.Event.StartBeat == current.StartBeat
-                        && item.Event.EndBeat >= current.EndBeat
-                        && Math.Abs(item.Event.StartValue - current.StartValue)
+                    .Any(later =>
+                        later.StartBeat == current.StartBeat
+                        && later.EndBeat >= current.EndBeat
+                        && Math.Abs(later.StartValue - current.StartValue)
                             <= StellateGeometryConstants.ValueEpsilon
-                        && Math.Abs(item.Event.EndValue - current.EndValue)
+                        && Math.Abs(later.EndValue - current.EndValue)
                             <= StellateGeometryConstants.ValueEpsilon
                     );
             if (!isRedundantConstant)
@@ -233,7 +187,7 @@ public static class StellateDirectCurveConverter
         if (events.Count == 0)
             return false;
 
-        var boundaries = new SortedSet<Beat> { new(0) };
+        var boundaries = new SortedSet<Beat> { StellateBlockAreaConstants.ZeroBeat };
         foreach (var evt in events)
         {
             boundaries.Add(evt.StartBeat);
@@ -320,4 +274,38 @@ public static class StellateDirectCurveConverter
             Math.Abs(evt.StartValue) <= StellateGeometryConstants.ValueEpsilon
             && Math.Abs(evt.EndValue) <= StellateGeometryConstants.ValueEpsilon
         );
+
+    // 按开始拍、结束拍排序；排序是稳定的，区间相同的事件保持原有顺序
+    private static List<RpeEvent> OrderEvents(IEnumerable<RpeEvent> events) =>
+        events.OrderBy(evt => evt.StartBeat).ThenBy(evt => evt.EndBeat).ToList();
+
+    private static IrEvent ConvertDirectEvent(RpeEvent evt, Func<float, double> valueTransform)
+    {
+        if (evt.BezierPoints is null)
+            evt = CopyWithEmptyBezierPoints(evt);
+
+        var converted = RpeEventBuilder.ConvertFloatToDoubleEvent(evt, valueTransform);
+        converted.IsBezier = false;
+        converted.EasingLeft = 0f;
+        converted.EasingRight = 1f;
+        converted.Easing = new Ir.Easing(
+            RpeEasingConverter.MapToIr(StellateRePhiEditEasing.NormalizeType((int)evt.Easing))
+        );
+        return converted;
+    }
+
+    private static RpeEvent CopyWithEmptyBezierPoints(RpeEvent evt) =>
+        new()
+        {
+            IsBezier = false,
+            BezierPoints = [],
+            Easing = evt.Easing,
+            EasingLeft = evt.EasingLeft,
+            EasingRight = evt.EasingRight,
+            StartValue = evt.StartValue,
+            EndValue = evt.EndValue,
+            StartBeat = new Beat((int[])evt.StartBeat),
+            EndBeat = new Beat((int[])evt.EndBeat),
+            Font = evt.Font,
+        };
 }

@@ -10,7 +10,7 @@ public static class StellateBlockAreaConstants
     /// <summary>
     /// 噪域事件比较使用的数值容差。
     /// </summary>
-    public const double ValueEpsilon = 1e-10d;
+    public const double ValueEpsilon = StellateGeometryConstants.ValueEpsilon;
 
     /// <summary>
     /// 锚点采样允许生成的最大采样点数。

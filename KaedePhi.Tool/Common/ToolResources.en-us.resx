@@ -38,4 +38,115 @@
   <data name="phigros_tail_event_sentinel_conflict" xml:space="preserve">
     <value>Phigros mapped time conflicts with the tail-event sentinel.</value>
   </data>
+  <data name="stellate_warning_notes_ignored" xml:space="preserve">
+    <value>Notes on StellateRePhiEditExtended judge line {0} are ignored because the line is converted to a block area.</value>
+  </data>
+  <data name="stellate_warning_parent_converted" xml:space="preserve">
+    <value>The parent of StellateRePhiEditExtended judge line {0} was converted to a block area, so the parent-child transform cannot be preserved.</value>
+  </data>
+  <data name="stellate_warning_marker_texture_reimport" xml:space="preserve">
+    <value>IR judge line {0} uses a block area marker texture and will be converted to a block area when the exported chart is imported again.</value>
+  </data>
+  <data name="stellate_warning_anchor_baked" xml:space="preserve">
+    <value>The anchor transform of IR block area {0} was sampled at {1} segments per beat and baked into position events; the anchor events themselves are not preserved.</value>
+  </data>
+  <data name="stellate_error_block_area_null" xml:space="preserve">
+    <value>IR block area list cannot contain null.</value>
+  </data>
+  <data name="stellate_error_father_index_invalid" xml:space="preserve">
+    <value>RePhiEdit judge line {0} has an invalid parent index.</value>
+  </data>
+  <data name="stellate_error_father_cycle" xml:space="preserve">
+    <value>The RePhiEdit judge line parent hierarchy contains a cycle.</value>
+  </data>
+  <data name="stellate_error_father_unmapped" xml:space="preserve">
+    <value>The parent index of RePhiEdit judge line {0} cannot be mapped.</value>
+  </data>
+  <data name="stellate_error_anchor_position_not_finite" xml:space="preserve">
+    <value>The position of IR block area {0} after the anchor transform is not a finite number.</value>
+  </data>
+  <data name="stellate_error_anchor_time_invalid" xml:space="preserve">
+    <value>The anchor event time of IR block area {0} cannot be converted.</value>
+  </data>
+  <data name="stellate_error_anchor_step_stalled" xml:space="preserve">
+    <value>The anchor sampling step of IR block area {0} cannot advance.</value>
+  </data>
+  <data name="stellate_error_anchor_samples_exceeded" xml:space="preserve">
+    <value>The anchor sample count of IR block area {0} exceeds the limit of {1}.</value>
+  </data>
+  <data name="stellate_error_track_event_null" xml:space="preserve">
+    <value>The {1} event list of IR block area {0} cannot contain null.</value>
+  </data>
+  <data name="stellate_error_event_end_before_start" xml:space="preserve">
+    <value>A {1} event of IR block area {0} ends before it starts.</value>
+  </data>
+  <data name="stellate_error_event_value_not_finite" xml:space="preserve">
+    <value>The {1} event values of IR block area {0} must be finite numbers.</value>
+  </data>
+  <data name="stellate_error_event_easing_range_not_finite" xml:space="preserve">
+    <value>The {1} easing range of IR block area {0} must consist of finite numbers.</value>
+  </data>
+  <data name="stellate_error_event_easing_null" xml:space="preserve">
+    <value>The {1} easing type of IR block area {0} cannot be null.</value>
+  </data>
+  <data name="stellate_error_event_bezier_invalid" xml:space="preserve">
+    <value>The {1} Bezier control points of IR block area {0} are invalid.</value>
+  </data>
+  <data name="stellate_error_event_value_out_of_range" xml:space="preserve">
+    <value>The {1} event values of IR block area {0} are outside the range RePhiEdit can encode.</value>
+  </data>
+  <data name="stellate_error_value_out_of_range" xml:space="preserve">
+    <value>The {1} of IR block area {0} is outside the range RePhiEdit can encode.</value>
+  </data>
+  <data name="stellate_error_center_not_convertible" xml:space="preserve">
+    <value>The center coordinates of IR block area {0} cannot be converted.</value>
+  </data>
+  <data name="stellate_error_coordinates_not_finite" xml:space="preserve">
+    <value>IR block area coordinates must be finite numbers.</value>
+  </data>
+  <data name="stellate_error_size_out_of_range" xml:space="preserve">
+    <value>The IR block area size is outside the range RePhiEdit can encode.</value>
+  </data>
+  <data name="stellate_error_lifecycle_order_invalid" xml:space="preserve">
+    <value>The display phase order of IR block area {0} is invalid and cannot be converted to StellateRePhiEditExtended.</value>
+  </data>
+  <data name="stellate_error_curve_index_missing" xml:space="preserve">
+    <value>The extended curve index is not initialized.</value>
+  </data>
+  <data name="stellate_error_direct_curve_convert_failed" xml:space="preserve">
+    <value>Failed to convert the validated "{0}" block area event.</value>
+  </data>
+  <data name="stellate_track_move_x" xml:space="preserve">
+    <value>X-axis movement</value>
+  </data>
+  <data name="stellate_track_move_y" xml:space="preserve">
+    <value>Y-axis movement</value>
+  </data>
+  <data name="stellate_track_rotate" xml:space="preserve">
+    <value>rotation</value>
+  </data>
+  <data name="stellate_track_rotate_anchor_x" xml:space="preserve">
+    <value>X-axis rotation anchor</value>
+  </data>
+  <data name="stellate_track_rotate_anchor_y" xml:space="preserve">
+    <value>Y-axis rotation anchor</value>
+  </data>
+  <data name="stellate_track_scale_x" xml:space="preserve">
+    <value>X-axis scale</value>
+  </data>
+  <data name="stellate_track_scale_y" xml:space="preserve">
+    <value>Y-axis scale</value>
+  </data>
+  <data name="stellate_track_scale_anchor_x" xml:space="preserve">
+    <value>X-axis scale anchor</value>
+  </data>
+  <data name="stellate_track_scale_anchor_y" xml:space="preserve">
+    <value>Y-axis scale anchor</value>
+  </data>
+  <data name="stellate_value_width" xml:space="preserve">
+    <value>width</value>
+  </data>
+  <data name="stellate_value_height" xml:space="preserve">
+    <value>height</value>
+  </data>
 </root>

@@ -14,6 +14,7 @@ using IrJudgeLine = KaedePhi.Core.Intermediate.Model.JudgeLine;
 using PhigrosAreaEase = KaedePhi.Core.Formats.Phigros.v3.Model.AreaEase;
 using PhigrosAreaEaseType = KaedePhi.Core.Formats.Phigros.v3.Model.AreaEaseType;
 using PhigrosBlockArea = KaedePhi.Core.Formats.Phigros.v3.Model.BlockArea;
+using PhiEditEasings = KaedePhi.Core.Formats.PhiEdit.Model.Easings;
 using RpeEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<float>;
 using RpeEventLayer = KaedePhi.Core.Formats.RePhiEdit.Model.Events.EventLayer;
 using RpeExtendLayer = KaedePhi.Core.Formats.RePhiEdit.Model.Events.ExtendLayer;
@@ -878,7 +879,7 @@ public class StellateRePhiEditExtendedConverterTests
     }
 
     [Fact]
-    public async Task ImportSamplesRpeElasticEasingWithReferenceCurve()
+    public async Task ImportSamplesRpeElasticEasingWithCoreCurve()
     {
         var line = CreateBlockAreaLine("isSubtract0.png");
         line.EventLayers[0].MoveXEvents = [CreateEvent(0, 4, 0f, 675f)];
@@ -900,8 +901,7 @@ public class StellateRePhiEditExtendedConverterTests
         );
         var area = Assert.Single(imported.BlockAreaList);
         var progress = 0.125d;
-        var expected =
-            Math.Pow(2d, -10d * progress) * Math.Sin((10d * progress - 0.75d) * 2.094395d) + 1d;
+        var expected = PhiEditEasings.GetFunction(24)(progress);
         var actual = EvaluateIrTrack(area.MoveXEvents, new Beat(0.5d), GetIrCenterX(area));
 
         Assert.InRange(Math.Abs(actual - expected), 0d, 0.02d);

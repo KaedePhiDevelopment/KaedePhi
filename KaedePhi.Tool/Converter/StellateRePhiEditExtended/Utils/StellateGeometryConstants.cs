@@ -26,6 +26,21 @@ public static class StellateGeometryConstants
     public const double TextureHeight = 900d;
 
     /// <summary>
+    /// 渲染坐标系的宽度。
+    /// </summary>
+    public const double RenderWidth = 1350d;
+
+    /// <summary>
+    /// 渲染坐标系的高度。
+    /// </summary>
+    public const double RenderHeight = 900d;
+
+    /// <summary>
+    /// IR 坐标系单个轴的跨度。
+    /// </summary>
+    public const double IrCoordinateSpan = 2d;
+
+    /// <summary>
     /// 每拍的几何采样点数。
     /// </summary>
     public const int SamplesPerBeat = 32;

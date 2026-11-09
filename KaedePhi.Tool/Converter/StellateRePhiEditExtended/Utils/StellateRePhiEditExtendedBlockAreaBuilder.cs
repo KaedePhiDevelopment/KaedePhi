@@ -1,5 +1,9 @@
+using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter.RePhiEdit.Model;
+using static KaedePhi.Tool.Converter.StellateRePhiEditExtended.Utils.StellateGeometryConstants;
 using IrBlockArea = KaedePhi.Core.Intermediate.Model.BlockArea;
+using IrEvent = KaedePhi.Core.Intermediate.Model.Events.Event<double>;
+using RpeEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<float>;
 using RpeEventLayer = KaedePhi.Core.Formats.RePhiEdit.Model.Events.EventLayer;
 using RpeExtendLayer = KaedePhi.Core.Formats.RePhiEdit.Model.Events.ExtendLayer;
 using RpeJudgeLine = KaedePhi.Core.Formats.RePhiEdit.Model.JudgeLine;
@@ -12,12 +16,6 @@ namespace KaedePhi.Tool.Converter.StellateRePhiEditExtended.Utils;
 /// </summary>
 public static class StellateRePhiEditExtendedBlockAreaBuilder
 {
-    private const double MarkerTextureWidth = 900d;
-    private const double MarkerTextureHeight = 900d;
-    private const double RenderWidth = 1350d;
-    private const double RenderHeight = 900d;
-    private const double IrCoordinateSpan = 2d;
-
     /// <summary>
     /// 将一个 IR 噪域转换为 RePhiEdit 标记判定线。
     /// </summary>
@@ -47,29 +45,24 @@ public static class StellateRePhiEditExtendedBlockAreaBuilder
         var width = Math.Abs(source.TopRightX - source.BottomLeftX);
         var height = Math.Abs(source.TopRightY - source.BottomLeftY);
         if (!double.IsFinite(centerX) || !double.IsFinite(centerY))
-            throw new FormatException($"IR 噪域 {index} 的中心坐标无法转换。");
+            throw StellateExceptions.CenterNotConvertible(index);
 
         var baseScaleX = StellateBlockAreaEventConverter.ToRpeFloat(
-            width * RenderWidth / (IrCoordinateSpan * MarkerTextureWidth),
+            width * RenderWidth / (IrCoordinateSpan * TextureWidth),
             index,
-            "宽度"
+            ToolResources.stellate_value_width
         );
         var baseScaleY = StellateBlockAreaEventConverter.ToRpeFloat(
-            height * RenderHeight / (IrCoordinateSpan * MarkerTextureHeight),
+            height * RenderHeight / (IrCoordinateSpan * TextureHeight),
             index,
-            "高度"
+            ToolResources.stellate_value_height
         );
 
-        var hasAnchorEvents =
-            StellateBlockAreaEventConverter.HasEvents(source.RotateAnchorXEvents)
-            || StellateBlockAreaEventConverter.HasEvents(source.RotateAnchorYEvents)
-            || StellateBlockAreaEventConverter.HasEvents(source.ScaleAnchorXEvents)
-            || StellateBlockAreaEventConverter.HasEvents(source.ScaleAnchorYEvents);
         var moveXEvents = source.MoveXEvents;
         var moveYEvents = source.MoveYEvents;
         var moveDefaultX = centerX;
         var moveDefaultY = centerY;
-        if (hasAnchorEvents)
+        if (HasAnchorEvents(source))
         {
             var bakedMotion = StellateBlockAreaAnchorMotionBaker.BakeAnchorMotion(
                 source,
@@ -82,41 +75,50 @@ public static class StellateRePhiEditExtendedBlockAreaBuilder
             moveDefaultX = bakedMotion.CenterX;
             moveDefaultY = bakedMotion.CenterY;
             warnLogger?.Invoke(
-                $"IR 噪域 {index} 的锚点变换已按每拍 {options.UnsupportedEasingPrecision} 段采样并烘焙到位置事件；锚点事件本身不会保留。"
+                string.Format(
+                    ToolResources.stellate_warning_anchor_baked,
+                    index,
+                    options.UnsupportedEasingPrecision
+                )
             );
         }
 
+        List<RpeEvent>? ConvertTrack(
+            List<IrEvent>? events,
+            double defaultValue,
+            Func<double, double> valueTransformer,
+            string trackName
+        ) =>
+            StellateBlockAreaEventConverter.ConvertEvents(
+                events,
+                defaultValue,
+                valueTransformer,
+                options,
+                index,
+                trackName,
+                ensureBaseline: true,
+                cancellationToken
+            );
+
         var eventLayer = new RpeEventLayer
         {
-            MoveXEvents = StellateBlockAreaEventConverter.ConvertEvents(
+            MoveXEvents = ConvertTrack(
                 moveXEvents,
                 moveDefaultX,
                 RpeTransform.TransformToRpeX,
-                options,
-                index,
-                "X 轴移动",
-                ensureBaseline: true,
-                cancellationToken
+                ToolResources.stellate_track_move_x
             ),
-            MoveYEvents = StellateBlockAreaEventConverter.ConvertEvents(
+            MoveYEvents = ConvertTrack(
                 moveYEvents,
                 moveDefaultY,
                 RpeTransform.TransformToRpeY,
-                options,
-                index,
-                "Y 轴移动",
-                ensureBaseline: true,
-                cancellationToken
+                ToolResources.stellate_track_move_y
             ),
-            RotateEvents = StellateBlockAreaEventConverter.ConvertEvents(
+            RotateEvents = ConvertTrack(
                 source.RotateEvents,
                 0d,
                 RpeTransform.TransformToRpeAngle,
-                options,
-                index,
-                "旋转",
-                ensureBaseline: true,
-                cancellationToken
+                ToolResources.stellate_track_rotate
             ),
             AlphaEvents = StellateBlockAreaEventConverter.CreateAlphaEvents(source),
             SpeedEvents =
@@ -131,52 +133,52 @@ public static class StellateRePhiEditExtendedBlockAreaBuilder
         return new RpeJudgeLine
         {
             Name = $"BlockArea_{index + 1}",
-            Texture = source.IsSubtract ? @"Pictures\isSubtract1.png" : @"Pictures\isSubtract0.png",
+            Texture = StellateRePhiEditExtendedTexture.GetMarkerTexture(source.IsSubtract),
             Anchor = [0.5f, 0.5f],
             Father = -1,
             RotateWithFather = false,
             EventLayers = [eventLayer],
             Extended = new RpeExtendLayer
             {
-                ScaleXEvents = StellateBlockAreaEventConverter.ConvertEvents(
+                ScaleXEvents = ConvertTrack(
                     source.ScaleXEvents,
                     1d,
                     value => baseScaleX * value,
-                    options,
-                    index,
-                    "X 轴缩放",
-                    ensureBaseline: true,
-                    cancellationToken
+                    ToolResources.stellate_track_scale_x
                 ),
-                ScaleYEvents = StellateBlockAreaEventConverter.ConvertEvents(
+                ScaleYEvents = ConvertTrack(
                     source.ScaleYEvents,
                     1d,
                     value => baseScaleY * value,
-                    options,
-                    index,
-                    "Y 轴缩放",
-                    ensureBaseline: true,
-                    cancellationToken
+                    ToolResources.stellate_track_scale_y
                 ),
             },
         };
     }
 
+    private static bool HasAnchorEvents(IrBlockArea source) =>
+        StellateBlockAreaEventConverter.HasEvents(source.RotateAnchorXEvents)
+        || StellateBlockAreaEventConverter.HasEvents(source.RotateAnchorYEvents)
+        || StellateBlockAreaEventConverter.HasEvents(source.ScaleAnchorXEvents)
+        || StellateBlockAreaEventConverter.HasEvents(source.ScaleAnchorYEvents);
+
     private static void ValidateCoordinates(IrBlockArea source)
     {
-        if (
-            !double.IsFinite(source.TopRightX)
-            || !double.IsFinite(source.TopRightY)
-            || !double.IsFinite(source.BottomLeftX)
-            || !double.IsFinite(source.BottomLeftY)
-        )
-            throw new FormatException("IR 噪域坐标必须是有限数值。");
+        double[] coordinates =
+        [
+            source.TopRightX,
+            source.TopRightY,
+            source.BottomLeftX,
+            source.BottomLeftY,
+        ];
+        if (!coordinates.All(double.IsFinite))
+            throw StellateExceptions.CoordinatesNotFinite();
 
         if (
             !double.IsFinite(Math.Abs(source.TopRightX - source.BottomLeftX))
             || !double.IsFinite(Math.Abs(source.TopRightY - source.BottomLeftY))
         )
-            throw new FormatException("IR 噪域尺寸超出 RePhiEdit 可编码范围。");
+            throw StellateExceptions.SizeOutOfRange();
     }
 
     private static void ValidateLifecycle(IrBlockArea source, int index)
@@ -186,8 +188,6 @@ public static class StellateRePhiEditExtendedBlockAreaBuilder
             || source.EnableBeat > source.DisableBeat
             || source.DisableBeat > source.DisappearBeat
         )
-            throw new FormatException(
-                $"IR 噪域 {index} 的显示阶段顺序无效，无法转换为 StellateRePhiEditExtended。"
-            );
+            throw StellateExceptions.LifecycleOrderInvalid(index);
     }
 }

@@ -1,7 +1,19 @@
 using KaedePhi.Core.Primitives;
+using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter.Phigros.v3.Utils;
+using KaedePhi.Tool.Converter.StellateRePhiEditExtended.Model;
+using static KaedePhi.Tool.Converter.StellateRePhiEditExtended.Utils.StellateDirectCurveConverter;
+using static KaedePhi.Tool.Converter.StellateRePhiEditExtended.Utils.StellateGeometryConstants;
+using GeometrySample = (
+    KaedePhi.Core.Primitives.Beat Beat,
+    KaedePhi.Tool.Converter.StellateRePhiEditExtended.Model.StellateBlockAreaGeometry Left,
+    KaedePhi.Tool.Converter.StellateRePhiEditExtended.Model.StellateBlockAreaGeometry Right,
+    bool Hard
+);
 using IrBpmItem = KaedePhi.Core.Intermediate.Model.BpmItem;
+using IrEvent = KaedePhi.Core.Intermediate.Model.Events.Event<double>;
 using RpeChart = KaedePhi.Core.Formats.RePhiEdit.Model.Chart;
+using RpeEvent = KaedePhi.Core.Formats.RePhiEdit.Model.Events.Event<float>;
 using RpeTransform = KaedePhi.Tool.Converter.RePhiEdit.Utils.Transform;
 
 namespace KaedePhi.Tool.Converter.StellateRePhiEditExtended.Utils;
@@ -65,82 +77,58 @@ public sealed class StellateRePhiEditGeometry
             return [];
 
         _sampler.PrepareLine(lineIndex);
-        var endBeat = _chartEndBeat;
-        foreach (var marker in markers.Where(marker => marker.Beat > endBeat))
-            endBeat = marker.Beat;
+        var endBeat = markers.Aggregate(
+            _chartEndBeat,
+            (end, marker) => marker.Beat > end ? marker.Beat : end
+        );
 
-        var hardBeats = new SortedSet<Beat> { new(0) };
-        _sampler.CollectPoseBreaks(lineIndex, hardBeats, []);
-        StellateBlockAreaPathBuilder.AddCurveBoundaries(source.Extended?.ScaleXEvents, hardBeats);
-        StellateBlockAreaPathBuilder.AddCurveBoundaries(source.Extended?.ScaleYEvents, hardBeats);
-        var scaleHardBeats = new SortedSet<Beat> { new(0) };
-        StellateBlockAreaPathBuilder.AddCurveBoundaries(
-            source.Extended?.ScaleXEvents,
-            scaleHardBeats
-        );
-        StellateBlockAreaPathBuilder.AddCurveBoundaries(
-            source.Extended?.ScaleYEvents,
-            scaleHardBeats
-        );
-        var rotateHardBeats = new SortedSet<Beat> { new(0) };
-        _sampler.CollectRotationBreaks(lineIndex, rotateHardBeats, []);
+        var moveXSource = GetSingleCurve(source, static layer => layer.MoveXEvents);
+        var moveYSource = GetSingleCurve(source, static layer => layer.MoveYEvents);
+        var rotateSource = GetDirectRotationCurve(source, out var hasMultipleRotationCurves);
+        var rotateDirectSource = RemoveRedundantConstantEvents(rotateSource);
+        var scaleXSource = source.Extended?.ScaleXEvents;
+        var scaleYSource = source.Extended?.ScaleYEvents;
 
-        var moveXSourceEvents = StellateDirectCurveConverter.GetSingleCurve(
-            source,
-            static layer => layer.MoveXEvents
-        );
-        var moveYSourceEvents = StellateDirectCurveConverter.GetSingleCurve(
-            source,
-            static layer => layer.MoveYEvents
-        );
-        var rotateSourceEvents = StellateDirectCurveConverter.GetDirectRotationCurve(
-            source,
-            out var hasMultipleRotationCurves
-        );
-        var rotateDirectSourceEvents = StellateDirectCurveConverter.RemoveRedundantConstantEvents(
-            rotateSourceEvents
-        );
-        var scaleXSourceEvents = source.Extended?.ScaleXEvents;
-        var scaleYSourceEvents = source.Extended?.ScaleYEvents;
+        // 满足直通条件的曲线直接保留原生缓动，其余曲线通过几何采样重建
         var isDirectMoveShape =
             source.Father < 0
-            && StellateDirectCurveConverter.IsCenteredAnchor(source)
-            && StellateDirectCurveConverter.NonEmptyLayerCount(
-                source,
-                static layer => layer.MoveXEvents
-            ) <= 1
-            && StellateDirectCurveConverter.NonEmptyLayerCount(
-                source,
-                static layer => layer.MoveYEvents
-            ) <= 1;
+            && IsCenteredAnchor(source)
+            && NonEmptyLayerCount(source, static layer => layer.MoveXEvents) <= 1
+            && NonEmptyLayerCount(source, static layer => layer.MoveYEvents) <= 1;
         var canUseDirectMove =
             isDirectMoveShape
-            && StellateDirectCurveConverter.CanConvertDirectCurve(moveXSourceEvents)
-            && StellateDirectCurveConverter.CanConvertDirectCurve(moveYSourceEvents)
-            && !StellateDirectCurveConverter.HasInteriorCurveBoundary(
-                moveXSourceEvents,
-                moveYSourceEvents
-            );
+            && CanConvertDirectCurve(moveXSource)
+            && CanConvertDirectCurve(moveYSource)
+            && !HasInteriorCurveBoundary(moveXSource, moveYSource);
         var isDirectRotateShape =
             !(source.Father >= 0 && source.RotateWithFather) && !hasMultipleRotationCurves;
         var canUseDirectRotate =
             isDirectRotateShape
-            && StellateDirectCurveConverter.CanConvertDirectCurve(rotateDirectSourceEvents)
-            && !StellateDirectCurveConverter.HasInteriorCurveBoundary(rotateDirectSourceEvents);
+            && CanConvertDirectCurve(rotateDirectSource)
+            && !HasInteriorCurveBoundary(rotateDirectSource);
         var canUseDirectScale =
-            StellateDirectCurveConverter.CanConvertDirectScale(scaleXSourceEvents)
-            && StellateDirectCurveConverter.CanConvertDirectScale(scaleYSourceEvents)
-            && !StellateDirectCurveConverter.HasInteriorCurveBoundary(
-                scaleXSourceEvents,
-                scaleYSourceEvents
-            );
+            CanConvertDirectScale(scaleXSource)
+            && CanConvertDirectScale(scaleYSource)
+            && !HasInteriorCurveBoundary(scaleXSource, scaleYSource);
+
+        // 去重时保留先加入的拍数表示，因此依次加入位置旋转边界和缩放边界
+        var hardBeats = StellateBlockAreaPathBuilder.CreateCurveBoundarySet();
+        _sampler.CollectPoseBreaks(lineIndex, hardBeats, []);
+        StellateBlockAreaPathBuilder.AddCurveBoundaries(scaleXSource, hardBeats);
+        StellateBlockAreaPathBuilder.AddCurveBoundaries(scaleYSource, hardBeats);
+        var scaleHardBeats = StellateBlockAreaPathBuilder.CreateCurveBoundarySet(
+            scaleXSource,
+            scaleYSource
+        );
+        var rotateHardBeats = StellateBlockAreaPathBuilder.CreateCurveBoundarySet();
+        _sampler.CollectRotationBreaks(lineIndex, rotateHardBeats, []);
 
         var sampleBeats = new SortedSet<Beat>(hardBeats);
         if (isDirectMoveShape && !canUseDirectMove)
-            _pathBuilder.AddMovementCutPoints(sampleBeats, moveXSourceEvents, moveYSourceEvents);
+            _pathBuilder.AddMovementCutPoints(sampleBeats, moveXSource, moveYSource);
         if (isDirectRotateShape && !canUseDirectRotate)
-            _pathBuilder.AddRotationCutPoints(sampleBeats, rotateSourceEvents);
-        _pathBuilder.AddScaleCutPoints(sampleBeats, scaleXSourceEvents, scaleYSourceEvents);
+            _pathBuilder.AddRotationCutPoints(sampleBeats, rotateSource);
+        _pathBuilder.AddScaleCutPoints(sampleBeats, scaleXSource, scaleYSource);
         _pathBuilder.AddUniformGrid(sampleBeats, endBeat);
         var sampleParallelism =
             maxDegreeOfParallelism > 0 ? maxDegreeOfParallelism : Environment.ProcessorCount;
@@ -148,163 +136,65 @@ public sealed class StellateRePhiEditGeometry
             .SampleGeometry(lineIndex, sampleBeats, hardBeats, sampleParallelism)
             .ToList();
 
-        var baseBeat = new Beat(0);
-        var baseGeometry = _sampler.GetGeometryAtBeat(lineIndex, baseBeat, rightSide: true);
+        var baseGeometry = _sampler.GetGeometryAtBeat(
+            lineIndex,
+            StellateBlockAreaConstants.ZeroBeat,
+            rightSide: true
+        );
         var baseWidth =
-            baseGeometry.Width > StellateGeometryConstants.MinimumBaseSize
-                ? baseGeometry.Width
-                : StellateGeometryConstants.TextureWidth / 1350d;
+            baseGeometry.Width > MinimumBaseSize ? baseGeometry.Width : TextureWidth / RenderWidth;
         var baseHeight =
-            baseGeometry.Height > StellateGeometryConstants.MinimumBaseSize
+            baseGeometry.Height > MinimumBaseSize
                 ? baseGeometry.Height
-                : StellateGeometryConstants.TextureHeight / 900d;
-        var baseCenterX = StellateGeometryConstants.ToIrCoordinate(baseGeometry.CenterX);
-        var baseCenterY = StellateGeometryConstants.ToIrCoordinate(baseGeometry.CenterY);
+                : TextureHeight / RenderHeight;
+        var baseCenterX = ToIrCoordinate(baseGeometry.CenterX);
+        var baseCenterY = ToIrCoordinate(baseGeometry.CenterY);
 
-        var movePath = _pathBuilder
-            .SimplifyVector(
-                _pathBuilder.BuildVectorPath(
-                    samples,
-                    geometry => (geometry.CenterX, geometry.CenterY)
-                )
-            )
-            .ConvertAll(point =>
-                (
-                    point.Beat,
-                    StellateGeometryConstants.ToIrCoordinate(point.X),
-                    StellateGeometryConstants.ToIrCoordinate(point.Y),
-                    point.Hard
-                )
-            );
-        var scaleSamples = samples.ConvertAll(sample =>
-            sample with
-            {
-                Hard = scaleHardBeats.Contains(sample.Beat),
-            }
-        );
-        var rotateSamples = samples.ConvertAll(sample =>
-            sample with
-            {
-                Hard = rotateHardBeats.Contains(sample.Beat),
-            }
-        );
-        var scalePath = _pathBuilder.SimplifyVector(
-            _pathBuilder.BuildVectorPath(
-                scaleSamples,
-                geometry => (geometry.Width / baseWidth, geometry.Height / baseHeight)
-            )
-        );
-        var rotatePath = _pathBuilder.SimplifyScalar(
-            _pathBuilder.BuildScalarPath(rotateSamples, geometry => geometry.Rotation)
-        );
-        var moveXEvents = StellateBlockAreaPathBuilder.CreateVectorEvents(
-            movePath,
-            baseCenterX,
-            baseCenterY,
-            xAxis: true
-        );
-        var moveYEvents = StellateBlockAreaPathBuilder.CreateVectorEvents(
-            movePath,
-            baseCenterX,
-            baseCenterY,
-            xAxis: false
-        );
-        var scaleXEvents = StellateBlockAreaPathBuilder.CreateVectorEvents(
-            scalePath,
-            1d,
-            1d,
-            xAxis: true
-        );
-        var scaleYEvents = StellateBlockAreaPathBuilder.CreateVectorEvents(
-            scalePath,
-            1d,
-            1d,
-            xAxis: false
-        );
-        var rotateEvents = StellateBlockAreaPathBuilder.CreateScalarEvents(rotatePath, 0d);
-
-        if (canUseDirectMove)
-        {
-            if (
-                !StellateDirectCurveConverter.TryConvertDirectCurve(
-                    moveXSourceEvents,
+        var (moveXEvents, moveYEvents) = canUseDirectMove
+            ? (
+                ConvertDirectCurve(
+                    moveXSource,
                     RpeTransform.TransformToIrX,
                     baseCenterX,
-                    out var directMoveX
-                )
-            )
-                throw new InvalidOperationException("无法转换已验证的噪域 X 轴移动事件。");
-            if (
-                !StellateDirectCurveConverter.TryConvertDirectCurve(
-                    moveYSourceEvents,
+                    ToolResources.stellate_track_move_x
+                ),
+                ConvertDirectCurve(
+                    moveYSource,
                     RpeTransform.TransformToIrY,
                     baseCenterY,
-                    out var directMoveY
+                    ToolResources.stellate_track_move_y
                 )
             )
-                throw new InvalidOperationException("无法转换已验证的噪域 Y 轴移动事件。");
-
-            moveXEvents = directMoveX;
-            moveYEvents = directMoveY;
-        }
-
-        if (canUseDirectRotate)
-        {
-            if (
-                !StellateDirectCurveConverter.TryConvertDirectCurve(
-                    rotateDirectSourceEvents,
-                    RpeTransform.TransformToIrAngle,
-                    0d,
-                    out var directRotate
+            : BuildMoveEvents(samples, baseCenterX, baseCenterY);
+        var rotateEvents = canUseDirectRotate
+            ? ConvertDirectCurve(
+                rotateDirectSource,
+                RpeTransform.TransformToIrAngle,
+                0d,
+                ToolResources.stellate_track_rotate
+            )
+            : BuildRotateEvents(samples, rotateHardBeats);
+        var (scaleXEvents, scaleYEvents) = canUseDirectScale
+            ? (
+                ConvertDirectScaleCurve(
+                    scaleXSource,
+                    TextureWidth / RenderWidth,
+                    ToolResources.stellate_track_scale_x
+                ),
+                ConvertDirectScaleCurve(
+                    scaleYSource,
+                    TextureHeight * AspectWidth / (RenderWidth * AspectHeight),
+                    ToolResources.stellate_track_scale_y
                 )
             )
-                throw new InvalidOperationException("无法转换已验证的噪域旋转事件。");
-            rotateEvents = directRotate;
-        }
-
-        if (canUseDirectScale)
-        {
-            if (
-                !StellateDirectCurveConverter.TryConvertDirectScale(
-                    scaleXSourceEvents,
-                    baseBeat: new Beat(0),
-                    canonicalBaseSize: StellateGeometryConstants.TextureWidth / 1350d,
-                    geometrySampler: _sampler,
-                    out var directScaleX
-                )
-            )
-                throw new InvalidOperationException("无法转换已验证的噪域 X 轴缩放事件。");
-            if (
-                !StellateDirectCurveConverter.TryConvertDirectScale(
-                    scaleYSourceEvents,
-                    baseBeat: new Beat(0),
-                    canonicalBaseSize: StellateGeometryConstants.TextureHeight
-                        * StellateGeometryConstants.AspectWidth
-                        / (1350d * StellateGeometryConstants.AspectHeight),
-                    geometrySampler: _sampler,
-                    out var directScaleY
-                )
-            )
-                throw new InvalidOperationException("无法转换已验证的噪域 Y 轴缩放事件。");
-
-            scaleXEvents = directScaleX;
-            scaleYEvents = directScaleY;
-        }
+            : BuildScaleEvents(samples, scaleHardBeats, baseWidth, baseHeight);
 
         var geometryTemplate = new Ir.BlockArea
         {
-            TopRightX = StellateGeometryConstants.ToIrCoordinate(
-                baseGeometry.CenterX + baseWidth / 2d
-            ),
-            TopRightY = StellateGeometryConstants.ToIrCoordinate(
-                baseGeometry.CenterY + baseHeight / 2d
-            ),
-            BottomLeftX = StellateGeometryConstants.ToIrCoordinate(
-                baseGeometry.CenterX - baseWidth / 2d
-            ),
-            BottomLeftY = StellateGeometryConstants.ToIrCoordinate(
-                baseGeometry.CenterY - baseHeight / 2d
-            ),
+            TopRightX = ToIrCoordinate(baseGeometry.CenterX + baseWidth / 2d),
+            TopRightY = ToIrCoordinate(baseGeometry.CenterY + baseHeight / 2d),
+            BottomLeftX = ToIrCoordinate(baseGeometry.CenterX - baseWidth / 2d),
+            BottomLeftY = ToIrCoordinate(baseGeometry.CenterY - baseHeight / 2d),
             IsSubtract = StellateRePhiEditExtendedTexture.IsSubtractTexture(source.Texture),
             MoveXEvents = moveXEvents,
             MoveYEvents = moveYEvents,
@@ -327,4 +217,89 @@ public sealed class StellateRePhiEditGeometry
 
         return result;
     }
+
+    private (List<IrEvent>? X, List<IrEvent>? Y) BuildMoveEvents(
+        List<GeometrySample> samples,
+        double baseCenterX,
+        double baseCenterY
+    )
+    {
+        var path = _pathBuilder
+            .SimplifyVector(
+                _pathBuilder.BuildVectorPath(
+                    samples,
+                    geometry => (geometry.CenterX, geometry.CenterY)
+                )
+            )
+            .ConvertAll(point =>
+                (point.Beat, ToIrCoordinate(point.X), ToIrCoordinate(point.Y), point.Hard)
+            );
+        return (
+            StellateBlockAreaPathBuilder.CreateVectorEvents(path, baseCenterX, baseCenterY, true),
+            StellateBlockAreaPathBuilder.CreateVectorEvents(path, baseCenterX, baseCenterY, false)
+        );
+    }
+
+    private List<IrEvent>? BuildRotateEvents(
+        List<GeometrySample> samples,
+        SortedSet<Beat> rotateHardBeats
+    )
+    {
+        var rotateSamples = WithHardBeats(samples, rotateHardBeats);
+        var path = _pathBuilder.SimplifyScalar(
+            _pathBuilder.BuildScalarPath(rotateSamples, geometry => geometry.Rotation)
+        );
+        return StellateBlockAreaPathBuilder.CreateScalarEvents(path, 0d);
+    }
+
+    private (List<IrEvent>? X, List<IrEvent>? Y) BuildScaleEvents(
+        List<GeometrySample> samples,
+        SortedSet<Beat> scaleHardBeats,
+        double baseWidth,
+        double baseHeight
+    )
+    {
+        var scaleSamples = WithHardBeats(samples, scaleHardBeats);
+        var path = _pathBuilder.SimplifyVector(
+            _pathBuilder.BuildVectorPath(
+                scaleSamples,
+                geometry => (geometry.Width / baseWidth, geometry.Height / baseHeight)
+            )
+        );
+        return (
+            StellateBlockAreaPathBuilder.CreateVectorEvents(path, 1d, 1d, true),
+            StellateBlockAreaPathBuilder.CreateVectorEvents(path, 1d, 1d, false)
+        );
+    }
+
+    // 各轨道的硬边界不同，需要按轨道重新标记采样点
+    private static List<GeometrySample> WithHardBeats(
+        List<GeometrySample> samples,
+        SortedSet<Beat> hardBeats
+    ) => samples.ConvertAll(sample => sample with { Hard = hardBeats.Contains(sample.Beat) });
+
+    private static List<IrEvent>? ConvertDirectCurve(
+        List<RpeEvent>? events,
+        Func<float, double> valueTransform,
+        double initialValue,
+        string trackName
+    ) =>
+        TryConvertDirectCurve(events, valueTransform, initialValue, out var converted)
+            ? converted
+            : throw StellateExceptions.DirectCurveConvertFailed(trackName);
+
+    private List<IrEvent>? ConvertDirectScaleCurve(
+        List<RpeEvent>? events,
+        double canonicalBaseSize,
+        string trackName
+    ) =>
+        TryConvertDirectScale(
+            events,
+            StellateBlockAreaConstants.ZeroBeat,
+            canonicalBaseSize,
+            _sampler,
+            out var converted
+        )
+            ? converted
+            : throw StellateExceptions.DirectCurveConvertFailed(trackName);
 }

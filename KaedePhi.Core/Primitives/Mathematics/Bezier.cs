@@ -88,6 +88,26 @@ namespace KaedePhi.Core.Primitives.Mathematics
             throw new NotSupportedException("T必须是float、double、int或byte");
         }
 
+        /// <summary>
+        /// 计算三次贝塞尔缓动曲线在指定进度处的缓动值。
+        /// 进度小于 0 或大于 1 时沿曲线延伸，不会被截断为端点值。
+        /// </summary>
+        /// <param name="points">控制点数组 [x1, y1, x2, y2]，隐含端点 (0,0) → (1,1)。</param>
+        /// <param name="progress">输入进度，允许小于 0 或大于 1。</param>
+        /// <returns>缓动值；控制点超出 [0, 1] 时会产生过冲。</returns>
+        public static double Evaluate(float[] points, double progress)
+        {
+            if (points == null || points.Length < 4)
+                throw new ArgumentException("points 需要至少 4 个元素 [x1, y1, x2, y2]");
+
+            var x = (float)progress;
+            var u =
+                x < 0f || x > 1f
+                    ? SolveExtendedU(points[0], points[2], x)
+                    : SolveU(points[0], points[2], x);
+            return SampleCurveY(u, points[1], points[3]);
+        }
+
         #region 核心数学
 
         /// <summary>
@@ -100,6 +120,68 @@ namespace KaedePhi.Core.Primitives.Mathematics
 
             var (uLo, uHi) = FindBracket(x1, x2, targetX);
             return RefineByBisection(x1, x2, targetX, uLo, uHi);
+        }
+
+        /// <summary>
+        /// 目标进度位于 [0,1] 之外时，从最近的端点沿曲线向外扫描，
+        /// 在第一个跨越目标的区间内二分求 u；扫描范围内无解时返回端点参数。
+        /// </summary>
+        private static float SolveExtendedU(float x1, float x2, float targetX)
+        {
+            const int maxSteps = 512;
+            const float step = 1f / 32f;
+            var direction = targetX > 1f ? 1f : -1f;
+            var origin = targetX > 1f ? 1f : 0f;
+            var previousU = origin;
+            var previousErr = SampleCurveX(previousU, x1, x2) - targetX;
+
+            for (var i = 1; i <= maxSteps; i++)
+            {
+                var currentU = origin + direction * step * i;
+                var currentErr = SampleCurveX(currentU, x1, x2) - targetX;
+                if (
+                    (previousErr <= 0f && currentErr >= 0f)
+                    || (previousErr >= 0f && currentErr <= 0f)
+                )
+                {
+                    var (uLo, uHi) =
+                        previousU < currentU ? (previousU, currentU) : (currentU, previousU);
+                    return BisectUnclamped(x1, x2, targetX, uLo, uHi);
+                }
+
+                previousU = currentU;
+                previousErr = currentErr;
+            }
+
+            return origin;
+        }
+
+        /// <summary>
+        /// 在已知跨越目标的区间内二分，不对结果做 [0,1] 截断。
+        /// </summary>
+        private static float BisectUnclamped(
+            float x1,
+            float x2,
+            float targetX,
+            float uLo,
+            float uHi
+        )
+        {
+            var increasing = SampleCurveX(uHi, x1, x2) >= SampleCurveX(uLo, x1, x2);
+            for (var i = 0; i < 30; i++)
+            {
+                var u = (uLo + uHi) * 0.5f;
+                var err = SampleCurveX(u, x1, x2) - targetX;
+                if (MathF.Abs(err) < 1e-7f)
+                    return u;
+
+                if (err < 0f == increasing)
+                    uLo = u;
+                else
+                    uHi = u;
+            }
+
+            return (uLo + uHi) * 0.5f;
         }
 
         /// <summary>
