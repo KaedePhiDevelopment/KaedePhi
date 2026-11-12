@@ -18,8 +18,8 @@ namespace KaedePhi.Core.Formats.PhiEdit.Model
             get => _bpm;
             set
             {
-                if (value <= 0)
-                    throw new ArgumentException("Bpm must be greater than zero.");
+                if (value <= 0 || float.IsInfinity(value) || float.IsNaN(value))
+                    throw new ArgumentException(Resources.illegal_bpm_infinity_or_negative);
                 _bpm = value;
             }
         }

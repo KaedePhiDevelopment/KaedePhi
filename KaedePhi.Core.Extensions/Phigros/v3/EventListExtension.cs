@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using KaedePhi.Core.Phigros.v3;
+using KaedePhi.Core.Formats.Phigros.v3.Model;
 
 namespace KaedePhi.Core.Extensions.Phigros.v3
 {

@@ -2,7 +2,6 @@ using System.Diagnostics.CodeAnalysis;
 using KaedePhi.Core.Formats;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Compatibility;
-using KpcChart = KaedePhi.Core.KaedePhi.Chart;
 
 namespace KaedePhi.Tool.Converter;
 
@@ -13,13 +12,7 @@ public sealed class ChartFormatDescriptor
 {
     private readonly string? _formatId;
     private int _legacyType;
-
-    /// <summary>
-    /// 创建使用兼容枚举初始化的格式描述。
-    /// </summary>
-    [Obsolete("将在下一个大版本移除；请通过 Create 或 CreateDetectionOnly 工厂创建格式描述。")]
-    public ChartFormatDescriptor() { }
-
+    
     [SetsRequiredMembers]
     internal ChartFormatDescriptor(
         string formatId,
@@ -32,20 +25,9 @@ public sealed class ChartFormatDescriptor
         FileExtension = fileExtension;
     }
 
-    /// <summary>内置格式类型；由工厂创建的外部格式返回未定义的枚举值 -1，应使用 <see cref="FormatId"/> 标识。</summary>
-    [Obsolete("将在下一个大版本移除；请改用 FormatId 标识格式，并通过 Create 工厂创建格式描述。")]
-    public required ChartType Type
-    {
-        get => (ChartType)_legacyType;
-        init => _legacyType = (int)value;
-    }
 
     /// <summary>格式的稳定字符串标识；内置格式使用枚举名称。</summary>
     public string FormatId => _formatId ?? LegacyChartTypeMapping.ToFormatId(_legacyType);
-
-    /// <summary>内置格式类型；外部格式返回 <see langword="null"/>。</summary>
-    [Obsolete("将在下一个大版本移除；请使用 FormatId 标识格式。")]
-    public ChartType? BuiltInType => _legacyType == -1 ? null : (ChartType)_legacyType;
 
     internal bool HasLegacyType => _legacyType != -1;
 
@@ -313,45 +295,7 @@ public sealed class ChartFormatDescriptor
         var normalized = IrChartNormalizer.NormalizeAndValidateNoteEndBeats(chart);
         return normalized;
     }
-
-    /// <summary>
-    /// 将该格式的谱面文本转换为已弃用的 KPC 中间格式。
-    /// </summary>
-    /// <param name="text">谱面原始文本</param>
-    /// <param name="importOptions">导入选项，传 <see langword="null"/> 时使用默认值</param>
-    /// <param name="log">日志回调集合</param>
-    /// <param name="ct">取消令牌</param>
-    /// <returns>KPC 谱面</returns>
-    [Obsolete("已弃用：请迁移至 ImportIrAsync。")]
-    public async Task<KpcChart> ImportAsync(
-        string text,
-        object? importOptions = null,
-        ChartLogSink? log = null,
-        CancellationToken ct = default
-    ) =>
-        Compatibility.KpcCompatibilityMapper.ToKpc(
-            await ImportIrAsync(text, importOptions, log, ct)
-        );
-
-    /// <summary>
-    /// 从输入流转换为已弃用的 KPC 中间格式。
-    /// </summary>
-    /// <param name="stream">输入流。</param>
-    /// <param name="importOptions">导入选项。</param>
-    /// <param name="log">日志回调集合。</param>
-    /// <param name="ct">取消令牌。</param>
-    /// <returns>KPC 谱面。</returns>
-    [Obsolete("已弃用：请迁移至 ImportStreamIrAsync。")]
-    public async Task<KpcChart> ImportStreamAsync(
-        Stream stream,
-        object? importOptions = null,
-        ChartLogSink? log = null,
-        CancellationToken ct = default
-    ) =>
-        Compatibility.KpcCompatibilityMapper.ToKpc(
-            await ImportStreamIrAsync(stream, importOptions, log, ct)
-        );
-
+    
     /// <summary>
     /// 将 IR 谱面导出为该格式并写入指定路径。
     /// </summary>
@@ -385,34 +329,6 @@ public sealed class ChartFormatDescriptor
             ct
         );
     }
-
-    /// <summary>
-    /// 将已弃用的 KPC 谱面导出为该格式并写入指定路径。
-    /// </summary>
-    /// <param name="chart">KPC 谱面</param>
-    /// <param name="outputPath">输出文件路径</param>
-    /// <param name="writeSettings">写入方式设置</param>
-    /// <param name="exportOptions">导出选项，传 <see langword="null"/> 时使用默认值</param>
-    /// <param name="log">日志回调集合</param>
-    /// <param name="ct">取消令牌</param>
-    /// <returns>导出任务</returns>
-    [Obsolete("已弃用：请迁移至 ExportAsync(Ir.Chart, ...)。")]
-    public Task ExportAsync(
-        KpcChart chart,
-        string outputPath,
-        ChartWriteSettings? writeSettings = null,
-        object? exportOptions = null,
-        ChartLogSink? log = null,
-        CancellationToken ct = default
-    ) =>
-        ExportAsync(
-            Compatibility.KpcCompatibilityMapper.ToIntermediate(chart),
-            outputPath,
-            writeSettings,
-            exportOptions,
-            log,
-            ct
-        );
-
+    
     private string FormatName => FormatId;
 }

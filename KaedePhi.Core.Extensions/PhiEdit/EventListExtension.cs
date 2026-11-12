@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using KaedePhi.Core.PhiEdit;
+using KaedePhi.Core.Formats.PhiEdit.Model;
 
 namespace KaedePhi.Core.Extensions.PhiEdit
 {

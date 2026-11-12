@@ -1,5 +1,6 @@
 using System;
 using KaedePhi.Core.Primitives.Serialization;
+using KaedePhi.Core.Utils;
 using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Primitives
@@ -106,7 +107,7 @@ namespace KaedePhi.Core.Primitives
                     if (
                         Math.Abs(remaining) < Common.CoreConstants.FloatEpsilon
                         || Math.Abs((double)numerator / denominator - fractionalPart)
-                            < Common.CoreConstants.FloatEpsilon
+                        < Common.CoreConstants.FloatEpsilon
                     )
                         break;
 
@@ -117,7 +118,7 @@ namespace KaedePhi.Core.Primitives
                 {
                     denominator = MaxDenominator;
                     numerator = (int)Math.Round(fractionalPart * denominator);
-                    var gcd = Gcd(numerator, denominator);
+                    var gcd = MathExtensions.Gcd(numerator, denominator);
                     numerator /= gcd;
                     denominator /= gcd;
                 }
@@ -140,46 +141,27 @@ namespace KaedePhi.Core.Primitives
             _curBeatFloat = (float)_curBeatDouble;
         }
 
-        private static int Gcd(int a, int b)
-        {
-            while (b != 0)
-            {
-                var temp = b;
-                b = a % b;
-                a = temp;
-            }
-
-            return a;
-        }
-
-        private static long Gcd(long a, long b)
-        {
-            while (b != 0)
-            {
-                var temp = b;
-                b = a % b;
-                a = temp;
-            }
-
-            return a;
-        }
-
         /// <summary>
         /// 获取指定分量；索引零、一、二分别对应整数拍、分子和分母。
         /// </summary>
         /// <param name="index">分量索引</param>
-        public int this[int index] =>
-            index switch
+        public int this[int index]
+        {
+            get
             {
-                0 => _whole,
-                1 => _numerator,
-                2 => EffectiveDenominator,
-                _ => throw new ArgumentOutOfRangeException(
-                    nameof(index),
-                    index,
-                    Resources.illegal_beat_index_out_of_range
-                ),
-            };
+                return index switch
+                {
+                    0 => _whole,
+                    1 => _numerator,
+                    2 => EffectiveDenominator,
+                    _ => throw new ArgumentOutOfRangeException(
+                        nameof(index),
+                        index,
+                        Resources.illegal_beat_index_out_of_range
+                    ),
+                };
+            }
+        }
 
         // 隐式转换为 float
         /// <summary>
@@ -238,7 +220,7 @@ namespace KaedePhi.Core.Primitives
             if (numerator == 0)
                 return new Beat(wholePart, 0, 1);
 
-            var gcd = Gcd(Math.Abs(numerator), denominator);
+            var gcd = MathExtensions.Gcd(Math.Abs(numerator), denominator);
             numerator /= gcd;
             denominator /= gcd;
 
@@ -275,7 +257,7 @@ namespace KaedePhi.Core.Primitives
             if (numerator == 0)
                 return new Beat(wholePart, 0, 1);
 
-            var gcd = Gcd(Math.Abs(numerator), denominator);
+            var gcd = MathExtensions.Gcd(Math.Abs(numerator), denominator);
             numerator /= gcd;
             denominator /= gcd;
 
@@ -368,5 +350,18 @@ namespace KaedePhi.Core.Primitives
         /// <param name="other">用于比较的对象</param>
         /// <returns>比较结果；负值表示当前对象小于参数，零表示相等，正值表示当前对象大于参数。</returns>
         public int CompareTo(Beat other) => _curBeatDouble.CompareTo(other._curBeatDouble);
+
+        /// <summary>
+        /// 获取表示无限拍的静态实例。
+        /// </summary>
+        public static Beat Infinity => new(new[] { int.MaxValue, 0, 1 });
+
+        /// <summary>
+        /// 判断给定的拍是否表示无限拍。
+        /// </summary>
+        /// <param name="beat">待判断的拍</param>
+        /// <returns>如果给定的拍表示无限拍，则为<see langword="true"/>；否则为<see langword="false"/>。</returns>
+        public static bool IsInfinity(Beat beat) =>
+            beat is { _whole: int.MaxValue, _numerator: 0, EffectiveDenominator: 1 };
     }
 }

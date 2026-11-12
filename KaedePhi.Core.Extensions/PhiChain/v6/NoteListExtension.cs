@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using KaedePhi.Core.PhiChain.v6;
+using KaedePhi.Core.Formats.PhiChain.v6.Model;
 
 namespace KaedePhi.Core.Extensions.PhiChain.v6
 {

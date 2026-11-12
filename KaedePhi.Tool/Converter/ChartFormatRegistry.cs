@@ -4,7 +4,6 @@ using KaedePhi.Core.Formats.PhiFans.Serialization;
 using KaedePhi.Core.Formats.Phigros.v3.Serialization;
 using KaedePhi.Core.Formats.RePhiEdit.Serialization;
 using KaedePhi.Tool.Common;
-using KaedePhi.Tool.Compatibility;
 using KaedePhi.Tool.Converter.PhiChain;
 using KaedePhi.Tool.Converter.PhiChain.Model;
 using KaedePhi.Tool.Converter.PhiEdit;
@@ -16,7 +15,6 @@ using KaedePhi.Tool.Converter.Phigros.v3.Model;
 using KaedePhi.Tool.Converter.RePhiEdit;
 using KaedePhi.Tool.Converter.RePhiEdit.Model;
 using KaedePhi.Tool.Converter.StellateRePhiEditExtended;
-using KpcChart = KaedePhi.Core.KaedePhi.Chart;
 
 namespace KaedePhi.Tool.Converter;
 
@@ -262,17 +260,6 @@ public static class ChartFormatRegistry
     public static ChartFormatCatalog Default { get; } = new(DefaultRegistrations);
 
     /// <summary>
-    /// 获取指定格式的能力描述。
-    /// </summary>
-    /// <param name="type">谱面格式</param>
-    /// <returns>格式描述，未注册时返回 <see langword="null"/></returns>
-    [Obsolete("将在下一个大版本移除；请改用 Find(string)，通过格式标识查询。")]
-    public static ChartFormatDescriptor? Find(ChartType type) =>
-        LegacyChartTypeMapping.IsDefined((int)type)
-            ? Find(LegacyChartTypeMapping.ToFormatId((int)type))
-            : null;
-
-    /// <summary>
     /// 按格式标识获取内置或外部格式描述，标识不区分大小写。
     /// </summary>
     /// <param name="formatId">格式的稳定字符串标识。</param>
@@ -303,37 +290,14 @@ public static class ChartFormatRegistry
         Func<Stream, CancellationToken, ValueTask<bool>> detector,
         int priority = 0
     ) => Default.Register(descriptor, detector, priority);
-
-    /// <summary>
-    /// 取消注册外部格式。
-    /// </summary>
-    /// <param name="formatId">外部格式的稳定字符串标识。</param>
-    /// <returns>是否移除了已注册格式。</returns>
-    [Obsolete(
-        "将在下一个大版本移除；请改用 UnregisterFormat 或 ChartFormatCatalog.Unregister，注意新接口也可移除内置格式。"
-    )]
-    public static bool Unregister(string formatId) => Default.UnregisterExternal(formatId);
-
+    
     /// <summary>
     /// 按标识取消注册默认注册表中的谱面格式，包括内置格式。
     /// </summary>
     /// <param name="formatId">格式的稳定字符串标识。</param>
     /// <returns>是否移除了已注册格式。</returns>
     public static bool UnregisterFormat(string formatId) => Default.Unregister(formatId);
-
-    /// <summary>
-    /// 获取指定格式的能力描述，未注册时抛出异常。
-    /// </summary>
-    /// <param name="type">谱面格式</param>
-    /// <returns>格式描述</returns>
-    [Obsolete("将在下一个大版本移除；请改用 Get(string)，通过格式标识查询。")]
-    public static ChartFormatDescriptor Get(ChartType type) =>
-        (
-            LegacyChartTypeMapping.IsDefined((int)type)
-                ? Find(LegacyChartTypeMapping.ToFormatId((int)type))
-                : null
-        ) ?? throw new NotSupportedException($"未注册的谱面格式：{type}");
-
+    
     /// <summary>
     /// 按格式标识获取内置或外部格式描述，未注册时抛出异常。
     /// </summary>
@@ -414,26 +378,6 @@ public static class ChartFormatRegistry
     /// </summary>
     public static IReadOnlyList<ChartFormatDescriptor> Formats => Default.Formats;
 
-    /// <summary>
-    /// 检测内置谱面文本格式并转换为 IR 中间格式；外部格式请使用 <see cref="ImportDetectedIrAsync(string, object?, ChartLogSink?, CancellationToken)"/>。
-    /// </summary>
-    /// <param name="text">谱面原始文本</param>
-    /// <param name="importOptions">导入选项，传 <see langword="null"/> 时使用格式默认值</param>
-    /// <param name="log">日志回调集合</param>
-    /// <param name="ct">取消令牌</param>
-    /// <returns>检测到的格式与转换结果</returns>
-    [Obsolete("将在下一个大版本移除；请改用 ImportDetectedIrAsync，并使用返回的格式描述。")]
-    public static async Task<(ChartType DetectedType, Ir.Chart Chart)> ImportIrAsync(
-        string text,
-        object? importOptions = null,
-        ChartLogSink? log = null,
-        CancellationToken ct = default
-    )
-    {
-        var (formatId, chart) = await ImportLegacyIrAsync(text, importOptions, log, ct);
-        return ((ChartType)LegacyChartTypeMapping.ToValue(formatId), chart);
-    }
-
     private static async Task<(string FormatId, Ir.Chart Chart)> ImportLegacyIrAsync(
         string text,
         object? importOptions,
@@ -492,31 +436,6 @@ public static class ChartFormatRegistry
         ChartLogSink? log = null,
         CancellationToken ct = default
     ) => Default.ImportDetectedIrAsync(openRead, importOptions, log, ct);
-
-    /// <summary>
-    /// 检测谱面文本格式并转换为已弃用的 KPC 中间格式。
-    /// </summary>
-    /// <param name="text">谱面原始文本</param>
-    /// <param name="importOptions">导入选项，传 <see langword="null"/> 时使用格式默认值</param>
-    /// <param name="log">日志回调集合</param>
-    /// <param name="ct">取消令牌</param>
-    /// <returns>检测到的格式与转换结果</returns>
-    [Obsolete(
-        "将在下一个大版本移除；请改用 ImportDetectedIrAsync，并使用返回的格式描述和 IR 谱面。"
-    )]
-    public static async Task<(ChartType DetectedType, KpcChart Chart)> ImportAsync(
-        string text,
-        object? importOptions = null,
-        ChartLogSink? log = null,
-        CancellationToken ct = default
-    )
-    {
-        var (formatId, chart) = await ImportLegacyIrAsync(text, importOptions, log, ct);
-        return (
-            (ChartType)LegacyChartTypeMapping.ToValue(formatId),
-            Compatibility.KpcCompatibilityMapper.ToKpc(chart)
-        );
-    }
 
     /// <summary>
     /// 为转换器注入日志回调与取消令牌。

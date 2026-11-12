@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using KaedePhi.Core.RePhiEdit;
+using KaedePhi.Core.Formats.RePhiEdit.Model;
 
 namespace KaedePhi.Core.Extensions.RePhiEdit
 {

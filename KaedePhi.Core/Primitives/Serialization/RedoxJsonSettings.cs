@@ -27,26 +27,15 @@ namespace KaedePhi.Core.Primitives.Serialization
                 };
             }
 
-            if (type == typeof(global::KaedePhi.Core.Common.Beat))
-            {
-                return contract with
-                {
-                    Converter = new BeatDataConverter<global::KaedePhi.Core.Common.Beat>(
-                        values => new global::KaedePhi.Core.Common.Beat(values),
-                        (value, index) => value[index]
-                    ),
-                };
-            }
-
-            if (type == typeof(global::KaedePhi.Core.Formats.PhiChain.v6.Model.Note))
+            if (type == typeof(Formats.PhiChain.v6.Model.Note))
             {
                 return contract with
                 {
                     Converter = new PhiChainNoteDataConverter<
-                        global::KaedePhi.Core.Formats.PhiChain.v6.Model.Note,
+                        Formats.PhiChain.v6.Model.Note,
                         Beat
                     >(
-                        () => new global::KaedePhi.Core.Formats.PhiChain.v6.Model.Note(),
+                        () => new Formats.PhiChain.v6.Model.Note(),
                         note => (int)note.Type,
                         (note, value) =>
                             note.Type =
@@ -67,34 +56,6 @@ namespace KaedePhi.Core.Primitives.Serialization
                 };
             }
 
-            if (type == typeof(PhiChain.v6.Note))
-            {
-                return contract with
-                {
-                    Converter = new PhiChainNoteDataConverter<
-                        PhiChain.v6.Note,
-                        global::KaedePhi.Core.Common.Beat
-                    >(
-                        () => new PhiChain.v6.Note(),
-                        note => (int)note.Type,
-                        (note, value) =>
-                            note.Type = (global::KaedePhi.Core.PhiChain.v6.NoteType)value,
-                        note => note.Above,
-                        (note, value) => note.Above = value,
-                        note => note.Beat,
-                        (note, value) => note.Beat = value,
-                        note => note.HoldBeat,
-                        (note, value) => note.HoldBeat = value,
-                        note => note.X,
-                        (note, value) => note.X = value,
-                        note => note.Speed,
-                        (note, value) => note.Speed = value,
-                        beat => beat > new global::KaedePhi.Core.Common.Beat(0),
-                        () => new global::KaedePhi.Core.Common.Beat(0)
-                    ),
-                };
-            }
-
             List<DataProperty>? properties = null;
 
             for (var i = 0; i < contract.Properties.Count; i++)
@@ -107,8 +68,6 @@ namespace KaedePhi.Core.Primitives.Serialization
                 if (
                     converterType
                         == typeof(global::KaedePhi.Core.Formats.Phigros.v3.Serialization.JsonConverter.NoteTypeConverter)
-                    || converterType
-                        == typeof(global::KaedePhi.Core.Phigros.v3.JsonConverter.NoteTypeConverter)
                 )
                 {
                     properties ??= new List<DataProperty>(contract.Properties);

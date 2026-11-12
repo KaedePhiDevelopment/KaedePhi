@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using KaedePhi.Core.PhiFans;
+using KaedePhi.Core.Formats.PhiFans.Model;
 
 namespace KaedePhi.Core.Extensions.PhiFans
 {
