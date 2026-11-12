@@ -2,9 +2,9 @@ using System.Collections.Concurrent;
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Event.Intermediate;
-using JudgeLine = KaedePhi.Core.Intermediate.Model.JudgeLine;
+using KaedePhi.Tool.JudgeLine.Utils;
 
-namespace KaedePhi.Tool.JudgeLines.Intermediate.Utils;
+namespace KaedePhi.Tool.JudgeLine.Intermediate.Utils;
 
 /// <summary>
 /// IR 判定线父子解绑处理器（等间隔采样）。
@@ -24,7 +24,7 @@ public class FatherUnbindProcessor : FatherUnbindProcessorBase
     /// <param name="logError">错误日志回调</param>
     /// <param name="logDebug">调试日志回调</param>
     public FatherUnbindProcessor(
-        ConcurrentDictionary<FatherUnbindHelpers.UnbindCacheKey, JudgeLine> cache,
+        ConcurrentDictionary<JudgeLineUnbindCacheKey, Ir.JudgeLine> cache,
         Action<string>? logInfo = null,
         Action<string>? logWarning = null,
         Action<string>? logError = null,
@@ -35,9 +35,9 @@ public class FatherUnbindProcessor : FatherUnbindProcessorBase
     /// <summary>
     /// 等间隔采样解绑（同步版）：将判定线与父线解绑，以等间隔拍步长采样保持原始行为。
     /// </summary>
-    public JudgeLine FatherUnbind(
+    public Ir.JudgeLine FatherUnbind(
         int targetJudgeLineIndex,
-        List<JudgeLine> allJudgeLines,
+        List<Ir.JudgeLine> allJudgeLines,
         double precision,
         IProgress<ToolProgress>? progress = null,
         CancellationToken ct = default
@@ -45,7 +45,7 @@ public class FatherUnbindProcessor : FatherUnbindProcessorBase
     {
         NumericParameterValidator.ValidatePrecision(precision);
         ct.ThrowIfCancellationRequested();
-        JudgeLine judgeLineCopy;
+        Ir.JudgeLine judgeLineCopy;
         try
         {
             progress?.Report(new ToolProgress(0.1, "准备解绑上下文"));
@@ -55,13 +55,13 @@ public class FatherUnbindProcessor : FatherUnbindProcessorBase
                 allJudgeLines,
                 logTag: "FatherUnbind",
                 startAction: "开始解绑",
-                cacheKeyFactory: index => new FatherUnbindHelpers.UnbindCacheKey(
+                cacheKeyFactory: index => new JudgeLineUnbindCacheKey(
                     index,
                     precision,
                     0d,
                     0d,
                     false,
-                    FatherUnbindHelpers.CurrentRenderProfile
+                    JudgeLineUnbindContext.CurrentRenderProfile
                 ),
                 recursiveUnbind: (idx, lines) => FatherUnbind(idx, lines, precision, progress, ct)
             );
@@ -74,7 +74,7 @@ public class FatherUnbindProcessor : FatherUnbindProcessorBase
             }
 
             progress?.Report(new ToolProgress(0.2, "合并通道"));
-            var mergedChannels = FatherUnbindHelpers.MergeChannels(
+            var mergedChannels = JudgeLineUnbindEvents.MergeChannels(
                 judgeLineCopy.EventLayers,
                 fatherLine.EventLayers,
                 Merge
@@ -82,11 +82,11 @@ public class FatherUnbindProcessor : FatherUnbindProcessorBase
 
             progress?.Report(new ToolProgress(0.4, "切割事件"));
             var cutLength = new Beat(1d / precision);
-            var (txMin, txMax) = FatherUnbindHelpers.GetEventRange(mergedChannels.Tx);
-            var (tyMin, tyMax) = FatherUnbindHelpers.GetEventRange(mergedChannels.Ty);
-            var (fxMin, fxMax) = FatherUnbindHelpers.GetEventRange(mergedChannels.Fx);
-            var (fyMin, fyMax) = FatherUnbindHelpers.GetEventRange(mergedChannels.Fy);
-            var (frMin, frMax) = FatherUnbindHelpers.GetEventRange(mergedChannels.Fr);
+            var (txMin, txMax) = JudgeLineUnbindEvents.GetEventRange(mergedChannels.Tx);
+            var (tyMin, tyMax) = JudgeLineUnbindEvents.GetEventRange(mergedChannels.Ty);
+            var (fxMin, fxMax) = JudgeLineUnbindEvents.GetEventRange(mergedChannels.Fx);
+            var (fyMin, fyMax) = JudgeLineUnbindEvents.GetEventRange(mergedChannels.Fy);
+            var (frMin, frMax) = JudgeLineUnbindEvents.GetEventRange(mergedChannels.Fr);
 
             var cutTasks = new[]
             {
@@ -107,10 +107,10 @@ public class FatherUnbindProcessor : FatherUnbindProcessorBase
                 ),
             };
             // ReSharper disable once CoVariantArrayConversion
-            Task.WaitAll(cutTasks);
+            Task.WaitAll(cutTasks, ct);
 
             ct.ThrowIfCancellationRequested();
-            var cutChannels = new FatherUnbindHelpers.EventChannels(
+            var cutChannels = new JudgeLineUnbindEventChannels(
                 Fx: cutTasks[2].Result,
                 Fy: cutTasks[3].Result,
                 Fr: cutTasks[4].Result,
@@ -125,13 +125,13 @@ public class FatherUnbindProcessor : FatherUnbindProcessorBase
                 Math.Max(Math.Max(Math.Max(txMax, tyMax), Math.Max(fxMax, fyMax)), frMax)
             );
             var step = new Beat(1d / precision);
-            var beats = FatherUnbindHelpers.BuildBeatList(overallMin, overallMax, step, ct);
+            var beats = JudgeLineEqualSpacingSampler.BuildBeatList(overallMin, overallMax, step, ct);
 
             progress?.Report(new ToolProgress(0.6, "等间隔采样"));
             LogDebug?.Invoke(
                 $"FatherUnbind[{targetJudgeLineIndex}]: 等间隔采样 {beats.Count} 段，精度={precision}"
             );
-            var (sortedX, sortedY) = FatherUnbindHelpers.EqualSpacingSampling(
+            var (sortedX, sortedY) = JudgeLineEqualSpacingSampler.Sample(
                 beats,
                 overallMax,
                 step,
@@ -141,7 +141,7 @@ public class FatherUnbindProcessor : FatherUnbindProcessorBase
 
             progress?.Report(new ToolProgress(0.9, "写回结果"));
             LogDebug?.Invoke($"FatherUnbind[{targetJudgeLineIndex}]: 采样完成，写回");
-            FatherUnbindHelpers.WriteResultToLine(
+            JudgeLineUnbindLayerOperations.WriteResultToLine(
                 judgeLineCopy,
                 sortedX,
                 sortedY,
@@ -150,13 +150,13 @@ public class FatherUnbindProcessor : FatherUnbindProcessorBase
             );
 
             Cache.TryAdd(
-                new FatherUnbindHelpers.UnbindCacheKey(
+                new JudgeLineUnbindCacheKey(
                     targetJudgeLineIndex,
                     precision,
                     0d,
                     0d,
                     false,
-                    FatherUnbindHelpers.CurrentRenderProfile
+                    JudgeLineUnbindContext.CurrentRenderProfile
                 ),
                 judgeLineCopy
             );

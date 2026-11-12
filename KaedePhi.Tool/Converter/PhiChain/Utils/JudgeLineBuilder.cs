@@ -1,6 +1,7 @@
 using KaedePhi.Core.Formats.PhiChain.v6.Model;
 using KaedePhi.Tool.Converter.PhiChain.Model;
-using KaedePhi.Tool.JudgeLines.Intermediate;
+using KaedePhi.Tool.JudgeLine.Intermediate;
+using KaedePhi.Tool.JudgeLine;
 using KaedePhi.Tool.Layer.Intermediate;
 
 namespace KaedePhi.Tool.Converter.PhiChain.Utils;
@@ -198,7 +199,7 @@ public static class JudgeLineBuilder
         if (!options.UnbindNonRotatingChildren)
             return irLines;
 
-        var unbinder = new JudgeLineUnbinder();
+        IJudgeLineUnbindService<Ir.JudgeLine> unbinder = new JudgeLineUnbinder();
         var result = irLines.Select(l => l.Clone()).ToList();
 
         // 找出所有需要解绑的子线（rotateWithFather 为 false）
@@ -213,24 +214,23 @@ public static class JudgeLineBuilder
 
         // 使用 JudgeLineUnbinder 解绑
         var compressor = options.UnbindClassicMode ? new LayerProcessor() : null;
+        var unbindOptions = new JudgeLineUnbindOptions
+        {
+            SamplingMode = options.UnbindClassicMode
+                ? JudgeLineUnbindSamplingMode.EqualSpacing
+                : JudgeLineUnbindSamplingMode.Adaptive,
+            Precision = options.UnbindPrecision,
+            Tolerance = options.UnbindTolerance,
+            MergeTolerance = options.UnbindMergeTolerance,
+        };
         foreach (var lineIndex in linesToUnbind)
         {
             ct.ThrowIfCancellationRequested();
-            Ir.JudgeLine unboundLine;
-            if (options.UnbindClassicMode)
-            {
-                unboundLine = unbinder.FatherUnbind(lineIndex, result, options.UnbindPrecision);
-            }
-            else
-            {
-                unboundLine = unbinder.FatherUnbindDynamic(
-                    lineIndex,
-                    result,
-                    options.UnbindPrecision,
-                    options.UnbindTolerance,
-                    options.UnbindMergeTolerance
-                );
-            }
+            var unboundLine = unbinder.Unbind(
+                lineIndex,
+                result,
+                unbindOptions
+            );
 
             if (compressor is not null)
             {

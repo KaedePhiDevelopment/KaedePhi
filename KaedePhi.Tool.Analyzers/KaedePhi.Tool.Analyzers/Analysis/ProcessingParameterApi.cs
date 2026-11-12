@@ -14,8 +14,8 @@ namespace KaedePhi.Tool.Analyzers.Analysis;
 internal static class ProcessingParameterApi
 {
     // 各目标类型的命名空间与元数据名称
-    private const string JudgeLineNamespace = "KaedePhi.Tool.JudgeLines";
-    private const string JudgeLineImplementationNamespace = "KaedePhi.Tool.JudgeLines.Intermediate";
+    private const string JudgeLineNamespace = "KaedePhi.Tool.JudgeLine";
+    private const string JudgeLineImplementationNamespace = "KaedePhi.Tool.JudgeLine.Intermediate";
     private const string LayerNamespace = "KaedePhi.Tool.Layer";
     private const string LayerImplementationNamespace = "KaedePhi.Tool.Layer.Intermediate";
     private const string EventNamespace = "KaedePhi.Tool.Event";
@@ -108,6 +108,30 @@ internal static class ProcessingParameterApi
         IInvocationOperation invocation,
         out IArgumentOperation argument
     ) => TryGetArgument(invocation, PrecisionMethods, "precision", out argument);
+
+    /// <summary>
+    /// 尝试从调用中检索 precision 参数或统一解绑选项中的精度值。
+    /// </summary>
+    /// <param name="invocation">待检查的调用操作</param>
+    /// <param name="value">匹配到的精度值操作</param>
+    /// <returns>是否找到受支持的精度值</returns>
+    public static bool TryGetPrecisionValue(
+        IInvocationOperation invocation,
+        out IOperation value
+    )
+    {
+        if (JudgeLineUnbinderApi.TryGetOptionValue(invocation, "Precision", out value))
+            return true;
+
+        if (TryGetPrecisionArgument(invocation, out var argument))
+        {
+            value = argument.Value;
+            return true;
+        }
+
+        value = null!;
+        return false;
+    }
 
     /// <summary>
     /// 尝试从调用中检索受支持的 tolerance 实参。

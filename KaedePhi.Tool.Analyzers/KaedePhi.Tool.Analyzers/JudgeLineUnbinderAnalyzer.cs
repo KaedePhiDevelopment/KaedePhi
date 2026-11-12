@@ -39,31 +39,35 @@ public sealed class JudgeLineUnbinderAnalyzer : DiagnosticAnalyzer
         // 非目标调用直接忽略
         if (
             context.Operation is not IInvocationOperation invocation
-            || !JudgeLineUnbinderApi.TryGetToleranceArguments(invocation, out var arguments)
+            || !JudgeLineUnbinderApi.TryGetToleranceValues(invocation, out var values)
         )
             return;
 
-        // 零容差诊断仅针对动态解绑方法的 tolerance 实参
-        var isDynamicMethod = JudgeLineUnbinderApi.IsDynamicMethod(invocation.TargetMethod);
-        foreach (var argument in arguments)
+        // 零容差诊断仅针对自适应采样的几何容差
+        var isAdaptiveUnbind = JudgeLineUnbinderApi.IsAdaptiveUnbind(invocation);
+        foreach (var (valueOperation, name) in values)
         {
             // 仅分析编译期可确定的常量值
             if (
                 !ConstantExpressionEvaluator.TryGetValue(
                     context.Compilation,
-                    argument,
+                    valueOperation,
                     context.CancellationToken,
                     out var value
                 )
                 || double.IsNaN(value)
                 || double.IsInfinity(value)
-                || argument.Value.Syntax is not SyntaxNode expression
+                || valueOperation.Syntax is not SyntaxNode expression
             )
                 continue;
 
             // 依次按阈值匹配规则：动态零容差、过大、过小
             DiagnosticDescriptor? diagnostic;
-            if (isDynamicMethod && argument.Parameter?.Name == "tolerance" && value == 0.0)
+            if (
+                isAdaptiveUnbind
+                && name is "tolerance" or "Tolerance"
+                && value == 0.0
+            )
                 diagnostic = JudgeLineUnbinderDiagnostic.ZeroToleranceRule;
             else if (value >= JudgeLineUnbinderTolerance.ErrorThreshold)
                 diagnostic = JudgeLineUnbinderDiagnostic.Rule;

@@ -1,9 +1,11 @@
 using KaedePhi.Core.Intermediate.Model.Events;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Event.Intermediate;
-using KaedePhi.Tool.JudgeLines.Intermediate;
+using KaedePhi.Tool.JudgeLine.Intermediate;
+using KaedePhi.Tool.JudgeLine;
 using KaedePhi.Tool.Layer.Intermediate;
 using Chart = KaedePhi.Core.Intermediate.Model.Chart;
+using JudgeLine = KaedePhi.Core.Intermediate.Model.JudgeLine;
 
 namespace KaedePhi.Tool.App.Shared;
 
@@ -26,7 +28,7 @@ public static class ChartProcessor
         NumericParameterValidator.ValidateTolerance(mergeTolerance);
         IrChartValidator.ValidateJudgeLineHierarchy(chart.JudgeLineList);
 
-        var unbinder = new JudgeLineUnbinder();
+        IJudgeLineUnbindService<Core.Intermediate.Model.JudgeLine> unbinder = new JudgeLineUnbinder();
         var compressor = new LayerProcessor();
         log?.AttachToAll(unbinder, compressor);
 
@@ -43,17 +45,21 @@ public static class ChartProcessor
             ct.ThrowIfCancellationRequested();
             var i = linesToProcess[idx];
             var lineProgress = CreateLineProgress(progress, idx, totalLines);
-            var unboundLine = classic
-                ? unbinder.FatherUnbind(i, chart.JudgeLineList, precision, lineProgress, ct)
-                : unbinder.FatherUnbindDynamic(
-                    i,
-                    chart.JudgeLineList,
-                    precision,
-                    tolerance,
-                    mergeTolerance,
-                    lineProgress,
-                    ct
-                );
+            var unboundLine = unbinder.Unbind(
+                i,
+                chart.JudgeLineList,
+                new JudgeLineUnbindOptions
+                {
+                    SamplingMode = classic
+                        ? JudgeLineUnbindSamplingMode.EqualSpacing
+                        : JudgeLineUnbindSamplingMode.Adaptive,
+                    Precision = precision,
+                    Tolerance = tolerance,
+                    MergeTolerance = mergeTolerance,
+                },
+                lineProgress,
+                ct
+            );
             if (classic && !disableCompress)
             {
                 foreach (var layer in unboundLine.EventLayers)

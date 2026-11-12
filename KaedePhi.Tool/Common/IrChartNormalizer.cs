@@ -23,7 +23,7 @@ public static class IrChartNormalizer
         return normalized;
     }
 
-    private static void NormalizeJudgeLineNotes(IReadOnlyList<JudgeLine> judgeLines)
+    private static void NormalizeJudgeLineNotes(IReadOnlyList<Ir.JudgeLine> judgeLines)
     {
         foreach (var line in judgeLines)
             NormalizeNotes(line.Notes);

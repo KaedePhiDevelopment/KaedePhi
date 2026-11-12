@@ -2,9 +2,9 @@ using System.Collections.Concurrent;
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Event.Intermediate;
-using JudgeLine = KaedePhi.Core.Intermediate.Model.JudgeLine;
+using KaedePhi.Tool.JudgeLine.Utils;
 
-namespace KaedePhi.Tool.JudgeLines.Intermediate.Utils;
+namespace KaedePhi.Tool.JudgeLine.Intermediate.Utils;
 
 /// <summary>
 /// IR 判定线父子解绑处理器（自适应采样）。
@@ -16,27 +16,7 @@ public class FatherUnbindPlusProcessor : FatherUnbindProcessorBase
     private readonly double _tolerance;
     private readonly double _mergeTolerance;
     private readonly EventListMergerPlus<double> _merger = new();
-
-    /// <summary>
-    /// 初始化父级解绑增强处理器的新实例。
-    /// </summary>
-    /// <param name="cache">共享缓存</param>
-    /// <param name="tolerance">容差</param>
-    /// <param name="logInfo">信息日志回调</param>
-    /// <param name="logWarning">警告日志回调</param>
-    /// <param name="logError">错误日志回调</param>
-    /// <param name="logDebug">调试日志回调</param>
-    [Obsolete("请改用包含 mergeTolerance 参数的构造函数。")]
-    public FatherUnbindPlusProcessor(
-        ConcurrentDictionary<FatherUnbindHelpers.UnbindCacheKey, JudgeLine> cache,
-        double tolerance,
-        Action<string>? logInfo = null,
-        Action<string>? logWarning = null,
-        Action<string>? logError = null,
-        Action<string>? logDebug = null
-    )
-        : this(cache, tolerance, tolerance, logInfo, logWarning, logError, logDebug) { }
-
+    
     /// <summary>
     /// 初始化父级解绑增强处理器的新实例。
     /// </summary>
@@ -48,7 +28,7 @@ public class FatherUnbindPlusProcessor : FatherUnbindProcessorBase
     /// <param name="logError">错误日志回调</param>
     /// <param name="logDebug">调试日志回调</param>
     public FatherUnbindPlusProcessor(
-        ConcurrentDictionary<FatherUnbindHelpers.UnbindCacheKey, JudgeLine> cache,
+        ConcurrentDictionary<JudgeLineUnbindCacheKey, Ir.JudgeLine> cache,
         double tolerance,
         double mergeTolerance,
         Action<string>? logInfo = null,
@@ -66,9 +46,9 @@ public class FatherUnbindPlusProcessor : FatherUnbindProcessorBase
     /// 自适应采样解绑：将判定线与父线解绑，以事件边界为强制切割点，
     /// 仅在误差超过容差时插入新采样段。相较 <see cref="FatherUnbindProcessor"/> 可减少冗余段数。
     /// </summary>
-    public JudgeLine FatherUnbind(
+    public Ir.JudgeLine FatherUnbind(
         int targetJudgeLineIndex,
-        List<JudgeLine> allJudgeLines,
+        List<Ir.JudgeLine> allJudgeLines,
         double precision,
         IProgress<ToolProgress>? progress = null,
         CancellationToken ct = default
@@ -78,7 +58,7 @@ public class FatherUnbindPlusProcessor : FatherUnbindProcessorBase
         NumericParameterValidator.ValidateTolerance(_tolerance);
         NumericParameterValidator.ValidateTolerance(_mergeTolerance);
         ct.ThrowIfCancellationRequested();
-        JudgeLine judgeLineCopy;
+        Ir.JudgeLine judgeLineCopy;
         try
         {
             progress?.Report(new ToolProgress(0.1, "准备解绑上下文"));
@@ -88,13 +68,13 @@ public class FatherUnbindPlusProcessor : FatherUnbindProcessorBase
                 allJudgeLines,
                 logTag: "FatherUnbindPlus",
                 startAction: "开始解绑（自适应采样）",
-                cacheKeyFactory: index => new FatherUnbindHelpers.UnbindCacheKey(
+                cacheKeyFactory: index => new JudgeLineUnbindCacheKey(
                     index,
                     precision,
                     _tolerance,
                     _mergeTolerance,
                     true,
-                    FatherUnbindHelpers.CurrentRenderProfile
+                    JudgeLineUnbindContext.CurrentRenderProfile
                 ),
                 recursiveUnbind: (idx, lines) => FatherUnbind(idx, lines, precision, progress, ct)
             );
@@ -107,24 +87,24 @@ public class FatherUnbindPlusProcessor : FatherUnbindProcessorBase
             }
 
             progress?.Report(new ToolProgress(0.2, "合并通道"));
-            var ch = FatherUnbindHelpers.MergeChannels(
+            var ch = JudgeLineUnbindEvents.MergeChannels(
                 judgeLineCopy.EventLayers,
                 fatherLine.EventLayers,
                 Merge
             );
 
-            var rangeResult = FatherUnbindHelpers.TryGetOverallRange(ch);
+            var rangeResult = JudgeLineAdaptiveSampler.TryGetOverallRange(ch);
             if (rangeResult is null)
             {
                 judgeLineCopy.Father = -1;
                 Cache.TryAdd(
-                    new FatherUnbindHelpers.UnbindCacheKey(
+                    new JudgeLineUnbindCacheKey(
                         targetJudgeLineIndex,
                         precision,
                         _tolerance,
                         _mergeTolerance,
                         true,
-                        FatherUnbindHelpers.CurrentRenderProfile
+                        JudgeLineUnbindContext.CurrentRenderProfile
                     ),
                     judgeLineCopy
                 );
@@ -136,13 +116,13 @@ public class FatherUnbindPlusProcessor : FatherUnbindProcessorBase
             var step = new Beat(1d / precision);
 
             progress?.Report(new ToolProgress(0.4, "收集关键帧"));
-            var keyBeats = FatherUnbindHelpers.CollectKeyBeats(overallMin, overallMax, ch);
+            var keyBeats = JudgeLineAdaptiveSampler.CollectKeyBeats(overallMin, overallMax, ch);
 
             progress?.Report(new ToolProgress(0.6, "自适应采样"));
             LogDebug?.Invoke(
                 $"FatherUnbindPlus[{targetJudgeLineIndex}]: 自适应采样，关键帧数={keyBeats.Count}，最大精度={precision}"
             );
-            var (resultX, resultY) = FatherUnbindHelpers.RunAdaptiveSampling(
+            var (resultX, resultY) = JudgeLineAdaptiveSampler.Sample(
                 keyBeats,
                 step,
                 _tolerance,
@@ -154,16 +134,22 @@ public class FatherUnbindPlusProcessor : FatherUnbindProcessorBase
             LogDebug?.Invoke(
                 $"FatherUnbindPlus[{targetJudgeLineIndex}]: 采样完成（生成 {resultX.Count} 段），写回结果"
             );
-            FatherUnbindHelpers.WriteResultToLine(judgeLineCopy, resultX, resultY, ch.Fr, Merge);
+            JudgeLineUnbindLayerOperations.WriteResultToLine(
+                judgeLineCopy,
+                resultX,
+                resultY,
+                ch.Fr,
+                Merge
+            );
 
             Cache.TryAdd(
-                new FatherUnbindHelpers.UnbindCacheKey(
+                new JudgeLineUnbindCacheKey(
                     targetJudgeLineIndex,
                     precision,
                     _tolerance,
                     _mergeTolerance,
                     true,
-                    FatherUnbindHelpers.CurrentRenderProfile
+                    JudgeLineUnbindContext.CurrentRenderProfile
                 ),
                 judgeLineCopy
             );

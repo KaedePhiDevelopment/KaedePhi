@@ -50,9 +50,9 @@ public sealed class JudgeLineUnbinderCodeFixProvider : CodeFixProvider
         if (
             semanticModel?.GetOperation(invocation, context.CancellationToken)
                 is not IInvocationOperation operation
-            || !JudgeLineUnbinderApi.TryGetToleranceArguments(operation, out var arguments)
-            || FindArgument(arguments, diagnostic.Location.SourceSpan) is not { } argument
-            || argument.Value.Syntax is not ExpressionSyntax expression
+            || !JudgeLineUnbinderApi.TryGetToleranceValues(operation, out var values)
+            || FindValue(values, diagnostic.Location.SourceSpan) is not { } valueOperation
+            || valueOperation.Syntax is not ExpressionSyntax expression
         )
             return;
 
@@ -60,7 +60,7 @@ public sealed class JudgeLineUnbinderCodeFixProvider : CodeFixProvider
         if (
             !ConstantExpressionEvaluator.TryGetValue(
                 semanticModel.Compilation,
-                argument,
+                valueOperation,
                 context.CancellationToken,
                 out var value
             )
@@ -68,10 +68,10 @@ public sealed class JudgeLineUnbinderCodeFixProvider : CodeFixProvider
             || double.IsInfinity(value)
             || !CanFix(diagnostic.Id, value)
             ||
-            // 零容差修复仅适用于动态解绑方法
+            // 零容差修复仅适用于自适应采样
             (
                 diagnostic.Id == JudgeLineUnbinderAnalyzer.ZeroToleranceDiagnosticId
-                && !JudgeLineUnbinderApi.IsDynamicMethod(operation.TargetMethod)
+                && !JudgeLineUnbinderApi.IsAdaptiveUnbind(operation)
             )
         )
             return;
@@ -122,9 +122,8 @@ public sealed class JudgeLineUnbinderCodeFixProvider : CodeFixProvider
         if (
             semanticModel?.GetOperation(invocation, cancellationToken)
                 is not IInvocationOperation operation
-            || !JudgeLineUnbinderApi.TryGetToleranceArguments(operation, out var arguments)
-            || FindArgument(arguments, diagnosticSpan)
-                is not { Value.Syntax: ExpressionSyntax expression }
+            || !JudgeLineUnbinderApi.TryGetToleranceValues(operation, out var values)
+            || FindValue(values, diagnosticSpan) is not { Syntax: ExpressionSyntax expression }
         )
             return document;
 
@@ -169,10 +168,17 @@ public sealed class JudgeLineUnbinderCodeFixProvider : CodeFixProvider
         );
     }
 
-    private static IArgumentOperation? FindArgument(
-        ImmutableArray<IArgumentOperation> arguments,
+    private static IOperation? FindValue(
+        ImmutableArray<(IOperation Value, string Name)> values,
         TextSpan diagnosticSpan
-    ) =>
-        // 诊断位置与实参表达式位置逐一比对，定位被诊断的具体实参
-        arguments.FirstOrDefault(argument => argument.Value.Syntax.Span == diagnosticSpan);
+    )
+    {
+        foreach (var value in values)
+        {
+            if (value.Value.Syntax.Span == diagnosticSpan)
+                return value.Value;
+        }
+
+        return null;
+    }
 }

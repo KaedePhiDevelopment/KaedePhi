@@ -1,7 +1,8 @@
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter.PhiEdit.Model;
-using KaedePhi.Tool.JudgeLines.Intermediate;
+using KaedePhi.Tool.JudgeLine.Intermediate;
+using KaedePhi.Tool.JudgeLine;
 using KaedePhi.Tool.Layer.Intermediate;
 using ExtendLayer = KaedePhi.Core.Intermediate.Model.Events.ExtendLayer;
 using IrJudgeLine = KaedePhi.Core.Intermediate.Model.JudgeLine;
@@ -60,23 +61,20 @@ public class PhiEditJudgeLineBuilder
 
         if (trueSrc.Father != -1)
         {
-            var unbinder = new JudgeLineUnbinder();
-            if (_options.FatherLineUnbind.ClassicMode)
-            {
-                trueSrc = unbinder.FatherUnbind(
-                    allLine.FindIndex(l => ReferenceEquals(l, src)),
-                    allLine,
-                    _options.FatherLineUnbind.Precision
-                );
-            }
-            else
-                trueSrc = unbinder.FatherUnbindDynamic(
-                    allLine.FindIndex(l => ReferenceEquals(l, src)),
-                    allLine,
-                    _options.FatherLineUnbind.Precision,
-                    _options.FatherLineUnbind.Tolerance,
-                    _options.FatherLineUnbind.MergeTolerance
-                );
+            IJudgeLineUnbindService<IrJudgeLine> unbinder = new JudgeLineUnbinder();
+            trueSrc = unbinder.Unbind(
+                allLine.FindIndex(l => ReferenceEquals(l, src)),
+                allLine,
+                new JudgeLineUnbindOptions
+                {
+                    SamplingMode = _options.FatherLineUnbind.ClassicMode
+                        ? JudgeLineUnbindSamplingMode.EqualSpacing
+                        : JudgeLineUnbindSamplingMode.Adaptive,
+                    Precision = _options.FatherLineUnbind.Precision,
+                    Tolerance = _options.FatherLineUnbind.Tolerance,
+                    MergeTolerance = _options.FatherLineUnbind.MergeTolerance,
+                }
+            );
 
             if (_options.FatherLineUnbind is { ClassicMode: true, Compress: true })
             {

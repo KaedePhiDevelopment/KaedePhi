@@ -1,7 +1,7 @@
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Event.Intermediate;
-using KaedePhi.Tool.JudgeLines.Intermediate.Utils;
+using KaedePhi.Tool.JudgeLine.Intermediate.Utils;
 using EventLayer = KaedePhi.Core.Intermediate.Model.Events.EventLayer;
 
 namespace KaedePhi.Tool.Layer.Intermediate;
@@ -242,7 +242,7 @@ public class LayerProcessor : LoggableBase, ILayerProcessor<EventLayer>
         var canCompressPositionTogether = CanCompressPositionTogether(layer);
         if (canCompressPositionTogether)
         {
-            var (compressedX, compressedY) = FatherUnbindHelpers.CompressPositionEvents(
+            var (compressedX, compressedY) = JudgeLinePositionEventCompressor.CompressPositionEvents(
                 layer.MoveXEvents!,
                 layer.MoveYEvents!,
                 tolerance

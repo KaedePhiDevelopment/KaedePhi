@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
-using JudgeLine = KaedePhi.Core.Intermediate.Model.JudgeLine;
+using KaedePhi.Tool.JudgeLine.Utils;
 
-namespace KaedePhi.Tool.JudgeLines.Intermediate.Utils;
+namespace KaedePhi.Tool.JudgeLine.Intermediate.Utils;
 
 /// <summary>
 /// IR 判定线父子解绑处理器基类。
@@ -13,7 +13,7 @@ public abstract class FatherUnbindProcessorBase
     /// <summary>
     /// 表示缓存。
     /// </summary>
-    protected readonly ConcurrentDictionary<FatherUnbindHelpers.UnbindCacheKey, JudgeLine> Cache;
+    protected readonly ConcurrentDictionary<JudgeLineUnbindCacheKey, Ir.JudgeLine> Cache;
 
     /// <summary>
     /// 表示日志信息。
@@ -44,7 +44,7 @@ public abstract class FatherUnbindProcessorBase
     /// <param name="logError">错误日志回调</param>
     /// <param name="logDebug">调试日志回调</param>
     protected FatherUnbindProcessorBase(
-        ConcurrentDictionary<FatherUnbindHelpers.UnbindCacheKey, JudgeLine> cache,
+        ConcurrentDictionary<JudgeLineUnbindCacheKey, Ir.JudgeLine> cache,
         Action<string>? logInfo = null,
         Action<string>? logWarning = null,
         Action<string>? logError = null,
@@ -65,8 +65,8 @@ public abstract class FatherUnbindProcessorBase
     /// <param name="FatherLine">父判定线数据</param>
     /// <param name="ShouldReturn">是否应提前返回</param>
     protected readonly record struct PrepareResult(
-        JudgeLine JudgeLine,
-        JudgeLine? FatherLine,
+        Ir.JudgeLine JudgeLine,
+        Ir.JudgeLine? FatherLine,
         bool ShouldReturn
     );
 
@@ -82,15 +82,15 @@ public abstract class FatherUnbindProcessorBase
     /// <returns>操作得到的结果。</returns>
     protected PrepareResult PrepareUnbindContext(
         int targetJudgeLineIndex,
-        List<JudgeLine> allJudgeLines,
+        List<Ir.JudgeLine> allJudgeLines,
         string logTag,
         string startAction,
-        Func<int, FatherUnbindHelpers.UnbindCacheKey> cacheKeyFactory,
-        Func<int, List<JudgeLine>, JudgeLine> recursiveUnbind
+        Func<int, JudgeLineUnbindCacheKey> cacheKeyFactory,
+        Func<int, List<Ir.JudgeLine>, Ir.JudgeLine> recursiveUnbind
     )
     {
         if (
-            FatherUnbindHelpers.TryGetCachedClone(
+            JudgeLineUnbindCache.TryGetCachedClone(
                 cacheKeyFactory(targetJudgeLineIndex),
                 Cache,
                 logTag,
@@ -106,7 +106,7 @@ public abstract class FatherUnbindProcessorBase
         var allJudgeLinesCopy = allJudgeLines.Select(jl => jl.Clone()).ToList();
 
         if (
-            FatherUnbindHelpers.TryReturnWhenNoFather(
+            JudgeLineUnbindCache.TryReturnWhenNoFather(
                 cacheKeyFactory(targetJudgeLineIndex),
                 judgeLineCopy,
                 Cache,
@@ -132,7 +132,7 @@ public abstract class FatherUnbindProcessorBase
             fatherLineCopy = recursiveUnbind(judgeLineCopy.Father, allJudgeLinesCopy);
         }
 
-        FatherUnbindHelpers.CleanupRedundantLayers(judgeLineCopy, fatherLineCopy);
+        JudgeLineUnbindLayerOperations.CleanupRedundantLayers(judgeLineCopy, fatherLineCopy);
 
         return new PrepareResult(judgeLineCopy, fatherLineCopy, false);
     }

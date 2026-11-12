@@ -1,4 +1,3 @@
-using KaedePhi.Core;
 using KaedePhi.Core.Intermediate.Model;
 
 namespace KaedePhi.Tool.Common;
@@ -31,7 +30,7 @@ public static class IrChartValidator
     /// </summary>
     /// <param name="judgeLines">待检查的判定线列表。</param>
     /// <returns>无返回值。</returns>
-    public static void ValidateJudgeLineHierarchy(IReadOnlyList<JudgeLine> judgeLines)
+    public static void ValidateJudgeLineHierarchy(IReadOnlyList<Ir.JudgeLine> judgeLines)
     {
         ArgumentNullException.ThrowIfNull(judgeLines);
         ValidateFatherIndexes(judgeLines);
@@ -60,7 +59,7 @@ public static class IrChartValidator
         }
     }
 
-    private static void ValidateBpmFactors(IReadOnlyList<JudgeLine> judgeLines)
+    private static void ValidateBpmFactors(IReadOnlyList<Ir.JudgeLine> judgeLines)
     {
         for (var index = 0; index < judgeLines.Count; index++)
         {
@@ -72,7 +71,7 @@ public static class IrChartValidator
         }
     }
 
-    private static void ValidateFatherIndexes(IReadOnlyList<JudgeLine> judgeLines)
+    private static void ValidateFatherIndexes(IReadOnlyList<Ir.JudgeLine> judgeLines)
     {
         for (var index = 0; index < judgeLines.Count; index++)
         {
@@ -84,7 +83,7 @@ public static class IrChartValidator
         }
     }
 
-    private static void ValidateAcyclicHierarchy(IReadOnlyList<JudgeLine> judgeLines)
+    private static void ValidateAcyclicHierarchy(IReadOnlyList<Ir.JudgeLine> judgeLines)
     {
         var states = new byte[judgeLines.Count];
         for (var start = 0; start < judgeLines.Count; start++)
@@ -92,7 +91,7 @@ public static class IrChartValidator
     }
 
     private static void VisitFatherPath(
-        IReadOnlyList<JudgeLine> judgeLines,
+        IReadOnlyList<Ir.JudgeLine> judgeLines,
         byte[] states,
         int start
     )

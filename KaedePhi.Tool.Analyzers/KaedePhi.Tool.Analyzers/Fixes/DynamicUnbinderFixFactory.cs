@@ -21,6 +21,9 @@ internal static class DynamicUnbinderFixFactory
         IInvocationOperation operation
     )
     {
+        if (operation.TargetMethod.Name == "Unbind")
+            return CreateOptionsFix(invocation, operation);
+
         // 先记录需要移除的容差实参在实参列表中的索引
         var removedIndices = new HashSet<int>(
             operation
@@ -51,5 +54,61 @@ internal static class DynamicUnbinderFixFactory
         return invocation
             .WithExpression(expression)
             .WithArgumentList(invocation.ArgumentList.WithArguments(arguments));
+    }
+
+    private static InvocationExpressionSyntax CreateOptionsFix(
+        InvocationExpressionSyntax invocation,
+        IInvocationOperation operation
+    )
+    {
+        var optionsArgument = operation.Arguments.FirstOrDefault(argument =>
+            argument.Parameter?.Name == "options"
+        );
+        if (
+            optionsArgument?.Value.Syntax is not ObjectCreationExpressionSyntax objectCreation
+            || objectCreation.Initializer is not { } initializer
+        )
+            return invocation;
+
+        var expressions = initializer.Expressions;
+        var samplingModeReplaced = false;
+        for (var i = expressions.Count - 1; i >= 0; i--)
+        {
+            if (expressions[i] is not AssignmentExpressionSyntax assignment)
+                continue;
+
+            var propertyName = assignment.Left switch
+            {
+                IdentifierNameSyntax identifier => identifier.Identifier.ValueText,
+                MemberAccessExpressionSyntax memberAccess => memberAccess.Name.Identifier.ValueText,
+                _ => string.Empty,
+            };
+            if (propertyName is "Tolerance" or "MergeTolerance")
+            {
+                expressions = expressions.RemoveAt(i);
+                continue;
+            }
+
+            if (propertyName == "SamplingMode")
+            {
+                var equalSpacing = SyntaxFactory
+                    .ParseExpression(
+                        "global::KaedePhi.Tool.JudgeLine.JudgeLineUnbindSamplingMode.EqualSpacing"
+                    )
+                    .WithTriviaFrom(assignment.Right);
+                expressions = expressions.Replace(
+                    assignment,
+                    assignment.WithRight(equalSpacing)
+                );
+                samplingModeReplaced = true;
+            }
+        }
+
+        return samplingModeReplaced
+            ? invocation.ReplaceNode(
+                objectCreation,
+                objectCreation.WithInitializer(initializer.WithExpressions(expressions))
+            )
+            : invocation;
     }
 }

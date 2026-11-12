@@ -1,7 +1,8 @@
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter.Phigros.v3.Model;
-using KaedePhi.Tool.JudgeLines.Intermediate;
+using KaedePhi.Tool.JudgeLine.Intermediate;
+using KaedePhi.Tool.JudgeLine;
 using KaedePhi.Tool.Layer.Intermediate;
 using IrEventLayer = KaedePhi.Core.Intermediate.Model.Events.EventLayer;
 using IrJudgeLine = KaedePhi.Core.Intermediate.Model.JudgeLine;
@@ -102,23 +103,20 @@ public class PhigrosV3JudgeLineBuilder
         if (preprocessedSrc.Father != -1)
         {
             var srcIndex = allLine.FindIndex(l => ReferenceEquals(l, src));
-            var unbinder = new JudgeLineUnbinder();
-            if (_options.FatherLineUnbind.ClassicMode)
-            {
-                preprocessedSrc = unbinder.FatherUnbind(
-                    srcIndex,
-                    allLine,
-                    _options.FatherLineUnbind.Precision
-                );
-            }
-            else
-                preprocessedSrc = unbinder.FatherUnbindDynamic(
-                    srcIndex,
-                    allLine,
-                    _options.FatherLineUnbind.Precision,
-                    _options.FatherLineUnbind.Tolerance,
-                    _options.FatherLineUnbind.MergeTolerance
-                );
+            IJudgeLineUnbindService<IrJudgeLine> unbinder = new JudgeLineUnbinder();
+            preprocessedSrc = unbinder.Unbind(
+                srcIndex,
+                allLine,
+                new JudgeLineUnbindOptions
+                {
+                    SamplingMode = _options.FatherLineUnbind.ClassicMode
+                        ? JudgeLineUnbindSamplingMode.EqualSpacing
+                        : JudgeLineUnbindSamplingMode.Adaptive,
+                    Precision = _options.FatherLineUnbind.Precision,
+                    Tolerance = _options.FatherLineUnbind.Tolerance,
+                    MergeTolerance = _options.FatherLineUnbind.MergeTolerance,
+                }
+            );
 
             if (_options.FatherLineUnbind.ClassicMode && _options.FatherLineUnbind.Compress)
             {

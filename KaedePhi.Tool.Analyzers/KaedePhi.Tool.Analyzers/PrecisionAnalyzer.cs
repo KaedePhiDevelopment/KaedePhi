@@ -43,7 +43,7 @@ public sealed class PrecisionAnalyzer : DiagnosticAnalyzer
         // 非目标调用直接忽略
         if (
             context.Operation is not IInvocationOperation invocation
-            || !ProcessingParameterApi.TryGetPrecisionArgument(invocation, out var argument)
+            || !ProcessingParameterApi.TryGetPrecisionValue(invocation, out var valueOperation)
         )
             return;
 
@@ -51,13 +51,13 @@ public sealed class PrecisionAnalyzer : DiagnosticAnalyzer
         if (
             !ConstantExpressionEvaluator.TryGetValue(
                 context.Compilation,
-                argument,
+                valueOperation,
                 context.CancellationToken,
                 out var value
             )
             || double.IsNaN(value)
             || double.IsInfinity(value)
-            || argument.Value.Syntax is not { } expression
+            || valueOperation.Syntax is not { } expression
         )
             return;
 

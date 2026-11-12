@@ -7,6 +7,8 @@ public static class Constants
 {
     /// <summary>浮点比较容差</summary>
     public const float FloatEpsilon = 1e-6f;
+    
+    public const float StrictFloatEpsilon = 1e-12f;
 
     /// <summary>Phigros 速度值转换比例</summary>
     public const double SpeedValueRatio = 4.5d;

@@ -60,7 +60,7 @@ public sealed class PrecisionAnalyzerTests
             {
                 public static void Run()
                 {
-                    var unbinder = new KaedePhi.Tool.JudgeLines.Intermediate.JudgeLineUnbinder();
+                    var unbinder = new KaedePhi.Tool.JudgeLine.Intermediate.JudgeLineUnbinder();
                     unbinder.FatherUnbindDynamic(0, new List<JudgeLine>(), {|#0:2048d|}, 0.1d, 0.1d);
                 }
             }
@@ -69,7 +69,7 @@ public sealed class PrecisionAnalyzerTests
             {
             }
 
-            namespace KaedePhi.Tool.JudgeLines
+            namespace KaedePhi.Tool.JudgeLine
             {
                 public interface IJudgeLineUnbinder<TJudgeLine>
                 {
@@ -83,7 +83,7 @@ public sealed class PrecisionAnalyzerTests
                 }
             }
 
-            namespace KaedePhi.Tool.JudgeLines.Intermediate
+            namespace KaedePhi.Tool.JudgeLine.Intermediate
             {
                 public sealed class JudgeLineUnbinder : IJudgeLineUnbinder<global::JudgeLine>
                 {
@@ -116,7 +116,7 @@ public sealed class PrecisionAnalyzerTests
             {
                 public static void Run()
                 {
-                    var unbinder = new KaedePhi.Tool.JudgeLines.Intermediate.JudgeLineUnbinder();
+                    var unbinder = new KaedePhi.Tool.JudgeLine.Intermediate.JudgeLineUnbinder();
                     unbinder.FatherUnbind(0, new List<JudgeLine>(), {|#0:512d|});
                 }
             }
@@ -125,7 +125,7 @@ public sealed class PrecisionAnalyzerTests
             {
             }
 
-            namespace KaedePhi.Tool.JudgeLines
+            namespace KaedePhi.Tool.JudgeLine
             {
                 public interface IJudgeLineUnbinder<TJudgeLine>
                 {
@@ -137,7 +137,7 @@ public sealed class PrecisionAnalyzerTests
                 }
             }
 
-            namespace KaedePhi.Tool.JudgeLines.Intermediate
+            namespace KaedePhi.Tool.JudgeLine.Intermediate
             {
                 public sealed class JudgeLineUnbinder : IJudgeLineUnbinder<global::JudgeLine>
                 {
@@ -155,6 +155,56 @@ public sealed class PrecisionAnalyzerTests
             .WithLocation(0)
             .WithSeverity(DiagnosticSeverity.Warning)
             .WithArguments("512");
+        await Verifier.VerifyAnalyzerAsync(source, expected);
+    }
+
+    [Fact]
+    public async Task UnbindOptions_WithExcessivePrecision_ReportsError()
+    {
+        const string source = """
+            using System.Collections.Generic;
+
+            public sealed class JudgeLine
+            {
+            }
+
+            namespace KaedePhi.Tool.JudgeLine
+            {
+                public sealed class JudgeLineUnbindOptions
+                {
+                    public double Precision { get; set; }
+                }
+
+                public interface IJudgeLineUnbindService<TJudgeLine>
+                {
+                    TJudgeLine Unbind(
+                        int targetJudgeLineIndex,
+                        List<TJudgeLine> allTJudgeLines,
+                        JudgeLineUnbindOptions options);
+                }
+            }
+
+            public static class Test
+            {
+                public static void Run(
+                    KaedePhi.Tool.JudgeLine.IJudgeLineUnbindService<JudgeLine> unbinder)
+                {
+                    unbinder.Unbind(
+                        0,
+                        new List<JudgeLine>(),
+                        new KaedePhi.Tool.JudgeLine.JudgeLineUnbindOptions
+                        {
+                            Precision = {|#0:2048d|},
+                        });
+                }
+            }
+            """;
+
+        var expected = Verifier
+            .Diagnostic(PrecisionAnalyzer.ExcessivePrecisionDiagnosticId)
+            .WithLocation(0)
+            .WithSeverity(DiagnosticSeverity.Error)
+            .WithArguments("2048");
         await Verifier.VerifyAnalyzerAsync(source, expected);
     }
 

@@ -355,6 +355,8 @@ namespace KaedePhi.Core.Primitives
         /// 获取表示无限拍的静态实例。
         /// </summary>
         public static Beat Infinity => new(new[] { int.MaxValue, 0, 1 });
+        
+        public static Beat Zero => new(new[] { 0, 0, 1 });
 
         /// <summary>
         /// 判断给定的拍是否表示无限拍。

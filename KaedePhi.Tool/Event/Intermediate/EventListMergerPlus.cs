@@ -129,8 +129,8 @@ public class EventListMergerPlus<TPayload> : EventListMerger<TPayload>
     /// <summary>
     /// 在单个区间内按误差阈值动态分段，生成近似线性片段。
     /// <para>
-    /// 先收集区间内所有事件的起止拍作为强制切割关键帧（与
-    /// FatherUnbindHelpers.CollectKeyBeats 等价），再逐子区间调用
+    /// 先收集区间内所有事件的起止拍作为强制切割关键帧（与判定线自适应采样采用相同规则），
+    /// 再逐子区间调用
     /// <see cref="AdaptiveSampleSubInterval"/>。
     /// 关键帧之间的子区间长度等于单个事件的持续时间，使得容差评估中的
     /// 进度参数 p = (nextBeat − segStart) / (subEnd − segStart)
@@ -175,7 +175,7 @@ public class EventListMergerPlus<TPayload> : EventListMerger<TPayload>
     /// <summary>
     /// 对两相邻事件边界之间的子区间执行自适应采样。
     /// 容差评估参考端点固定为 <paramref name="subEnd"/>（子区间终点），
-    /// 与 FatherUnbindHelpers.AdaptiveSampleInterval 结构完全对齐。
+    /// 与判定线自适应采样的区间处理规则保持一致。
     /// </summary>
     private List<IrEvents.Event<TPayload>> AdaptiveSampleSubInterval(
         List<IrEvents.Event<TPayload>> toEventsCopy,

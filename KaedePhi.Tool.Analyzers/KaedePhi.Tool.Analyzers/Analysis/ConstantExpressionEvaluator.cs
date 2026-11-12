@@ -19,18 +19,19 @@ internal static class ConstantExpressionEvaluator
     /// <returns>是否成功解析出常量数值</returns>
     public static bool TryGetValue(
         Compilation compilation,
-        IArgumentOperation argument,
+        IOperation operation,
         CancellationToken cancellationToken,
         out double value
     )
     {
         value = 0;
-        if (argument.Parameter is null || argument.Value.Syntax is not ExpressionSyntax expression)
+        var valueOperation = operation is IArgumentOperation argument ? argument.Value : operation;
+        if (valueOperation.Syntax is not ExpressionSyntax expression)
             return false;
 
         var semanticModel = compilation.GetSemanticModel(expression.SyntaxTree);
         // Beat 实参需要先取出其构造参数中的数值，其余类型直接取常量值
-        return EventCutterApi.IsBeat(argument.Parameter.Type)
+        return EventCutterApi.IsBeat(valueOperation.Type)
             ? TryGetBeatValue(semanticModel, expression, cancellationToken, out value)
             : TryGetNumericValue(semanticModel, expression, cancellationToken, out value);
     }
