@@ -1,6 +1,6 @@
 using System;
 using KaedePhi.Core.Formats.Phigros.v3.Serialization.JsonConverter;
-using KaedePhi.Core.Utils;
+using KaedePhi.Core.Primitives.Mathematics;
 using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Formats.Phigros.v3.Model
@@ -55,6 +55,20 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
         /// <returns>插值结果。</returns>
         public float Interpolate(float start, float end, float progress) =>
             Interpolate(start, end, progress, Value);
+        
+        /// <summary>
+        /// 根据缓动后的进度计算两个数值之间的插值。
+        /// </summary>
+        /// <param name="start">上一个关键帧的数值。</param>
+        /// <param name="end">当前关键帧的目标数值。</param>
+        /// <param name="progress">事件进度，通常位于 0 到 1 之间。</param>
+        /// <param name="type">缓动类型。</param>
+        /// <returns>插值结果。</returns>
+        public static float Interpolate(float start, float end, float progress, AreaEaseType type)
+        {
+            var easedProgress = GetEaseWithProgress(progress, type);
+            return start + (end - start) * easedProgress;
+        }
 
         /// <summary>
         /// 将缓动类型转换为原始整数编号。
@@ -178,20 +192,6 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
         /// <returns>计算得到的缓动值。</returns>
         public static float GetEaseWithProgress(float progress, AreaEaseType type) =>
             GetEaseWithProgress(progress, (int)type);
-
-        /// <summary>
-        /// 根据缓动后的进度计算两个数值之间的插值。
-        /// </summary>
-        /// <param name="start">上一个关键帧的数值。</param>
-        /// <param name="end">当前关键帧的目标数值。</param>
-        /// <param name="progress">事件进度，通常位于 0 到 1 之间。</param>
-        /// <param name="type">缓动类型。</param>
-        /// <returns>插值结果。</returns>
-        public static float Interpolate(float start, float end, float progress, AreaEaseType type)
-        {
-            var easedProgress = GetEaseWithProgress(progress, type);
-            return start + (end - start) * easedProgress;
-        }
 
         /// <summary>
         /// 根据前一事件时间、当前事件时间和查询时间计算事件进度。

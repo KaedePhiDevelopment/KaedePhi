@@ -1,6 +1,6 @@
 using System;
+using KaedePhi.Core.Primitives.Mathematics;
 using KaedePhi.Core.Primitives.Serialization;
-using KaedePhi.Core.Utils;
 using Newtonsoft.Json;
 
 namespace KaedePhi.Core.Primitives

@@ -378,20 +378,6 @@ public static class ChartFormatRegistry
     /// </summary>
     public static IReadOnlyList<ChartFormatDescriptor> Formats => Default.Formats;
 
-    private static async Task<(string FormatId, Ir.Chart Chart)> ImportLegacyIrAsync(
-        string text,
-        object? importOptions,
-        ChartLogSink? log,
-        CancellationToken ct
-    )
-    {
-        ct.ThrowIfCancellationRequested();
-        using var textReader = new StringReader(text);
-        var formatId = ChartGetType.DetectBuiltInFormat(textReader);
-        var chart = await Get(formatId).ImportIrAsync(text, importOptions, log, ct);
-        return (formatId, chart);
-    }
-
     /// <summary>
     /// 检测谱面文本的内置或外部格式并转换为 IR。
     /// </summary>

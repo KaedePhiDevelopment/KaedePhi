@@ -1,4 +1,4 @@
-namespace KaedePhi.Core.Utils
+namespace KaedePhi.Core.Primitives.Mathematics
 {
     /// <summary>
     /// 提供数学扩展方法。
