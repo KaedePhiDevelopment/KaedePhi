@@ -69,6 +69,36 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
             var easedProgress = GetEaseWithProgress(progress, type);
             return start + (end - start) * easedProgress;
         }
+        
+        /// <summary>
+        /// 对二维坐标或倍率分别按 x、y 方向的缓动类型进行插值。
+        /// </summary>
+        /// <param name="start">上一个关键帧的二维数值。</param>
+        /// <param name="end">当前关键帧的目标二维数值。</param>
+        /// <param name="progress">事件进度，通常位于 0 到 1 之间。</param>
+        /// <param name="easeX">x 方向的缓动类型。</param>
+        /// <param name="easeY">y 方向的缓动类型。</param>
+        /// <returns>插值后的二维数值。</returns>
+        public static PositionUnit Interpolate(
+            PositionUnit start,
+            PositionUnit end,
+            float progress,
+            AreaEase easeX,
+            AreaEase easeY
+        )
+        {
+            return new PositionUnit
+            {
+                X = easeX.Interpolate(start.X, end.X, progress),
+                Y = easeY.Interpolate(start.Y, end.Y, progress),
+            };
+        }
+
+        private static float Interpolate(float start, float end, float progress, int type)
+        {
+            var easedProgress = GetEaseWithProgress(progress, type);
+            return start + (end - start) * easedProgress;
+        }
 
         /// <summary>
         /// 将缓动类型转换为原始整数编号。
@@ -225,28 +255,6 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
             return (time - previousEventTime) / (eventTime - previousEventTime);
         }
 
-        /// <summary>
-        /// 对二维坐标或倍率分别按 x、y 方向的缓动类型进行插值。
-        /// </summary>
-        /// <param name="start">上一个关键帧的二维数值。</param>
-        /// <param name="end">当前关键帧的目标二维数值。</param>
-        /// <param name="progress">事件进度，通常位于 0 到 1 之间。</param>
-        /// <param name="easeX">x 方向的缓动类型。</param>
-        /// <param name="easeY">y 方向的缓动类型。</param>
-        /// <returns>插值后的二维数值。</returns>
-        public static PositionUnit Interpolate(
-            PositionUnit start,
-            PositionUnit end,
-            float progress,
-            AreaEase easeX,
-            AreaEase easeY
-        ) =>
-            new()
-            {
-                X = easeX.Interpolate(start.X, end.X, progress),
-                Y = easeY.Interpolate(start.Y, end.Y, progress),
-            };
-
         private static float[,] CreateEaseTable()
         {
             var table = new float[EaseTypeCount, SamplesPerEase + 1];
@@ -285,12 +293,6 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
                     _ => throw new ArgumentOutOfRangeException(nameof(type)),
                 }
             );
-        }
-
-        private static float Interpolate(float start, float end, float progress, int type)
-        {
-            var easedProgress = GetEaseWithProgress(progress, type);
-            return start + (end - start) * easedProgress;
         }
 
         private static bool IsFinite(float value) =>

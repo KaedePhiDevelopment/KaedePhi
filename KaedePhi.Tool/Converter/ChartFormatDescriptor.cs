@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using KaedePhi.Core.Formats;
 using KaedePhi.Tool.Common;
-using KaedePhi.Tool.Compatibility;
 
 namespace KaedePhi.Tool.Converter;
 
@@ -11,25 +10,20 @@ namespace KaedePhi.Tool.Converter;
 public sealed class ChartFormatDescriptor
 {
     private readonly string? _formatId;
-    private int _legacyType;
-    
+
     [SetsRequiredMembers]
     internal ChartFormatDescriptor(
         string formatId,
-        string fileExtension,
-        bool useLegacyType = false
+        string fileExtension
     )
     {
         _formatId = formatId;
-        _legacyType = useLegacyType ? LegacyChartTypeMapping.ToValue(formatId) : -1;
         FileExtension = fileExtension;
     }
 
 
     /// <summary>格式的稳定字符串标识；内置格式使用枚举名称。</summary>
-    public string FormatId => _formatId ?? LegacyChartTypeMapping.ToFormatId(_legacyType);
-
-    internal bool HasLegacyType => _legacyType != -1;
+    public string FormatId => _formatId ?? throw new InvalidOperationException("未设置格式标识。");
 
     /// <summary>该格式的默认文件扩展名（不含点）。</summary>
     public required string FileExtension { get; init; }

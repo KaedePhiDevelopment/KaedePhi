@@ -1,6 +1,5 @@
 using System.Text;
 using KaedePhi.Tool.Common;
-using KaedePhi.Tool.Compatibility;
 
 namespace KaedePhi.Tool.Converter;
 
@@ -82,15 +81,6 @@ public sealed class ChartFormatCatalog
             return _registrations.Remove(formatId);
     }
 
-    internal bool UnregisterExternal(string formatId)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(formatId);
-        lock (_lock)
-            return _registrations.TryGetValue(formatId, out var registration)
-                && !registration.Descriptor.HasLegacyType
-                && _registrations.Remove(formatId);
-    }
-
     /// <summary>
     /// 按标识查询格式注册信息。
     /// </summary>
@@ -111,36 +101,12 @@ public sealed class ChartFormatCatalog
     public ChartFormatDescriptor? Find(string formatId) => FindRegistration(formatId)?.Descriptor;
 
     /// <summary>
-    /// 根据兼容枚举的名称查询格式描述。
-    /// </summary>
-    /// <param name="type">内置格式的兼容枚举值。</param>
-    /// <returns>格式描述，未注册时返回空。</returns>
-    [Obsolete("将在下一个大版本移除；请改用 Find(string)，通过格式标识查询。")]
-    public ChartFormatDescriptor? Find(ChartType type) =>
-        LegacyChartTypeMapping.IsDefined((int)type)
-            ? Find(LegacyChartTypeMapping.ToFormatId((int)type))
-            : null;
-
-    /// <summary>
     /// 按标识获取已注册的格式描述。
     /// </summary>
     /// <param name="formatId">格式标识，不区分大小写。</param>
     /// <returns>格式描述。</returns>
     public ChartFormatDescriptor Get(string formatId) =>
         Find(formatId) ?? throw new NotSupportedException($"未注册的谱面格式：{formatId}");
-
-    /// <summary>
-    /// 根据兼容枚举的名称获取已注册的格式描述。
-    /// </summary>
-    /// <param name="type">内置格式的兼容枚举值。</param>
-    /// <returns>格式描述。</returns>
-    [Obsolete("将在下一个大版本移除；请改用 Get(string)，通过格式标识查询。")]
-    public ChartFormatDescriptor Get(ChartType type) =>
-        (
-            LegacyChartTypeMapping.IsDefined((int)type)
-                ? Find(LegacyChartTypeMapping.ToFormatId((int)type))
-                : null
-        ) ?? throw new NotSupportedException($"未注册的谱面格式：{type}");
 
     /// <summary>已注册格式及检测配置的快照。</summary>
     public IReadOnlyList<ChartFormatRegistration> Registrations

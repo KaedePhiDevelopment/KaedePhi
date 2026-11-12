@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Text;
 using JetBrains.Annotations;
-using KaedePhi.Tool.Compatibility;
 using KaedePhi.Tool.Converter;
 using KaedePhi.Tool.Converter.StellateRePhiEditExtended.Utils;
 using Newtonsoft.Json;
@@ -177,35 +176,7 @@ public static class ChartGetType
             return null;
         }
     }
-
-    /// <summary>
-    /// 使用谱面文本推算内置谱面类型；外部格式请使用 <see cref="DetectFormatAsync(string, CancellationToken)"/>。
-    /// </summary>
-    /// <param name="chartText">待检测的谱面文本。</param>
-    /// <returns>内置谱面类型。</returns>
-    /// <exception cref="NotSupportedException">输入了不支持的谱面类别</exception>
-    [PublicAPI]
-    [Pure]
-    [Obsolete("将在下一个大版本移除；请改用 DetectFormatAsync，并使用返回的格式描述。")]
-    public static ChartType GetType(string chartText)
-    {
-        ArgumentNullException.ThrowIfNull(chartText);
-
-        using var textReader = new StringReader(chartText);
-        return (ChartType)LegacyChartTypeMapping.ToValue(DetectBuiltInFormat(textReader));
-    }
-
-    /// <summary>
-    /// 从文本读取器中推算内置谱面类型，不缓存完整谱面结构。
-    /// </summary>
-    /// <param name="reader">待检测的文本读取器。</param>
-    /// <returns>检测到的谱面类型。</returns>
-    /// <exception cref="NotSupportedException">输入了不支持的谱面类别。</exception>
-    [PublicAPI]
-    [Obsolete("将在下一个大版本移除；请改用 DetectFormatAsync，并使用返回的格式描述。")]
-    public static ChartType GetType(TextReader reader) =>
-        (ChartType)LegacyChartTypeMapping.ToValue(DetectBuiltInFormat(reader));
-
+    
     internal static string DetectBuiltInFormat(TextReader reader)
     {
         ArgumentNullException.ThrowIfNull(reader);
@@ -223,63 +194,7 @@ public static class ChartGetType
             throw new NotSupportedException(e.Message, e);
         }
     }
-
-    /// <summary>
-    /// 从输入流中推算内置谱面类型，匹配到足够的类型标记后停止读取，不缓存完整谱面文本。
-    /// </summary>
-    /// <param name="stream">待检测的谱面输入流。</param>
-    /// <returns>检测到的谱面类型。</returns>
-    /// <exception cref="NotSupportedException">输入了不支持的谱面类别。</exception>
-    [PublicAPI]
-    [Obsolete("将在下一个大版本移除；请改用 DetectFormatAsync，并使用返回的格式描述。")]
-    public static ChartType GetType(Stream stream)
-    {
-        ArgumentNullException.ThrowIfNull(stream);
-        using var textReader = new StreamReader(
-            stream,
-            Encoding.UTF8,
-            detectEncodingFromByteOrderMarks: true,
-            bufferSize: 4096,
-            leaveOpen: true
-        );
-        return (ChartType)LegacyChartTypeMapping.ToValue(DetectBuiltInFormat(textReader));
-    }
-
-    /// <summary>
-    /// 异步从输入流中推算内置谱面类型，匹配到足够的类型标记后停止读取，不缓存完整谱面文本。
-    /// </summary>
-    /// <param name="stream">待检测的谱面输入流。</param>
-    /// <param name="ct">用于响应取消请求的令牌。</param>
-    /// <returns>检测到的谱面类型。</returns>
-    /// <exception cref="NotSupportedException">输入了不支持的谱面类别。</exception>
-    [PublicAPI]
-    [Obsolete("将在下一个大版本移除；请改用 DetectFormatAsync，并使用返回的格式描述。")]
-    public static async Task<ChartType> GetTypeAsync(Stream stream, CancellationToken ct = default)
-    {
-        ArgumentNullException.ThrowIfNull(stream);
-        using var textReader = new StreamReader(
-            stream,
-            Encoding.UTF8,
-            detectEncodingFromByteOrderMarks: true,
-            bufferSize: 4096,
-            leaveOpen: true
-        );
-        using var jsonReader = CreateJsonReader(textReader);
-        try
-        {
-            return (ChartType)
-                LegacyChartTypeMapping.ToValue(await ReadBuiltInFormatAsync(jsonReader, ct));
-        }
-        catch (UnrecognizedChartFormatException e)
-        {
-            throw new NotSupportedException(e.Message);
-        }
-        catch (JsonException e)
-        {
-            throw new NotSupportedException(e.Message, e);
-        }
-    }
-
+    
     private static JsonTextReader CreateJsonReader(TextReader textReader) =>
         new(textReader) { DateParseHandling = DateParseHandling.None, CloseInput = false };
 

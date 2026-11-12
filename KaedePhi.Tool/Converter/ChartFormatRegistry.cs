@@ -29,7 +29,7 @@ public static class ChartFormatRegistry
     internal static IReadOnlyList<ChartFormatRegistration> DefaultRegistrations { get; } =
     [
         new(
-            new ChartFormatDescriptor(ChartFormatIds.RePhiEdit, "json", useLegacyType: true)
+            new ChartFormatDescriptor(ChartFormatIds.RePhiEdit, "json")
             {
                 ExportOptionsFactory = () => new ConvertOption(),
                 Importer = async (text, _, log, ct) =>
@@ -65,8 +65,7 @@ public static class ChartFormatRegistry
         new(
             new ChartFormatDescriptor(
                 ChartFormatIds.StellateRePhiEditExtended,
-                "json",
-                useLegacyType: true
+                "json"
             )
             {
                 ExportOptionsFactory = () => new ConvertOption(),
@@ -101,7 +100,7 @@ public static class ChartFormatRegistry
             DefaultDetector
         ),
         new(
-            new ChartFormatDescriptor(ChartFormatIds.PhiEdit, "pec", useLegacyType: true)
+            new ChartFormatDescriptor(ChartFormatIds.PhiEdit, "pec")
             {
                 ImportOptionsFactory = () => new PhiEditToIrConvertOptions(),
                 ExportOptionsFactory = () => new IrToPhiEditConvertOptions(),
@@ -142,7 +141,7 @@ public static class ChartFormatRegistry
             DefaultDetector
         ),
         new(
-            new ChartFormatDescriptor(ChartFormatIds.PhigrosV3, "json", useLegacyType: true)
+            new ChartFormatDescriptor(ChartFormatIds.PhigrosV3, "json")
             {
                 ExportOptionsFactory = () => new IrToPhigrosV3ConvertOptions(),
                 Importer = async (text, _, log, ct) =>
@@ -176,7 +175,7 @@ public static class ChartFormatRegistry
             DefaultDetector
         ),
         new(
-            new ChartFormatDescriptor(ChartFormatIds.PhiChain, "json", useLegacyType: true)
+            new ChartFormatDescriptor(ChartFormatIds.PhiChain, "json")
             {
                 ImportOptionsFactory = () => new PhiChainToIrConvertOptions(),
                 ExportOptionsFactory = () => new IrToPhiChainConvertOptions(),
@@ -217,7 +216,7 @@ public static class ChartFormatRegistry
             DefaultDetector
         ),
         new(
-            new ChartFormatDescriptor(ChartFormatIds.PhiFans, "json", useLegacyType: true)
+            new ChartFormatDescriptor(ChartFormatIds.PhiFans, "json")
             {
                 ExportOptionsFactory = () => new IrToPhiFansConvertOptions(),
                 Importer = async (text, _, log, ct) =>
@@ -251,7 +250,7 @@ public static class ChartFormatRegistry
             DefaultDetector
         ),
         new(
-            new ChartFormatDescriptor(ChartFormatIds.PhigrosV1, "json", useLegacyType: true),
+            new ChartFormatDescriptor(ChartFormatIds.PhigrosV1, "json"),
             DefaultDetector
         ),
     ];
