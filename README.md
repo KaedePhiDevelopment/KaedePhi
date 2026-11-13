@@ -62,9 +62,6 @@ KaedePhi.Tool.App config reset
 - 目前正式应用产物提供 Windows x64、Linux x64 和 macOS x86_64/arm64；其他系统和架构需要自行编译验证。
 - 部分目标格式不支持源格式的全部事件或缓动类型，转换时可能进行采样、拟合或压缩；大型谱面可尝试 `--stream` 降低内存占用。
 
-## 开发者文档
-构建、测试、发布流程、谱面格式扩展和接口迁移说明见 [DEVELOPMENT.md](DEVELOPMENT.md)。
-
 ## 招新
 本项目需要更多人开发与维护，欢迎发送邮件到 nrlt@nuanr-mxi.com 来加入开发！  
 若您需要其它私下联系方式，请在邮件中说明。
