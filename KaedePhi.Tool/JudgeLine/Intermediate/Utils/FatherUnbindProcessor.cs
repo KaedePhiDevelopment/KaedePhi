@@ -125,7 +125,12 @@ public class FatherUnbindProcessor : FatherUnbindProcessorBase
                 Math.Max(Math.Max(Math.Max(txMax, tyMax), Math.Max(fxMax, fyMax)), frMax)
             );
             var step = new Beat(1d / precision);
-            var beats = JudgeLineEqualSpacingSampler.BuildBeatList(overallMin, overallMax, step, ct);
+            var beats = JudgeLineEqualSpacingSampler.BuildBeatList(
+                overallMin,
+                overallMax,
+                step,
+                ct
+            );
 
             progress?.Report(new ToolProgress(0.6, "等间隔采样"));
             LogDebug?.Invoke(

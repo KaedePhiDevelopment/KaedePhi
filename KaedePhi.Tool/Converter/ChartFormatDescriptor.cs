@@ -12,15 +12,11 @@ public sealed class ChartFormatDescriptor
     private readonly string? _formatId;
 
     [SetsRequiredMembers]
-    internal ChartFormatDescriptor(
-        string formatId,
-        string fileExtension
-    )
+    internal ChartFormatDescriptor(string formatId, string fileExtension)
     {
         _formatId = formatId;
         FileExtension = fileExtension;
     }
-
 
     /// <summary>格式的稳定字符串标识；内置格式使用枚举名称。</summary>
     public string FormatId => _formatId ?? throw new InvalidOperationException("未设置格式标识。");
@@ -289,7 +285,7 @@ public sealed class ChartFormatDescriptor
         var normalized = IrChartNormalizer.NormalizeAndValidateNoteEndBeats(chart);
         return normalized;
     }
-    
+
     /// <summary>
     /// 将 IR 谱面导出为该格式并写入指定路径。
     /// </summary>
@@ -323,6 +319,6 @@ public sealed class ChartFormatDescriptor
             ct
         );
     }
-    
+
     private string FormatName => FormatId;
 }

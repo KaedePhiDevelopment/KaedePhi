@@ -96,10 +96,7 @@ internal static class DynamicUnbinderFixFactory
                         "global::KaedePhi.Tool.JudgeLine.JudgeLineUnbindSamplingMode.EqualSpacing"
                     )
                     .WithTriviaFrom(assignment.Right);
-                expressions = expressions.Replace(
-                    assignment,
-                    assignment.WithRight(equalSpacing)
-                );
+                expressions = expressions.Replace(assignment, assignment.WithRight(equalSpacing));
                 samplingModeReplaced = true;
             }
         }

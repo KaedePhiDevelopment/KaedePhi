@@ -37,15 +37,18 @@ internal static class ChartImporter
         ChartLogSink? log,
         IProgress<double?>? progress,
         CancellationToken ct
-    ) => (await ImportWithFormatAsync(
-        filePath,
-        format,
-        preferStream,
-        importOptions,
-        log,
-        progress,
-        ct
-    )).Chart;
+    ) =>
+        (
+            await ImportWithFormatAsync(
+                filePath,
+                format,
+                preferStream,
+                importOptions,
+                log,
+                progress,
+                ct
+            )
+        ).Chart;
 
     public static async Task<(Chart Chart, string FormatId)> ImportWithFormatAsync(
         string filePath,
@@ -85,7 +88,10 @@ internal static class ChartImporter
         }
 
         if (format.CanStreamImport && (preferStream || !format.CanTextImport))
-            return (await format.ImportStreamIrAsync(stream, importOptions, log, ct), format.FormatId);
+            return (
+                await format.ImportStreamIrAsync(stream, importOptions, log, ct),
+                format.FormatId
+            );
 
         using var reader = new StreamReader(
             stream,
@@ -113,8 +119,9 @@ internal static class ChartImporter
         var builtInDetector = rePhiRegistration?.Detector ?? stellateRegistration?.Detector;
         var hasCustomDetectorAtBuiltInPriority = ChartFormatRegistry
             .Default.Registrations.Where(registration => registration.Priority >= 0)
-            .Any(registration => registration.Detector is not null
-                && registration.Detector != builtInDetector);
+            .Any(registration =>
+                registration.Detector is not null && registration.Detector != builtInDetector
+            );
 
         if (
             !hasCustomDetectorAtBuiltInPriority
@@ -177,13 +184,7 @@ internal static class ChartImporter
                 if (propertyName == "judgeLineList")
                     return hasMetaObject && jsonReader.TokenType == JsonToken.StartArray;
 
-                if (
-                    propertyName is "formatVersion"
-                        or "info"
-                        or "lines"
-                        or "format"
-                        or "bpm_list"
-                )
+                if (propertyName is "formatVersion" or "info" or "lines" or "format" or "bpm_list")
                     return false;
 
                 await SkipJsonValueAsync(jsonReader, ct);

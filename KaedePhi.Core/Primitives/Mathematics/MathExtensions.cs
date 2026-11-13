@@ -22,7 +22,7 @@ namespace KaedePhi.Core.Primitives.Mathematics
 
             return a;
         }
-        
+
         /// <summary>
         /// 计算两个长整数的最大公约数。
         /// </summary>

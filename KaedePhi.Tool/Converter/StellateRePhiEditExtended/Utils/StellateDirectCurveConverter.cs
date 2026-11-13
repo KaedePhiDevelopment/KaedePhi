@@ -71,8 +71,7 @@ public static class StellateDirectCurveConverter
         if (!CanConvertDirectCurve(events))
             return false;
 
-        var result = OrderEvents(events)
-            .ConvertAll(evt => ConvertDirectEvent(evt, valueTransform));
+        var result = OrderEvents(events).ConvertAll(evt => ConvertDirectEvent(evt, valueTransform));
         if (
             result.Any(evt =>
                 Math.Abs(evt.StartValue - initialValue) > StellateGeometryConstants.ValueEpsilon

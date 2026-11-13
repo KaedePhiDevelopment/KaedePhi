@@ -125,7 +125,7 @@ namespace KaedePhi.Core.Formats.PhiChain.v6.Serialization.JsonConverter
                 EasingKind.Custom => "custom",
                 EasingKind.Steps => "steps",
                 EasingKind.Elastic => "elastic",
-                _ => throw new JsonSerializationException("Unknown easing type.")
+                _ => throw new JsonSerializationException("Unknown easing type."),
             };
         }
 
@@ -167,7 +167,7 @@ namespace KaedePhi.Core.Formats.PhiChain.v6.Serialization.JsonConverter
                 "custom" => EasingKind.Custom,
                 "steps" => EasingKind.Steps,
                 "elastic" => EasingKind.Elastic,
-                _ => throw new JsonSerializationException("Unsupported easing type: " + type)
+                _ => throw new JsonSerializationException("Unsupported easing type: " + type),
             };
         }
     }

@@ -1,6 +1,6 @@
 using KaedePhi.Tool.Common;
-using KaedePhi.Tool.JudgeLine.Intermediate.Utils;
 using KaedePhi.Tool.JudgeLine;
+using KaedePhi.Tool.JudgeLine.Intermediate.Utils;
 using KaedePhi.Tool.JudgeLine.Utils;
 
 namespace KaedePhi.Tool.JudgeLine.Intermediate;
@@ -10,7 +10,6 @@ namespace KaedePhi.Tool.JudgeLine.Intermediate;
 /// </summary>
 public class JudgeLineUnbinder : LoggableBase, IJudgeLineUnbindService<Ir.JudgeLine>
 {
-
     #region 处理器创建
 
     private FatherUnbindProcessor CreateProcessor(List<Ir.JudgeLine> allJudgeLines)
@@ -88,11 +87,7 @@ public class JudgeLineUnbinder : LoggableBase, IJudgeLineUnbindService<Ir.JudgeL
                         options.Tolerance,
                         options.MergeTolerance
                     )
-                    .CreatePlusProcessor(
-                        allJudgeLines,
-                        options.Tolerance,
-                        options.MergeTolerance
-                    )
+                    .CreatePlusProcessor(allJudgeLines, options.Tolerance, options.MergeTolerance)
                     .FatherUnbind(
                         targetJudgeLineIndex,
                         allJudgeLines,

@@ -63,10 +63,7 @@ public static class ChartFormatRegistry
             DefaultDetector
         ),
         new(
-            new ChartFormatDescriptor(
-                ChartFormatIds.StellateRePhiEditExtended,
-                "json"
-            )
+            new ChartFormatDescriptor(ChartFormatIds.StellateRePhiEditExtended, "json")
             {
                 ExportOptionsFactory = () => new ConvertOption(),
                 Importer = async (text, _, log, ct) =>
@@ -249,10 +246,7 @@ public static class ChartFormatRegistry
             },
             DefaultDetector
         ),
-        new(
-            new ChartFormatDescriptor(ChartFormatIds.PhigrosV1, "json"),
-            DefaultDetector
-        ),
+        new(new ChartFormatDescriptor(ChartFormatIds.PhigrosV1, "json"), DefaultDetector),
     ];
 
     /// <summary>默认谱面格式注册表。</summary>
@@ -289,14 +283,14 @@ public static class ChartFormatRegistry
         Func<Stream, CancellationToken, ValueTask<bool>> detector,
         int priority = 0
     ) => Default.Register(descriptor, detector, priority);
-    
+
     /// <summary>
     /// 按标识取消注册默认注册表中的谱面格式，包括内置格式。
     /// </summary>
     /// <param name="formatId">格式的稳定字符串标识。</param>
     /// <returns>是否移除了已注册格式。</returns>
     public static bool UnregisterFormat(string formatId) => Default.Unregister(formatId);
-    
+
     /// <summary>
     /// 按格式标识获取内置或外部格式描述，未注册时抛出异常。
     /// </summary>

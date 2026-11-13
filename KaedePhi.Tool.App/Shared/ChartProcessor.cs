@@ -1,8 +1,8 @@
 using KaedePhi.Core.Intermediate.Model.Events;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Event.Intermediate;
-using KaedePhi.Tool.JudgeLine.Intermediate;
 using KaedePhi.Tool.JudgeLine;
+using KaedePhi.Tool.JudgeLine.Intermediate;
 using KaedePhi.Tool.Layer.Intermediate;
 using Chart = KaedePhi.Core.Intermediate.Model.Chart;
 using JudgeLine = KaedePhi.Core.Intermediate.Model.JudgeLine;
@@ -28,7 +28,8 @@ public static class ChartProcessor
         NumericParameterValidator.ValidateTolerance(mergeTolerance);
         IrChartValidator.ValidateJudgeLineHierarchy(chart.JudgeLineList);
 
-        IJudgeLineUnbindService<Core.Intermediate.Model.JudgeLine> unbinder = new JudgeLineUnbinder();
+        IJudgeLineUnbindService<Core.Intermediate.Model.JudgeLine> unbinder =
+            new JudgeLineUnbinder();
         var compressor = new LayerProcessor();
         log?.AttachToAll(unbinder, compressor);
 

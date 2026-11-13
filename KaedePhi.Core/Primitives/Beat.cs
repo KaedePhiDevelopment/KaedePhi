@@ -107,7 +107,7 @@ namespace KaedePhi.Core.Primitives
                     if (
                         Math.Abs(remaining) < Common.CoreConstants.FloatEpsilon
                         || Math.Abs((double)numerator / denominator - fractionalPart)
-                        < Common.CoreConstants.FloatEpsilon
+                            < Common.CoreConstants.FloatEpsilon
                     )
                         break;
 
@@ -355,7 +355,7 @@ namespace KaedePhi.Core.Primitives
         /// 获取表示无限拍的静态实例。
         /// </summary>
         public static Beat Infinity => new(new[] { int.MaxValue, 0, 1 });
-        
+
         /// <summary>
         /// 获取表示零拍的静态实例。
         /// </summary>

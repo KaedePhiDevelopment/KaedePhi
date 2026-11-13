@@ -31,10 +31,7 @@ namespace KaedePhi.Core.Primitives.Serialization
             {
                 return contract with
                 {
-                    Converter = new PhiChainNoteDataConverter<
-                        Formats.PhiChain.v6.Model.Note,
-                        Beat
-                    >(
+                    Converter = new PhiChainNoteDataConverter<Formats.PhiChain.v6.Model.Note, Beat>(
                         () => new Formats.PhiChain.v6.Model.Note(),
                         note => (int)note.Type,
                         (note, value) =>
@@ -67,7 +64,7 @@ namespace KaedePhi.Core.Primitives.Serialization
 
                 if (
                     converterType
-                        == typeof(global::KaedePhi.Core.Formats.Phigros.v3.Serialization.JsonConverter.NoteTypeConverter)
+                    == typeof(global::KaedePhi.Core.Formats.Phigros.v3.Serialization.JsonConverter.NoteTypeConverter)
                 )
                 {
                     properties ??= new List<DataProperty>(contract.Properties);

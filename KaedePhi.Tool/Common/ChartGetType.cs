@@ -176,7 +176,7 @@ public static class ChartGetType
             return null;
         }
     }
-    
+
     internal static string DetectBuiltInFormat(TextReader reader)
     {
         ArgumentNullException.ThrowIfNull(reader);
@@ -194,7 +194,7 @@ public static class ChartGetType
             throw new NotSupportedException(e.Message, e);
         }
     }
-    
+
     private static JsonTextReader CreateJsonReader(TextReader textReader) =>
         new(textReader) { DateParseHandling = DateParseHandling.None, CloseInput = false };
 

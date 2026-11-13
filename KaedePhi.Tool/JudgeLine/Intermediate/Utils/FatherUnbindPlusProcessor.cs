@@ -16,7 +16,7 @@ public class FatherUnbindPlusProcessor : FatherUnbindProcessorBase
     private readonly double _tolerance;
     private readonly double _mergeTolerance;
     private readonly EventListMergerPlus<double> _merger = new();
-    
+
     /// <summary>
     /// 初始化父级解绑增强处理器的新实例。
     /// </summary>

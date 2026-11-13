@@ -383,10 +383,7 @@ public class PhigrosV3BlockAreaConversionTests
     [Fact]
     public void FromIrRejectsAreasWhenTheChartHasNoBpmList()
     {
-        var source = new IrChart
-        {
-            BlockAreaList = [new IrBlockArea { AppearBeat = new Beat(2) }],
-        };
+        var source = new IrChart { BlockAreaList = [new IrBlockArea { AppearBeat = new Beat(2) }] };
 
         var act = () => new PhigrosV3Converter().FromIr(source, new IrToPhigrosV3ConvertOptions());
 

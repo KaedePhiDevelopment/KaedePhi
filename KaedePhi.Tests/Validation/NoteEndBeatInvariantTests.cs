@@ -47,7 +47,11 @@ public class NoteEndBeatInvariantTests
         ((double)source.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(9);
         normalized.Should().NotBeSameAs(source);
         normalized.JudgeLineList[0].Should().NotBeSameAs(source.JudgeLineList[0]);
-        normalized.JudgeLineList[0].NoteList[0].Should().NotBeSameAs(source.JudgeLineList[0].NoteList[0]);
+        normalized
+            .JudgeLineList[0]
+            .NoteList[0]
+            .Should()
+            .NotBeSameAs(source.JudgeLineList[0].NoteList[0]);
     }
 
     [Fact]
@@ -84,7 +88,11 @@ public class NoteEndBeatInvariantTests
         var normalized = IrChartNormalizer.NormalizeAndValidateNoteEndBeats(source);
 
         ((double)normalized.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(5);
-        normalized.JudgeLineList[0].NoteList[0].Should().NotBeSameAs(source.JudgeLineList[0].NoteList[0]);
+        normalized
+            .JudgeLineList[0]
+            .NoteList[0]
+            .Should()
+            .NotBeSameAs(source.JudgeLineList[0].NoteList[0]);
     }
 
     [Fact]

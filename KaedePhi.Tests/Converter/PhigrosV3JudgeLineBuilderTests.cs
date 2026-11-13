@@ -176,10 +176,7 @@ public class PhigrosV3JudgeLineBuilderTests
             OnWarning = warnings.Add,
         };
 
-        var converted = converter.FromIr(
-            CreateChart(line),
-            new IrToPhigrosV3ConvertOptions()
-        );
+        var converted = converter.FromIr(CreateChart(line), new IrToPhigrosV3ConvertOptions());
 
         converted.JudgeLineList.Should().ContainSingle();
         warnings.Should().BeEmpty();
@@ -701,7 +698,10 @@ public class PhigrosV3JudgeLineBuilderTests
             [
                 new JudgeLine
                 {
-                    NoteList = [new Note { StartBeat = Beat(3_750_000), EndBeat = Beat(3_750_000) }],
+                    NoteList =
+                    [
+                        new Note { StartBeat = Beat(3_750_000), EndBeat = Beat(3_750_000) },
+                    ],
                 },
             ],
         };

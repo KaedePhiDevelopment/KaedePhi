@@ -10,14 +10,14 @@ internal static class JudgeLineAdaptiveSampler
     /// <summary>
     /// 获取五个事件通道的总体拍范围；所有通道均为空时返回 null。
     /// </summary>
-    internal static (Beat Min, Beat Max)? TryGetOverallRange(
-        JudgeLineUnbindEventChannels channels
-    )
+    internal static (Beat Min, Beat Max)? TryGetOverallRange(JudgeLineUnbindEventChannels channels)
     {
         Beat overallMin = new(0),
             overallMax = new(0);
         var hasEvents = false;
-        foreach (var events in new[] { channels.Tx, channels.Ty, channels.Fx, channels.Fy, channels.Fr })
+        foreach (
+            var events in new[] { channels.Tx, channels.Ty, channels.Fx, channels.Fy, channels.Fr }
+        )
         {
             if (events.Count == 0)
                 continue;
@@ -50,7 +50,9 @@ internal static class JudgeLineAdaptiveSampler
     )
     {
         var keyBeats = new List<Beat> { overallMin, overallMax };
-        foreach (var events in new[] { channels.Tx, channels.Ty, channels.Fx, channels.Fy, channels.Fr })
+        foreach (
+            var events in new[] { channels.Tx, channels.Ty, channels.Fx, channels.Fy, channels.Fr }
+        )
         {
             foreach (var evt in events)
             {
@@ -67,10 +69,7 @@ internal static class JudgeLineAdaptiveSampler
     /// <summary>
     /// 并行处理关键拍区间并按区间顺序合并采样结果。
     /// </summary>
-    internal static (
-        List<IrEvents.Event<double>> X,
-        List<IrEvents.Event<double>> Y
-    ) Sample(
+    internal static (List<IrEvents.Event<double>> X, List<IrEvents.Event<double>> Y) Sample(
         List<Beat> keyBeats,
         Beat step,
         double tolerance,
@@ -137,10 +136,7 @@ internal static class JudgeLineAdaptiveSampler
             );
     }
 
-    private static (
-        List<IrEvents.Event<double>> X,
-        List<IrEvents.Event<double>> Y
-    ) SampleInterval(
+    private static (List<IrEvents.Event<double>> X, List<IrEvents.Event<double>> Y) SampleInterval(
         Beat intervalStart,
         Beat intervalEnd,
         Beat step,

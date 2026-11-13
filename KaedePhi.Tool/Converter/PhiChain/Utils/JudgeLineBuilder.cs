@@ -1,7 +1,7 @@
 using KaedePhi.Core.Formats.PhiChain.v6.Model;
 using KaedePhi.Tool.Converter.PhiChain.Model;
-using KaedePhi.Tool.JudgeLine.Intermediate;
 using KaedePhi.Tool.JudgeLine;
+using KaedePhi.Tool.JudgeLine.Intermediate;
 using KaedePhi.Tool.Layer.Intermediate;
 
 namespace KaedePhi.Tool.Converter.PhiChain.Utils;
@@ -226,11 +226,7 @@ public static class JudgeLineBuilder
         foreach (var lineIndex in linesToUnbind)
         {
             ct.ThrowIfCancellationRequested();
-            var unboundLine = unbinder.Unbind(
-                lineIndex,
-                result,
-                unbindOptions
-            );
+            var unboundLine = unbinder.Unbind(lineIndex, result, unbindOptions);
 
             if (compressor is not null)
             {

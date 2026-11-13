@@ -34,10 +34,7 @@ internal static class JudgeLineEqualSpacingSampler
     /// <summary>
     /// 对拍列表中的每个区间采样，并按原始拍序返回 X/Y 事件。
     /// </summary>
-    internal static (
-        List<IrEvents.Event<double>> X,
-        List<IrEvents.Event<double>> Y
-    ) Sample(
+    internal static (List<IrEvents.Event<double>> X, List<IrEvents.Event<double>> Y) Sample(
         List<Beat> beats,
         Beat max,
         Beat step,

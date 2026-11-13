@@ -115,10 +115,7 @@ internal static class ProcessingParameterApi
     /// <param name="invocation">待检查的调用操作</param>
     /// <param name="value">匹配到的精度值操作</param>
     /// <returns>是否找到受支持的精度值</returns>
-    public static bool TryGetPrecisionValue(
-        IInvocationOperation invocation,
-        out IOperation value
-    )
+    public static bool TryGetPrecisionValue(IInvocationOperation invocation, out IOperation value)
     {
         if (JudgeLineUnbinderApi.TryGetOptionValue(invocation, "Precision", out value))
             return true;

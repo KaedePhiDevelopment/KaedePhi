@@ -55,7 +55,7 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
         /// <returns>插值结果。</returns>
         public float Interpolate(float start, float end, float progress) =>
             Interpolate(start, end, progress, Value);
-        
+
         /// <summary>
         /// 根据缓动后的进度计算两个数值之间的插值。
         /// </summary>
@@ -69,7 +69,7 @@ namespace KaedePhi.Core.Formats.Phigros.v3.Model
             var easedProgress = GetEaseWithProgress(progress, type);
             return start + (end - start) * easedProgress;
         }
-        
+
         /// <summary>
         /// 对二维坐标或倍率分别按 x、y 方向的缓动类型进行插值。
         /// </summary>

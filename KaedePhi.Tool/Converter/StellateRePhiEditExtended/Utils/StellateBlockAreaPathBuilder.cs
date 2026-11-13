@@ -261,8 +261,7 @@ public sealed class StellateBlockAreaPathBuilder
         BuildPath(
             samples,
             selector,
-            static (left, right) =>
-                Math.Abs(left - right) > StellateGeometryConstants.ValueEpsilon,
+            static (left, right) => Math.Abs(left - right) > StellateGeometryConstants.ValueEpsilon,
             static (beat, value, hard) => (beat, value, hard)
         );
 

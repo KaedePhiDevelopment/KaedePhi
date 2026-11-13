@@ -11,7 +11,10 @@ internal static class JudgeLineUnbindLayerOperations
     /// <summary>
     /// 清理判定线与父线的全零事件层。
     /// </summary>
-    internal static void CleanupRedundantLayers(Ir.JudgeLine judgeLineCopy, Ir.JudgeLine fatherLineCopy)
+    internal static void CleanupRedundantLayers(
+        Ir.JudgeLine judgeLineCopy,
+        Ir.JudgeLine fatherLineCopy
+    )
     {
         judgeLineCopy.EventLayers =
             RemoveUnlessLayer(judgeLineCopy.EventLayers) ?? judgeLineCopy.EventLayers;

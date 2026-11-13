@@ -101,7 +101,7 @@ internal static class JudgeLinePositionEventCompressor
 
         if (
             JudgeLineUnbindGeometry.GetNormalizedDistance(actualJunction, currentStart)
-            / originalMovementRange
+                / originalMovementRange
             > relativeTolerance
         )
             return false;
@@ -119,7 +119,7 @@ internal static class JudgeLinePositionEventCompressor
             Y: lastY.StartValue + (currentY.EndValue - lastY.StartValue) * progress
         );
         return JudgeLineUnbindGeometry.GetNormalizedDistance(actualJunction, predictedJunction)
-            / originalMovementRange
+                / originalMovementRange
             <= relativeTolerance;
     }
 

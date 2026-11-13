@@ -1,8 +1,8 @@
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Common;
 using KaedePhi.Tool.Converter.Phigros.v3.Model;
-using KaedePhi.Tool.JudgeLine.Intermediate;
 using KaedePhi.Tool.JudgeLine;
+using KaedePhi.Tool.JudgeLine.Intermediate;
 using KaedePhi.Tool.Layer.Intermediate;
 using IrEventLayer = KaedePhi.Core.Intermediate.Model.Events.EventLayer;
 using IrJudgeLine = KaedePhi.Core.Intermediate.Model.JudgeLine;

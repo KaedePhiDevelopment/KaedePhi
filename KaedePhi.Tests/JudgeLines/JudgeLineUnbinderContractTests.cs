@@ -1,7 +1,7 @@
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Common;
-using KaedePhi.Tool.JudgeLine.Intermediate;
 using KaedePhi.Tool.JudgeLine;
+using KaedePhi.Tool.JudgeLine.Intermediate;
 using IrEvents = KaedePhi.Core.Intermediate.Model.Events;
 using JudgeLine = KaedePhi.Core.Intermediate.Model.JudgeLine;
 

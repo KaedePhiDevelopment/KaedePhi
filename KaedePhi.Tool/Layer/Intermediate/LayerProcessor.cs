@@ -242,11 +242,12 @@ public class LayerProcessor : LoggableBase, ILayerProcessor<EventLayer>
         var canCompressPositionTogether = CanCompressPositionTogether(layer);
         if (canCompressPositionTogether)
         {
-            var (compressedX, compressedY) = JudgeLinePositionEventCompressor.CompressPositionEvents(
-                layer.MoveXEvents!,
-                layer.MoveYEvents!,
-                tolerance
-            );
+            var (compressedX, compressedY) =
+                JudgeLinePositionEventCompressor.CompressPositionEvents(
+                    layer.MoveXEvents!,
+                    layer.MoveYEvents!,
+                    tolerance
+                );
             layer.MoveXEvents = compressedX;
             layer.MoveYEvents = compressedY;
         }

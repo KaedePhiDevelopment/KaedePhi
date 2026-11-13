@@ -37,11 +37,7 @@ internal static class JudgeLineUnbinderApi
                 return false;
             }
 
-            return TryGetOptionValues(
-                invocation,
-                ["Tolerance", "MergeTolerance"],
-                out values
-            );
+            return TryGetOptionValues(invocation, ["Tolerance", "MergeTolerance"], out values);
         }
 
         values = [];
@@ -218,7 +214,8 @@ internal static class JudgeLineUnbinderApi
             argument.Parameter?.Name == "options"
         );
         if (
-            optionsArgument?.Value is not IObjectCreationOperation
+            optionsArgument?.Value
+            is not IObjectCreationOperation
             {
                 Initializer: IObjectOrCollectionInitializerOperation initializer
             }
@@ -229,19 +226,21 @@ internal static class JudgeLineUnbinderApi
         foreach (var item in initializer.Initializers)
         {
             if (
-                item is ISimpleAssignmentOperation
-                {
-                    Target: IPropertyReferenceOperation property,
-                } assignment
+                item
+                    is ISimpleAssignmentOperation
+                    {
+                        Target: IPropertyReferenceOperation property,
+                    } assignment
                 && property.Property.Type.SpecialType == SpecialType.System_Double
                 && propertyNames.Contains(property.Property.Name)
             )
                 values.Add((assignment.Value, property.Property.Name));
             else if (
-                item is ISimpleAssignmentOperation
-                {
-                    Target: IPropertyReferenceOperation enumProperty,
-                } enumAssignment
+                item
+                    is ISimpleAssignmentOperation
+                    {
+                        Target: IPropertyReferenceOperation enumProperty,
+                    } enumAssignment
                 && propertyNames.Contains(enumProperty.Property.Name)
             )
                 values.Add((enumAssignment.Value, enumProperty.Property.Name));
