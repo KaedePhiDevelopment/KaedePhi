@@ -25,20 +25,20 @@ namespace KaedePhi.Core.Formats.PhiChain.v6.Serialization.JsonConverter
                 ),
             };
 
-            if (value.EasingType == EasingKind.Custom)
+            switch (value.EasingType)
             {
-                obj["x1"] = value.X1;
-                obj["y1"] = value.Y1;
-                obj["x2"] = value.X2;
-                obj["y2"] = value.Y2;
-            }
-            else if (value.EasingType == EasingKind.Steps)
-            {
-                obj["count"] = value.Count;
-            }
-            else if (value.EasingType == EasingKind.Elastic)
-            {
-                obj["omega"] = value.Omega;
+                case EasingKind.Custom:
+                    obj["x1"] = value.X1;
+                    obj["y1"] = value.Y1;
+                    obj["x2"] = value.X2;
+                    obj["y2"] = value.Y2;
+                    break;
+                case EasingKind.Steps:
+                    obj["count"] = value.Count;
+                    break;
+                case EasingKind.Elastic:
+                    obj["omega"] = value.Omega;
+                    break;
             }
 
             obj.WriteTo(writer);
@@ -89,156 +89,86 @@ namespace KaedePhi.Core.Formats.PhiChain.v6.Serialization.JsonConverter
 
         private static string ToTypeString(EasingKind kind)
         {
-            switch (kind)
+            return kind switch
             {
-                case EasingKind.Linear:
-                    return "linear";
-                case EasingKind.EaseInSine:
-                    return "ease_in_sine";
-                case EasingKind.EaseOutSine:
-                    return "ease_out_sine";
-                case EasingKind.EaseInOutSine:
-                    return "ease_in_out_sine";
-                case EasingKind.EaseInQuad:
-                    return "ease_in_quad";
-                case EasingKind.EaseOutQuad:
-                    return "ease_out_quad";
-                case EasingKind.EaseInOutQuad:
-                    return "ease_in_out_quad";
-                case EasingKind.EaseInCubic:
-                    return "ease_in_cubic";
-                case EasingKind.EaseOutCubic:
-                    return "ease_out_cubic";
-                case EasingKind.EaseInOutCubic:
-                    return "ease_in_out_cubic";
-                case EasingKind.EaseInQuart:
-                    return "ease_in_quart";
-                case EasingKind.EaseOutQuart:
-                    return "ease_out_quart";
-                case EasingKind.EaseInOutQuart:
-                    return "ease_in_out_quart";
-                case EasingKind.EaseInQuint:
-                    return "ease_in_quint";
-                case EasingKind.EaseOutQuint:
-                    return "ease_out_quint";
-                case EasingKind.EaseInOutQuint:
-                    return "ease_in_out_quint";
-                case EasingKind.EaseInExpo:
-                    return "ease_in_expo";
-                case EasingKind.EaseOutExpo:
-                    return "ease_out_expo";
-                case EasingKind.EaseInOutExpo:
-                    return "ease_in_out_expo";
-                case EasingKind.EaseInCirc:
-                    return "ease_in_circ";
-                case EasingKind.EaseOutCirc:
-                    return "ease_out_circ";
-                case EasingKind.EaseInOutCirc:
-                    return "ease_in_out_circ";
-                case EasingKind.EaseInBack:
-                    return "ease_in_back";
-                case EasingKind.EaseOutBack:
-                    return "ease_out_back";
-                case EasingKind.EaseInOutBack:
-                    return "ease_in_out_back";
-                case EasingKind.EaseInElastic:
-                    return "ease_in_elastic";
-                case EasingKind.EaseOutElastic:
-                    return "ease_out_elastic";
-                case EasingKind.EaseInOutElastic:
-                    return "ease_in_out_elastic";
-                case EasingKind.EaseInBounce:
-                    return "ease_in_bounce";
-                case EasingKind.EaseOutBounce:
-                    return "ease_out_bounce";
-                case EasingKind.EaseInOutBounce:
-                    return "ease_in_out_bounce";
-                case EasingKind.Custom:
-                    return "custom";
-                case EasingKind.Steps:
-                    return "steps";
-                case EasingKind.Elastic:
-                    return "elastic";
-                default:
-                    throw new JsonSerializationException("Unknown easing type.");
-            }
+                EasingKind.Linear => "linear",
+                EasingKind.EaseInSine => "ease_in_sine",
+                EasingKind.EaseOutSine => "ease_out_sine",
+                EasingKind.EaseInOutSine => "ease_in_out_sine",
+                EasingKind.EaseInQuad => "ease_in_quad",
+                EasingKind.EaseOutQuad => "ease_out_quad",
+                EasingKind.EaseInOutQuad => "ease_in_out_quad",
+                EasingKind.EaseInCubic => "ease_in_cubic",
+                EasingKind.EaseOutCubic => "ease_out_cubic",
+                EasingKind.EaseInOutCubic => "ease_in_out_cubic",
+                EasingKind.EaseInQuart => "ease_in_quart",
+                EasingKind.EaseOutQuart => "ease_out_quart",
+                EasingKind.EaseInOutQuart => "ease_in_out_quart",
+                EasingKind.EaseInQuint => "ease_in_quint",
+                EasingKind.EaseOutQuint => "ease_out_quint",
+                EasingKind.EaseInOutQuint => "ease_in_out_quint",
+                EasingKind.EaseInExpo => "ease_in_expo",
+                EasingKind.EaseOutExpo => "ease_out_expo",
+                EasingKind.EaseInOutExpo => "ease_in_out_expo",
+                EasingKind.EaseInCirc => "ease_in_circ",
+                EasingKind.EaseOutCirc => "ease_out_circ",
+                EasingKind.EaseInOutCirc => "ease_in_out_circ",
+                EasingKind.EaseInBack => "ease_in_back",
+                EasingKind.EaseOutBack => "ease_out_back",
+                EasingKind.EaseInOutBack => "ease_in_out_back",
+                EasingKind.EaseInElastic => "ease_in_elastic",
+                EasingKind.EaseOutElastic => "ease_out_elastic",
+                EasingKind.EaseInOutElastic => "ease_in_out_elastic",
+                EasingKind.EaseInBounce => "ease_in_bounce",
+                EasingKind.EaseOutBounce => "ease_out_bounce",
+                EasingKind.EaseInOutBounce => "ease_in_out_bounce",
+                EasingKind.Custom => "custom",
+                EasingKind.Steps => "steps",
+                EasingKind.Elastic => "elastic",
+                _ => throw new JsonSerializationException("Unknown easing type.")
+            };
         }
 
         private static EasingKind ParseType(string type)
         {
-            switch (type)
+            return type switch
             {
-                case "linear":
-                    return EasingKind.Linear;
-                case "ease_in_sine":
-                    return EasingKind.EaseInSine;
-                case "ease_out_sine":
-                    return EasingKind.EaseOutSine;
-                case "ease_in_out_sine":
-                    return EasingKind.EaseInOutSine;
-                case "ease_in_quad":
-                    return EasingKind.EaseInQuad;
-                case "ease_out_quad":
-                    return EasingKind.EaseOutQuad;
-                case "ease_in_out_quad":
-                    return EasingKind.EaseInOutQuad;
-                case "ease_in_cubic":
-                    return EasingKind.EaseInCubic;
-                case "ease_out_cubic":
-                    return EasingKind.EaseOutCubic;
-                case "ease_in_out_cubic":
-                    return EasingKind.EaseInOutCubic;
-                case "ease_in_quart":
-                    return EasingKind.EaseInQuart;
-                case "ease_out_quart":
-                    return EasingKind.EaseOutQuart;
-                case "ease_in_out_quart":
-                    return EasingKind.EaseInOutQuart;
-                case "ease_in_quint":
-                    return EasingKind.EaseInQuint;
-                case "ease_out_quint":
-                    return EasingKind.EaseOutQuint;
-                case "ease_in_out_quint":
-                    return EasingKind.EaseInOutQuint;
-                case "ease_in_expo":
-                    return EasingKind.EaseInExpo;
-                case "ease_out_expo":
-                    return EasingKind.EaseOutExpo;
-                case "ease_in_out_expo":
-                    return EasingKind.EaseInOutExpo;
-                case "ease_in_circ":
-                    return EasingKind.EaseInCirc;
-                case "ease_out_circ":
-                    return EasingKind.EaseOutCirc;
-                case "ease_in_out_circ":
-                    return EasingKind.EaseInOutCirc;
-                case "ease_in_back":
-                    return EasingKind.EaseInBack;
-                case "ease_out_back":
-                    return EasingKind.EaseOutBack;
-                case "ease_in_out_back":
-                    return EasingKind.EaseInOutBack;
-                case "ease_in_elastic":
-                    return EasingKind.EaseInElastic;
-                case "ease_out_elastic":
-                    return EasingKind.EaseOutElastic;
-                case "ease_in_out_elastic":
-                    return EasingKind.EaseInOutElastic;
-                case "ease_in_bounce":
-                    return EasingKind.EaseInBounce;
-                case "ease_out_bounce":
-                    return EasingKind.EaseOutBounce;
-                case "ease_in_out_bounce":
-                    return EasingKind.EaseInOutBounce;
-                case "custom":
-                    return EasingKind.Custom;
-                case "steps":
-                    return EasingKind.Steps;
-                case "elastic":
-                    return EasingKind.Elastic;
-                default:
-                    throw new JsonSerializationException("Unsupported easing type: " + type);
-            }
+                "linear" => EasingKind.Linear,
+                "ease_in_sine" => EasingKind.EaseInSine,
+                "ease_out_sine" => EasingKind.EaseOutSine,
+                "ease_in_out_sine" => EasingKind.EaseInOutSine,
+                "ease_in_quad" => EasingKind.EaseInQuad,
+                "ease_out_quad" => EasingKind.EaseOutQuad,
+                "ease_in_out_quad" => EasingKind.EaseInOutQuad,
+                "ease_in_cubic" => EasingKind.EaseInCubic,
+                "ease_out_cubic" => EasingKind.EaseOutCubic,
+                "ease_in_out_cubic" => EasingKind.EaseInOutCubic,
+                "ease_in_quart" => EasingKind.EaseInQuart,
+                "ease_out_quart" => EasingKind.EaseOutQuart,
+                "ease_in_out_quart" => EasingKind.EaseInOutQuart,
+                "ease_in_quint" => EasingKind.EaseInQuint,
+                "ease_out_quint" => EasingKind.EaseOutQuint,
+                "ease_in_out_quint" => EasingKind.EaseInOutQuint,
+                "ease_in_expo" => EasingKind.EaseInExpo,
+                "ease_out_expo" => EasingKind.EaseOutExpo,
+                "ease_in_out_expo" => EasingKind.EaseInOutExpo,
+                "ease_in_circ" => EasingKind.EaseInCirc,
+                "ease_out_circ" => EasingKind.EaseOutCirc,
+                "ease_in_out_circ" => EasingKind.EaseInOutCirc,
+                "ease_in_back" => EasingKind.EaseInBack,
+                "ease_out_back" => EasingKind.EaseOutBack,
+                "ease_in_out_back" => EasingKind.EaseInOutBack,
+                "ease_in_elastic" => EasingKind.EaseInElastic,
+                "ease_out_elastic" => EasingKind.EaseOutElastic,
+                "ease_in_out_elastic" => EasingKind.EaseInOutElastic,
+                "ease_in_bounce" => EasingKind.EaseInBounce,
+                "ease_out_bounce" => EasingKind.EaseOutBounce,
+                "ease_in_out_bounce" => EasingKind.EaseInOutBounce,
+                "custom" => EasingKind.Custom,
+                "steps" => EasingKind.Steps,
+                "elastic" => EasingKind.Elastic,
+                _ => throw new JsonSerializationException("Unsupported easing type: " + type)
+            };
         }
     }
 }
