@@ -63,8 +63,8 @@ public class PhiEditJudgeLineBuilder
         {
             IJudgeLineUnbindService<IrJudgeLine> unbinder = new JudgeLineUnbinder();
             trueSrc = unbinder.Unbind(
-                allLine.FindIndex(l => ReferenceEquals(l, src)),
-                allLine,
+                trueSrc,
+                line => line.Father >= 0 ? allLine[line.Father] : null,
                 new JudgeLineUnbindOptions
                 {
                     SamplingMode = _options.FatherLineUnbind.ClassicMode

@@ -102,11 +102,10 @@ public class PhigrosV3JudgeLineBuilder
         var preprocessedSrc = src.Clone();
         if (preprocessedSrc.Father != -1)
         {
-            var srcIndex = allLine.FindIndex(l => ReferenceEquals(l, src));
             IJudgeLineUnbindService<IrJudgeLine> unbinder = new JudgeLineUnbinder();
             preprocessedSrc = unbinder.Unbind(
-                srcIndex,
-                allLine,
+                preprocessedSrc,
+                line => line.Father >= 0 ? allLine[line.Father] : null,
                 new JudgeLineUnbindOptions
                 {
                     SamplingMode = _options.FatherLineUnbind.ClassicMode

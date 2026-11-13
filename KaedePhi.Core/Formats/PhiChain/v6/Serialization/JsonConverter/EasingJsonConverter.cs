@@ -68,20 +68,20 @@ namespace KaedePhi.Core.Formats.PhiChain.v6.Serialization.JsonConverter
                     ?? throw new JsonSerializationException("Missing 'type' property for Easing.")
             );
 
-            if (easing.EasingType == EasingKind.Custom)
+            switch (easing.EasingType)
             {
-                easing.X1 = obj.Value<float?>("x1") ?? 0f;
-                easing.Y1 = obj.Value<float?>("y1") ?? 0f;
-                easing.X2 = obj.Value<float?>("x2") ?? 0f;
-                easing.Y2 = obj.Value<float?>("y2") ?? 0f;
-            }
-            else if (easing.EasingType == EasingKind.Steps)
-            {
-                easing.Count = obj.Value<int?>("count") ?? 0;
-            }
-            else if (easing.EasingType == EasingKind.Elastic)
-            {
-                easing.Omega = obj.Value<float?>("omega") ?? 0f;
+                case EasingKind.Custom:
+                    easing.X1 = obj.Value<float?>("x1") ?? 0f;
+                    easing.Y1 = obj.Value<float?>("y1") ?? 0f;
+                    easing.X2 = obj.Value<float?>("x2") ?? 0f;
+                    easing.Y2 = obj.Value<float?>("y2") ?? 0f;
+                    break;
+                case EasingKind.Steps:
+                    easing.Count = obj.Value<int?>("count") ?? 0;
+                    break;
+                case EasingKind.Elastic:
+                    easing.Omega = obj.Value<float?>("omega") ?? 0f;
+                    break;
             }
 
             return easing;

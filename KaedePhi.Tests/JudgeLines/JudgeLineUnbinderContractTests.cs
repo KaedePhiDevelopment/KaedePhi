@@ -16,8 +16,8 @@ public sealed class JudgeLineUnbinderContractTests
         var lines = new List<JudgeLine> { new() };
 
         var result = unbinder.Unbind(
-            0,
-            lines,
+            lines[0],
+            _ => null,
             new JudgeLineUnbindOptions
             {
                 SamplingMode = JudgeLineUnbindSamplingMode.Adaptive,
@@ -38,8 +38,8 @@ public sealed class JudgeLineUnbinderContractTests
         var lines = new List<JudgeLine> { new() };
 
         var result = unbinder.Unbind(
-            0,
-            lines,
+            lines[0],
+            _ => null,
             new JudgeLineUnbindOptions
             {
                 SamplingMode = JudgeLineUnbindSamplingMode.Adaptive,
@@ -58,10 +58,11 @@ public sealed class JudgeLineUnbinderContractTests
     public void UnbindWithOptions_UsesTheConfiguredSamplingStrategy()
     {
         IJudgeLineUnbindService<JudgeLine> unbinder = new JudgeLineUnbinder();
+        var equalSpacingLines = CreateLines();
 
         var equalSpacingResult = unbinder.Unbind(
-            1,
-            CreateLines(),
+            equalSpacingLines[1],
+            line => line.Father >= 0 ? equalSpacingLines[line.Father] : null,
             new JudgeLineUnbindOptions
             {
                 SamplingMode = JudgeLineUnbindSamplingMode.EqualSpacing,
@@ -69,9 +70,10 @@ public sealed class JudgeLineUnbinderContractTests
             },
             cancellationToken: TestContext.Current.CancellationToken
         );
+        var adaptiveLines = CreateLines();
         var adaptiveResult = unbinder.Unbind(
-            1,
-            CreateLines(),
+            adaptiveLines[1],
+            line => line.Father >= 0 ? adaptiveLines[line.Father] : null,
             new JudgeLineUnbindOptions
             {
                 SamplingMode = JudgeLineUnbindSamplingMode.Adaptive,
@@ -81,9 +83,10 @@ public sealed class JudgeLineUnbinderContractTests
             },
             cancellationToken: TestContext.Current.CancellationToken
         );
+        var adaptiveWithProfileLines = CreateLines();
         var adaptiveWithProfileResult = unbinder.Unbind(
-            1,
-            CreateLines(),
+            adaptiveWithProfileLines[1],
+            line => line.Father >= 0 ? adaptiveWithProfileLines[line.Father] : null,
             new JudgeLineUnbindOptions
             {
                 SamplingMode = JudgeLineUnbindSamplingMode.Adaptive,

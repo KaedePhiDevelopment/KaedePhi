@@ -10,6 +10,8 @@ namespace KaedePhi.Tool.JudgeLine.Intermediate;
 /// </summary>
 public class JudgeLineUnbinder : LoggableBase, IJudgeLineUnbindService<Ir.JudgeLine>
 {
+    private const int MaximumFatherChainDepth = 256;
+
     #region 处理器创建
 
     private FatherUnbindProcessor CreateProcessor(List<Ir.JudgeLine> allJudgeLines)
@@ -44,8 +46,7 @@ public class JudgeLineUnbinder : LoggableBase, IJudgeLineUnbindService<Ir.JudgeL
 
     #region 统一解绑
 
-    /// <inheritdoc/>
-    public Ir.JudgeLine Unbind(
+    private Ir.JudgeLine UnbindByIndex(
         int targetJudgeLineIndex,
         List<Ir.JudgeLine> allJudgeLines,
         JudgeLineUnbindOptions options,
@@ -97,6 +98,51 @@ public class JudgeLineUnbinder : LoggableBase, IJudgeLineUnbindService<Ir.JudgeL
                     ),
                 _ => throw new ArgumentOutOfRangeException(nameof(options.SamplingMode)),
             };
+    }
+
+    /// <inheritdoc/>
+    public Ir.JudgeLine Unbind(
+        Ir.JudgeLine targetJudgeLine,
+        Func<Ir.JudgeLine, Ir.JudgeLine?> fatherResolver,
+        JudgeLineUnbindOptions options,
+        IProgress<ToolProgress>? progress = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        ArgumentNullException.ThrowIfNull(targetJudgeLine);
+        ArgumentNullException.ThrowIfNull(fatherResolver);
+        ArgumentNullException.ThrowIfNull(options);
+
+        var fatherChain = new List<Ir.JudgeLine>();
+        var visited = new HashSet<Ir.JudgeLine>(ReferenceEqualityComparer.Instance);
+        Ir.JudgeLine? currentLine = targetJudgeLine;
+
+        while (currentLine is not null)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!visited.Add(currentLine))
+                throw new FormatException("判定线父级关系存在循环。");
+            if (fatherChain.Count >= MaximumFatherChainDepth)
+                throw new FormatException(
+                    $"判定线父级链深度超过安全上限 {MaximumFatherChainDepth}。"
+                );
+
+            fatherChain.Add(currentLine);
+            currentLine = fatherResolver(currentLine);
+        }
+
+        fatherChain.Reverse();
+        var allJudgeLines = fatherChain.Select(line => line.Clone()).ToList();
+        for (var index = 0; index < allJudgeLines.Count; index++)
+            allJudgeLines[index].Father = index - 1;
+
+        return UnbindByIndex(
+            allJudgeLines.Count - 1,
+            allJudgeLines,
+            options,
+            progress,
+            cancellationToken
+        );
     }
 
     #endregion

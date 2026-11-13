@@ -226,7 +226,12 @@ public static class JudgeLineBuilder
         foreach (var lineIndex in linesToUnbind)
         {
             ct.ThrowIfCancellationRequested();
-            var unboundLine = unbinder.Unbind(lineIndex, result, unbindOptions);
+            var unboundLine = unbinder.Unbind(
+                result[lineIndex],
+                line => line.Father >= 0 ? result[line.Father] : null,
+                unbindOptions,
+                cancellationToken: ct
+            );
 
             if (compressor is not null)
             {

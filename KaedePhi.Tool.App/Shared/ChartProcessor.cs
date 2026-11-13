@@ -47,8 +47,8 @@ public static class ChartProcessor
             var i = linesToProcess[idx];
             var lineProgress = CreateLineProgress(progress, idx, totalLines);
             var unboundLine = unbinder.Unbind(
-                i,
-                chart.JudgeLineList,
+                chart.JudgeLineList[i],
+                line => line.Father >= 0 ? chart.JudgeLineList[line.Father] : null,
                 new JudgeLineUnbindOptions
                 {
                     SamplingMode = classic
