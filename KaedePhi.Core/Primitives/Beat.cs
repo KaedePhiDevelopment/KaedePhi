@@ -356,6 +356,9 @@ namespace KaedePhi.Core.Primitives
         /// </summary>
         public static Beat Infinity => new(new[] { int.MaxValue, 0, 1 });
         
+        /// <summary>
+        /// 获取表示零拍的静态实例。
+        /// </summary>
         public static Beat Zero => new(new[] { 0, 0, 1 });
 
         /// <summary>

@@ -69,7 +69,7 @@ internal sealed class ImportController : ControllerBase
                 }
                 else
                 {
-                    await LoadChartAsync(filePath, useStream, formatId, null, progress, ct);
+                    await LoadChartAsync(filePath, useStream, null, progress, ct);
                 }
             }
         );
@@ -93,7 +93,6 @@ internal sealed class ImportController : ControllerBase
                 return LoadChartAsync(
                     filePath,
                     useStream,
-                    formatId,
                     BuildImportOptions(formatId),
                     progress,
                     ct
@@ -144,7 +143,6 @@ internal sealed class ImportController : ControllerBase
     private async Task LoadChartAsync(
         string filePath,
         bool useStream,
-        string formatId,
         object? importOptions,
         IProgress<double?> progress,
         CancellationToken ct
@@ -155,7 +153,7 @@ internal sealed class ImportController : ControllerBase
             ct
         );
         ct.ThrowIfCancellationRequested();
-        _navigation.ShowToolForChart(filePath, formatId);
+        _navigation.ShowToolForChart(filePath, _chart.SourceFormat);
     }
 
     private object? BuildImportOptions(string formatId)

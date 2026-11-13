@@ -70,7 +70,6 @@ public sealed class GuiChartService
         var format = await ChartImporter.DetectFormatAsync(filePath, progress, ct);
         _detectedFilePath = filePath;
         _detectedFormat = format;
-        _log.Information(log_step_detected, format.FormatId);
         return format;
     }
 
@@ -103,13 +102,11 @@ public sealed class GuiChartService
 
         _detectedFilePath = null;
         _detectedFormat = null;
-        if (!hasDetectedFormat)
-            _log.Information(log_step_detected, descriptor.FormatId);
 
         if (!descriptor.CanImport)
             throw new NotSupportedException($"{descriptor.FormatId} 不支持作为导入源。");
 
-        var kpcChart = await ChartImporter.ImportAsync(
+        var importResult = await ChartImporter.ImportWithFormatAsync(
             filePath,
             descriptor,
             stream,
@@ -118,12 +115,14 @@ public sealed class GuiChartService
             progress,
             ct
         );
+        _log.Information(log_step_detected, importResult.FormatId);
+        var kpcChart = importResult.Chart;
 
         CurrentChart = kpcChart;
-        SourceFormat = descriptor.FormatId;
+        SourceFormat = importResult.FormatId;
         SourceFilePath = filePath;
         HasUnclearContent =
-            descriptor.FormatId == ChartFormatIds.PhigrosV3 && kpcChart.BlockAreaList.Count > 0;
+            importResult.FormatId == ChartFormatIds.PhigrosV3 && kpcChart.BlockAreaList.Count > 0;
         progress?.Report(1.0);
     }
 
