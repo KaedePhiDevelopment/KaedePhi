@@ -52,14 +52,14 @@ internal static class ExportOptionsBuilder
                 Tolerance = common.UnbindTolerance,
                 MergeTolerance = common.UnbindMergeTolerance,
                 ClassicMode = common.UnbindClassicMode,
-                Compress = common.UnbindCompress,
+                Compress = common.UnbindClassicMode && common.UnbindCompress,
             },
             MultiLayerMerge = new IrToPhiEditConvertOptions.MultiLayerMergeOptions
             {
                 Precision = common.MultiLayerMergePrecision,
                 Tolerance = common.MultiLayerMergeTolerance,
                 ClassicMode = common.MultiLayerMergeClassicMode,
-                Compress = common.MultiLayerMergeCompress,
+                Compress = common.MultiLayerMergeClassicMode && common.MultiLayerMergeCompress,
             },
             LineFilter = new IrToPhiEditConvertOptions.LineFilterOptions
             {
@@ -94,14 +94,14 @@ internal static class ExportOptionsBuilder
                 Tolerance = common.UnbindTolerance,
                 MergeTolerance = common.UnbindMergeTolerance,
                 ClassicMode = common.UnbindClassicMode,
-                Compress = common.UnbindCompress,
+                Compress = common.UnbindClassicMode && common.UnbindCompress,
             },
             MultiLayerMerge = new IrToPhigrosV3ConvertOptions.MultiLayerMergeOptions
             {
                 Precision = common.MultiLayerMergePrecision,
                 Tolerance = common.MultiLayerMergeTolerance,
                 ClassicMode = common.MultiLayerMergeClassicMode,
-                Compress = common.MultiLayerMergeCompress,
+                Compress = common.MultiLayerMergeClassicMode && common.MultiLayerMergeCompress,
             },
             LineFilter = new IrToPhigrosV3ConvertOptions.LineFilterOptions
             {
@@ -163,7 +163,7 @@ internal static class ExportOptionsBuilder
                 Precision = common.MultiLayerMergePrecision,
                 Tolerance = common.MultiLayerMergeTolerance,
                 ClassicMode = common.MultiLayerMergeClassicMode,
-                Compress = common.MultiLayerMergeCompress,
+                Compress = common.MultiLayerMergeClassicMode && common.MultiLayerMergeCompress,
             },
         };
     }

@@ -28,13 +28,18 @@ public sealed class CommonExportOptionsViewModel : ViewModelBase
     public bool UnbindClassicMode
     {
         get;
-        set => SetProperty(ref field, value);
+        set
+        {
+            SetProperty(ref field, value);
+            if (!value)
+                UnbindCompress = false;
+        }
     }
 
     public bool UnbindCompress
     {
         get;
-        set => SetProperty(ref field, value);
+        set => SetProperty(ref field, UnbindClassicMode && value);
     } = true;
 
     public double MultiLayerMergePrecision
@@ -52,13 +57,18 @@ public sealed class CommonExportOptionsViewModel : ViewModelBase
     public bool MultiLayerMergeClassicMode
     {
         get;
-        set => SetProperty(ref field, value);
+        set
+        {
+            SetProperty(ref field, value);
+            if (!value)
+                MultiLayerMergeCompress = false;
+        }
     }
 
     public bool MultiLayerMergeCompress
     {
         get;
-        set => SetProperty(ref field, value);
+        set => SetProperty(ref field, MultiLayerMergeClassicMode && value);
     } = true;
 
     public bool RemoveAttachUiLine

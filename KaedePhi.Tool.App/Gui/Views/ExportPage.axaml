@@ -184,7 +184,8 @@
                                     <CheckBox Content="{x:Static loc:GuiLocalizationString.convert_merge_classic}"
                                               IsChecked="{Binding Common.MultiLayerMergeClassicMode}" />
                                     <CheckBox Content="{x:Static loc:GuiLocalizationString.convert_merge_compress}"
-                                              IsChecked="{Binding Common.MultiLayerMergeCompress}" />
+                                              IsChecked="{Binding Common.MultiLayerMergeCompress}"
+                                              IsEnabled="{Binding Common.MultiLayerMergeClassicMode}" />
                                 </StackPanel>
                             </Border>
 
@@ -208,7 +209,8 @@
                                     <CheckBox Content="{x:Static loc:GuiLocalizationString.convert_unbind_classic}"
                                               IsChecked="{Binding Common.UnbindClassicMode}" />
                                     <CheckBox Content="{x:Static loc:GuiLocalizationString.convert_unbind_compress}"
-                                              IsChecked="{Binding Common.UnbindCompress}" />
+                                              IsChecked="{Binding Common.UnbindCompress}"
+                                              IsEnabled="{Binding Common.UnbindClassicMode}" />
                                     <TextBlock Text="{x:Static loc:GuiLocalizationString.ui_export_multi_merge}" Classes="muted" FontSize="11" />
                                     <Grid ColumnDefinitions="*,150" RowDefinitions="Auto,Auto" RowSpacing="10">
                                         <TextBlock Text="{x:Static loc:GuiLocalizationString.ui_export_precision}" VerticalAlignment="Center" />
@@ -220,7 +222,8 @@
                                     <CheckBox Content="{x:Static loc:GuiLocalizationString.convert_merge_classic}"
                                               IsChecked="{Binding Common.MultiLayerMergeClassicMode}" />
                                     <CheckBox Content="{x:Static loc:GuiLocalizationString.convert_merge_compress}"
-                                              IsChecked="{Binding Common.MultiLayerMergeCompress}" />
+                                              IsChecked="{Binding Common.MultiLayerMergeCompress}"
+                                              IsEnabled="{Binding Common.MultiLayerMergeClassicMode}" />
                                     <TextBlock Text="{x:Static loc:GuiLocalizationString.convert_line_filter}" Classes="muted" FontSize="11" />
                                     <CheckBox Content="{x:Static loc:GuiLocalizationString.convert_remove_attach_ui}"
                                               IsChecked="{Binding Common.RemoveAttachUiLine}" />
