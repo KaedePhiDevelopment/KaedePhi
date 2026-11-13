@@ -139,7 +139,7 @@ public class PhigrosV3JudgeLineBuilder
         var speedEvents = primaryLayer.SpeedEvents;
 
         var (notesAbove, notesBelow) = PhigrosV3NoteBuilder.ConvertNotes(
-            preprocessedSrc.Notes,
+            preprocessedSrc.NoteList,
             speedEvents,
             _warnLogger,
             _options.NoteFilter.FilterFakeNotes,
@@ -178,7 +178,7 @@ public class PhigrosV3JudgeLineBuilder
 
     private void WarnIfUnsupportedFloorPosition(IrJudgeLine line)
     {
-        if (line.Notes.Any(note => note.FloorPosition != 0f || note.EndFloorPosition != 0f))
+        if (line.NoteList.Any(note => note.FloorPosition != 0f || note.EndFloorPosition != 0f))
             Warn(
                 "PhigrosV3 不支持 Note.FloorPosition 和 Note.EndFloorPosition，将丢弃该字段并输出 0。"
             );
@@ -739,8 +739,8 @@ public class PhigrosV3JudgeLineBuilder
     /// </summary>
     private void WarnIfUnsupportedControlFields(IrJudgeLine src)
     {
-        if (HasNonDefaultExtendLayer(src.Extended))
-            Warn("PhigrosV3 不支持 JudgeLine.Extended（包含非默认数据）");
+        if (HasNonDefaultExtendLayer(src.ExtendedLayer))
+            Warn("PhigrosV3 不支持 JudgeLine.ExtendedLayer（包含非默认数据）");
         if (!ControlDefaultChecker.HasDefaultEffect(src.PositionControls))
             Warn("PhigrosV3 不支持 JudgeLine.PositionControls（包含非默认数据）");
         if (!ControlDefaultChecker.HasDefaultEffect(src.AlphaControls))

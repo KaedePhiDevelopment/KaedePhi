@@ -56,7 +56,7 @@ public class PhiEditJudgeLineBuilder
         var trueSrc = src;
         var pe = new Pe.JudgeLine
         {
-            NoteList = trueSrc.Notes.ConvertAll(n => NoteBuilder.ConvertNote(n, _warnLogger)),
+            NoteList = trueSrc.NoteList.ConvertAll(n => NoteBuilder.ConvertNote(n, _warnLogger)),
         };
 
         if (trueSrc.Father != -1)
