@@ -12,7 +12,7 @@ internal static class JudgeLineBuilder
 
     internal static Ir.JudgeLine ConvertToIr(Line src)
     {
-        var line = new Ir.JudgeLine { Notes = src.NoteList.ConvertAll(NoteBuilder.ConvertToIr) };
+        var line = new Ir.JudgeLine { NoteList = src.NoteList.ConvertAll(NoteBuilder.ConvertToIr) };
 
         var layer = new IrEvents.EventLayer();
         var props = src.Props;
@@ -50,7 +50,7 @@ internal static class JudgeLineBuilder
 
     internal static Line ConvertFromIr(Ir.JudgeLine src, IrToPhiFansConvertOptions options)
     {
-        var line = new Line { NoteList = src.Notes.ConvertAll(NoteBuilder.ConvertFromIr) };
+        var line = new Line { NoteList = src.NoteList.ConvertAll(NoteBuilder.ConvertFromIr) };
         var sourceLayers = src.EventLayers.ConvertAll(layer => layer.Clone());
         foreach (var sourceLayer in sourceLayers)
             sourceLayer.Sort();

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using KaedePhi.Core.Primitives;
 
 namespace KaedePhi.Core.Intermediate.Model
@@ -14,7 +15,7 @@ namespace KaedePhi.Core.Intermediate.Model
         /// <summary>
         /// 判定线名称
         /// </summary>
-        public string Name { get; set; } = "KpcJudgeLine";
+        public string Name { get; set; } = "IrJudgeLine";
 
         /// <summary>
         /// 判定线纹理相对路径，默认值为line.png
@@ -44,12 +45,12 @@ namespace KaedePhi.Core.Intermediate.Model
         /// <summary>
         /// 判定线音符列表
         /// </summary>
-        public List<Note> Notes { get; set; } = new();
+        public List<Note> NoteList { get; set; } = new();
 
         /// <summary>
         /// 特殊事件层（故事板）
         /// </summary>
-        public Events.ExtendLayer Extended { get; set; } = new();
+        public Events.ExtendLayer ExtendedLayer { get; set; } = new();
 
         /// <summary>
         /// 判定线的Z轴顺序
@@ -187,8 +188,8 @@ namespace KaedePhi.Core.Intermediate.Model
                 RotateWithFather = RotateWithFather,
                 AttachUi = AttachUi,
                 EventLayers = new List<Events.EventLayer>(),
-                Notes = new List<Note>(),
-                Extended = Extended.Clone(),
+                NoteList = new List<Note>(),
+                ExtendedLayer = ExtendedLayer.Clone(),
                 PositionControls = new List<Controls.XControl>(),
                 AlphaControls = new List<Controls.AlphaControl>(),
                 SizeControls = new List<Controls.SizeControl>(),
@@ -207,13 +208,13 @@ namespace KaedePhi.Core.Intermediate.Model
                 }
             }
 
-            if (Notes is not null)
+            if (NoteList is not null)
             {
-                foreach (var note in Notes)
+                foreach (var note in NoteList)
                 {
                     if (note is null)
                         continue;
-                    clone.Notes.Add(note.Clone());
+                    clone.NoteList.Add(note.Clone());
                 }
             }
 

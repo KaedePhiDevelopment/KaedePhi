@@ -156,8 +156,8 @@ public class PhigrosV3Converter
 
         foreach (var line in input.JudgeLineList)
         {
-            if (line.Notes is { Count: > 0 })
-                maxBeat = line.Notes.Select(note => (double)note.EndBeat).Prepend(maxBeat).Max();
+            if (line.NoteList is { Count: > 0 })
+                maxBeat = line.NoteList.Select(note => (double)note.EndBeat).Prepend(maxBeat).Max();
 
             if (line.EventLayers is not { Count: > 0 })
                 continue;

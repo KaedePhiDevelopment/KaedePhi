@@ -43,11 +43,11 @@ public class NoteEndBeatInvariantTests
 
         var normalized = IrChartNormalizer.NormalizeAndValidateNoteEndBeats(source);
 
-        ((double)normalized.JudgeLineList[0].Notes[0].EndBeat).Should().Be(3);
-        ((double)source.JudgeLineList[0].Notes[0].EndBeat).Should().Be(9);
+        ((double)normalized.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(3);
+        ((double)source.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(9);
         normalized.Should().NotBeSameAs(source);
         normalized.JudgeLineList[0].Should().NotBeSameAs(source.JudgeLineList[0]);
-        normalized.JudgeLineList[0].Notes[0].Should().NotBeSameAs(source.JudgeLineList[0].Notes[0]);
+        normalized.JudgeLineList[0].NoteList[0].Should().NotBeSameAs(source.JudgeLineList[0].NoteList[0]);
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public class NoteEndBeatInvariantTests
         Action act = () => IrChartNormalizer.NormalizeAndValidateNoteEndBeats(source);
 
         act.Should().NotThrow();
-        ((double)source.JudgeLineList[0].Notes[0].EndBeat).Should().Be(1);
+        ((double)source.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(1);
     }
 
     [Theory]
@@ -73,7 +73,7 @@ public class NoteEndBeatInvariantTests
         Action act = () => IrChartNormalizer.NormalizeAndValidateNoteEndBeats(source);
 
         act.Should().NotThrow();
-        ((double)source.JudgeLineList[0].Notes[0].EndBeat).Should().Be(endBeat);
+        ((double)source.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(endBeat);
     }
 
     [Fact]
@@ -83,8 +83,8 @@ public class NoteEndBeatInvariantTests
 
         var normalized = IrChartNormalizer.NormalizeAndValidateNoteEndBeats(source);
 
-        ((double)normalized.JudgeLineList[0].Notes[0].EndBeat).Should().Be(5);
-        normalized.JudgeLineList[0].Notes[0].Should().NotBeSameAs(source.JudgeLineList[0].Notes[0]);
+        ((double)normalized.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(5);
+        normalized.JudgeLineList[0].NoteList[0].Should().NotBeSameAs(source.JudgeLineList[0].NoteList[0]);
     }
 
     [Fact]
@@ -96,11 +96,11 @@ public class NoteEndBeatInvariantTests
         var imported = converter.ToIr(source, null);
         var exported = converter.FromIr(source, null);
 
-        ((double)imported.JudgeLineList[0].Notes[0].EndBeat).Should().Be(3);
-        ((double)exported.JudgeLineList[0].Notes[0].EndBeat).Should().Be(3);
+        ((double)imported.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(3);
+        ((double)exported.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(3);
         imported.Should().NotBeSameAs(source);
         exported.Should().NotBeSameAs(source);
-        ((double)source.JudgeLineList[0].Notes[0].EndBeat).Should().Be(9);
+        ((double)source.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(9);
     }
 
     [Fact]
@@ -147,7 +147,7 @@ public class NoteEndBeatInvariantTests
         var converted = converter.ToIr(nonHold, new PhiEditToIrConvertOptions());
         Action act = () => converter.ToIr(invalidHold, new PhiEditToIrConvertOptions());
 
-        ((double)converted.JudgeLineList[0].Notes[0].EndBeat).Should().Be(3);
+        ((double)converted.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(3);
         act.Should().Throw<FormatException>();
     }
 
@@ -205,7 +205,7 @@ public class NoteEndBeatInvariantTests
 
         var converted = new PhiEditConverter().ToIr(source, new PhiEditToIrConvertOptions());
 
-        ((double)converted.JudgeLineList[0].Notes[0].EndBeat).Should().Be(5);
+        ((double)converted.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(5);
     }
 
     [Fact]
@@ -227,7 +227,7 @@ public class NoteEndBeatInvariantTests
         var converted = converter.ToIr(nonHold, null);
         Action act = () => converter.ToIr(invalidHold, null);
 
-        ((double)converted.JudgeLineList[0].Notes[0].EndBeat).Should().Be(3);
+        ((double)converted.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(3);
         act.Should().Throw<FormatException>();
     }
 
@@ -245,7 +245,7 @@ public class NoteEndBeatInvariantTests
 
         var converted = new PhiFansConverter().ToIr(source, null);
 
-        ((double)converted.JudgeLineList[0].Notes[0].EndBeat).Should().Be(5);
+        ((double)converted.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(5);
     }
 
     [Fact]
@@ -267,7 +267,7 @@ public class NoteEndBeatInvariantTests
         var converted = converter.ToIr(nonHold, null);
         Action act = () => converter.ToIr(invalidHold, null);
 
-        ((double)converted.JudgeLineList[0].Notes[0].EndBeat).Should().Be(3);
+        ((double)converted.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(3);
         act.Should().Throw<FormatException>();
     }
 
@@ -305,7 +305,7 @@ public class NoteEndBeatInvariantTests
 
         var converted = new PhigrosV3Converter().ToIr(source, null);
 
-        ((double)converted.JudgeLineList[0].Notes[0].EndBeat).Should().Be(5);
+        ((double)converted.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(5);
     }
 
     [Fact]
@@ -327,7 +327,7 @@ public class NoteEndBeatInvariantTests
         var converted = converter.ToIr(nonHold, null);
         Action act = () => converter.ToIr(invalidHold, null);
 
-        ((double)converted.JudgeLineList[0].Notes[0].EndBeat).Should().Be(3);
+        ((double)converted.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(3);
         act.Should().Throw<FormatException>();
     }
 
@@ -345,7 +345,7 @@ public class NoteEndBeatInvariantTests
 
         var converted = new RePhiEditConverter().ToIr(source, null);
 
-        ((double)converted.JudgeLineList[0].Notes[0].EndBeat).Should().Be(5);
+        ((double)converted.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(5);
     }
 
     [Fact]
@@ -365,7 +365,7 @@ public class NoteEndBeatInvariantTests
         var converted = converter.ToIr(nonHold, new PhiChainToIrConvertOptions());
         Action act = () => converter.ToIr(invalidHold, new PhiChainToIrConvertOptions());
 
-        ((double)converted.JudgeLineList[0].Notes[0].EndBeat).Should().Be(3);
+        ((double)converted.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(3);
         act.Should().Throw<FormatException>();
     }
 
@@ -383,7 +383,7 @@ public class NoteEndBeatInvariantTests
 
         var converted = new PhiChainConverter().ToIr(source, new PhiChainToIrConvertOptions());
 
-        ((double)converted.JudgeLineList[0].Notes[0].EndBeat).Should().Be(5);
+        ((double)converted.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(5);
     }
 
     [Fact]
@@ -431,9 +431,9 @@ public class NoteEndBeatInvariantTests
 
         var converted = new PhiChainConverter().ToIr(source, new PhiChainToIrConvertOptions());
 
-        converted.JudgeLineList[0].Notes.Should().HaveCount(3);
-        converted.JudgeLineList[0].Notes[2].Type.Should().Be(NoteType.Hold);
-        ((double)converted.JudgeLineList[0].Notes[2].EndBeat).Should().Be(2.5);
+        converted.JudgeLineList[0].NoteList.Should().HaveCount(3);
+        converted.JudgeLineList[0].NoteList[2].Type.Should().Be(NoteType.Hold);
+        ((double)converted.JudgeLineList[0].NoteList[2].EndBeat).Should().Be(2.5);
     }
 
     [Fact]
@@ -446,7 +446,7 @@ public class NoteEndBeatInvariantTests
         Action act = () => new IntermediateConverter().FromIr(source, null);
 
         act.Should().NotThrow();
-        ((double)source.JudgeLineList[0].Notes[0].EndBeat).Should().Be(1);
+        ((double)source.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(1);
     }
 
     [Fact]
@@ -465,7 +465,7 @@ public class NoteEndBeatInvariantTests
         ((double)pc.Lines[0].Notes[0].HoldBeat).Should().Be(0);
         phigros.JudgeLineList[0].NotesAbove[0].HoldTime.Should().Be(0);
         ((double)rpe.JudgeLineList[0].Notes![0].EndBeat).Should().Be(3);
-        ((double)source.JudgeLineList[0].Notes[0].EndBeat).Should().Be(9);
+        ((double)source.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(9);
     }
 
     [Fact]
@@ -484,9 +484,9 @@ public class NoteEndBeatInvariantTests
         _ = pipeline.To<Ir.Chart, Unit?, Unit?>(targetConverter, null);
 
         targetConverter.ReceivedIr.Should().NotBeNull();
-        ((double)targetConverter.ReceivedIr!.JudgeLineList[0].Notes[0].EndBeat).Should().Be(3);
+        ((double)targetConverter.ReceivedIr!.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(3);
         targetConverter.ReceivedIr.Should().NotBeSameAs(sourceChart);
-        ((double)sourceChart.JudgeLineList[0].Notes[0].EndBeat).Should().Be(9);
+        ((double)sourceChart.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(9);
     }
 
     [Fact]
@@ -520,8 +520,8 @@ public class NoteEndBeatInvariantTests
         {
             OnFromIr = chart =>
             {
-                firstTargetEndBeat = (double)chart.JudgeLineList[0].Notes[0].EndBeat;
-                chart.JudgeLineList[0].Notes[0].EndBeat = Beat(15);
+                firstTargetEndBeat = (double)chart.JudgeLineList[0].NoteList[0].EndBeat;
+                chart.JudgeLineList[0].NoteList[0].EndBeat = Beat(15);
             },
         };
         var secondTarget = new UnvalidatedIrConverter();
@@ -532,15 +532,15 @@ public class NoteEndBeatInvariantTests
             null,
             TestContext.Current.CancellationToken
         );
-        sourceChart.JudgeLineList[0].Notes[0].EndBeat = Beat(11);
+        sourceChart.JudgeLineList[0].NoteList[0].EndBeat = Beat(11);
         _ = pipeline.To<Ir.Chart, Unit?, Unit?>(firstTarget, null);
         _ = pipeline.To<Ir.Chart, Unit?, Unit?>(secondTarget, null);
 
         firstTargetEndBeat.Should().Be(3);
         secondTarget.ReceivedIr.Should().NotBeNull();
-        ((double)secondTarget.ReceivedIr!.JudgeLineList[0].Notes[0].EndBeat).Should().Be(3);
+        ((double)secondTarget.ReceivedIr!.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(3);
         firstTarget.ReceivedIr.Should().NotBeSameAs(secondTarget.ReceivedIr);
-        ((double)sourceChart.JudgeLineList[0].Notes[0].EndBeat).Should().Be(11);
+        ((double)sourceChart.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(11);
     }
 
     [Fact]
@@ -558,9 +558,9 @@ public class NoteEndBeatInvariantTests
             ct: TestContext.Current.CancellationToken
         );
 
-        ((double)imported.JudgeLineList[0].Notes[0].EndBeat).Should().Be(3);
+        ((double)imported.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(3);
         imported.Should().NotBeSameAs(importedChart);
-        ((double)importedChart.JudgeLineList[0].Notes[0].EndBeat).Should().Be(9);
+        ((double)importedChart.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(9);
     }
 
     [Fact]
@@ -579,9 +579,9 @@ public class NoteEndBeatInvariantTests
             ct: TestContext.Current.CancellationToken
         );
 
-        ((double)imported.JudgeLineList[0].Notes[0].EndBeat).Should().Be(3);
+        ((double)imported.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(3);
         imported.Should().NotBeSameAs(importedChart);
-        ((double)importedChart.JudgeLineList[0].Notes[0].EndBeat).Should().Be(9);
+        ((double)importedChart.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(9);
     }
 
     [Fact]
@@ -606,9 +606,9 @@ public class NoteEndBeatInvariantTests
         );
 
         exportedChart.Should().NotBeNull();
-        ((double)exportedChart!.JudgeLineList[0].Notes[0].EndBeat).Should().Be(3);
+        ((double)exportedChart!.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(3);
         exportedChart.Should().NotBeSameAs(sourceChart);
-        ((double)sourceChart.JudgeLineList[0].Notes[0].EndBeat).Should().Be(9);
+        ((double)sourceChart.JudgeLineList[0].NoteList[0].EndBeat).Should().Be(9);
     }
 
     [Fact]
@@ -653,7 +653,7 @@ public class NoteEndBeatInvariantTests
         new()
         {
             BpmList = [new Ir.BpmItem { StartBeat = Beat(0), Bpm = 120f }],
-            JudgeLineList = [new Ir.JudgeLine { Notes = [note] }],
+            JudgeLineList = [new Ir.JudgeLine { NoteList = [note] }],
         };
 
     private static Pf.Chart CreatePhiFansChart(Pf.Note note) =>

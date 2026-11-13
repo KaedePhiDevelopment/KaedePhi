@@ -142,7 +142,7 @@ public class StellateRePhiEditExtendedLocalizationTests
         new StellateRePhiEditExtendedConverter { OnWarning = warnings.Add }.ToIr(source);
 
         Assert.Contains(
-            "Notes on StellateRePhiEditExtended judge line 0 are ignored because the line is converted to a block area.",
+            "NoteList on StellateRePhiEditExtended judge line 0 are ignored because the line is converted to a block area.",
             warnings
         );
         Assert.Contains(

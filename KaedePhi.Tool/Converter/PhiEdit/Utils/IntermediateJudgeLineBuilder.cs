@@ -56,7 +56,7 @@ public class IntermediateJudgeLineBuilder
         return new Ir.JudgeLine
         {
             Name = $"PeJudgeLine_{index}",
-            Notes = src.NoteList.ConvertAll(NoteBuilder.ConvertNote),
+            NoteList = src.NoteList.ConvertAll(NoteBuilder.ConvertNote),
             EventLayers = [eventLayer],
         };
     }

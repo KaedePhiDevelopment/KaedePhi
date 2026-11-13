@@ -153,7 +153,7 @@ public class ValidationComponentTests
         switch (malformedMember)
         {
             case "Notes":
-                line.Notes = null!;
+                line.NoteList = null!;
                 break;
             case "EventLayers":
                 line.EventLayers = null!;

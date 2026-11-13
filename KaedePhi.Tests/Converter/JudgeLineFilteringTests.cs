@@ -104,7 +104,7 @@ public class JudgeLineFilteringTests
         {
             Texture = texture,
             AttachUi = attachUi,
-            Notes =
+            NoteList =
             [
                 new Ir.Note { StartBeat = new Beat(markerBeat), EndBeat = new Beat(markerBeat) },
             ],

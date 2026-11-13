@@ -26,9 +26,9 @@ public static class JudgeLineBuilder
             IsGif = src.IsGif,
             BpmFactor = src.BpmFactor,
             RotateWithFather = src.RotateWithFather,
-            Notes = src.Notes is not null ? src.Notes.ConvertAll(NoteBuilder.ConvertNote) : [],
+            NoteList = src.Notes is not null ? src.Notes.ConvertAll(NoteBuilder.ConvertNote) : [],
             EventLayers = src.EventLayers.ConvertAll(EventLayerBuilder.ConvertEventLayer),
-            Extended =
+            ExtendedLayer =
                 EventLayerBuilder.ConvertExtendLayer(src.Extended) ?? new IrEvents.ExtendLayer(),
             PositionControls = src.PositionControls.ConvertAll(ControlBuilder.ConvertXControl),
             AlphaControls = src.AlphaControls.ConvertAll(ControlBuilder.ConvertAlphaControl),
@@ -59,12 +59,12 @@ public static class JudgeLineBuilder
             IsGif = src.IsGif,
             BpmFactor = src.BpmFactor,
             RotateWithFather = src.RotateWithFather,
-            Notes = src.Notes.ConvertAll(NoteBuilder.ConvertNote),
+            Notes = src.NoteList.ConvertAll(NoteBuilder.ConvertNote),
             EventLayers = src.EventLayers.ConvertAll(r =>
                 EventLayerBuilder.ConvertEventLayer(r, options)
             ),
             Extended =
-                EventLayerBuilder.ConvertExtendLayer(src.Extended, options)
+                EventLayerBuilder.ConvertExtendLayer(src.ExtendedLayer, options)
                 ?? new RpeEvents.ExtendLayer(),
             PositionControls = src.PositionControls.ConvertAll(ControlBuilder.ConvertXControl),
             AlphaControls = src.AlphaControls.ConvertAll(ControlBuilder.ConvertAlphaControl),

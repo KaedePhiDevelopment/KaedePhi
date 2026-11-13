@@ -417,7 +417,7 @@ public class PhigrosV3JudgeLineBuilderTests
     {
         var line = new JudgeLine
         {
-            Notes = [Hold(1, 5f)],
+            NoteList = [Hold(1, 5f)],
             EventLayers =
             [
                 new EventLayer { SpeedEvents = [SpeedEvent(0, 2, 4.5f, 4.5f)] },
@@ -492,7 +492,7 @@ public class PhigrosV3JudgeLineBuilderTests
     {
         var line = new JudgeLine
         {
-            Notes = [Hold(0.5), Hold(2), Hold(3), Hold(4), Hold(6)],
+            NoteList = [Hold(0.5), Hold(2), Hold(3), Hold(4), Hold(6)],
             EventLayers =
             [
                 new EventLayer
@@ -517,7 +517,7 @@ public class PhigrosV3JudgeLineBuilderTests
     {
         var firstLine = new JudgeLine
         {
-            Notes =
+            NoteList =
             [
                 new Note
                 {
@@ -547,7 +547,7 @@ public class PhigrosV3JudgeLineBuilderTests
         var secondLine = new JudgeLine
         {
             BpmFactor = 2f,
-            Notes =
+            NoteList =
             [
                 new Note
                 {
@@ -629,7 +629,7 @@ public class PhigrosV3JudgeLineBuilderTests
     {
         var source = new JudgeLine
         {
-            Notes =
+            NoteList =
             [
                 new Note
                 {
@@ -701,7 +701,7 @@ public class PhigrosV3JudgeLineBuilderTests
             [
                 new JudgeLine
                 {
-                    Notes = [new Note { StartBeat = Beat(3_750_000), EndBeat = Beat(3_750_000) }],
+                    NoteList = [new Note { StartBeat = Beat(3_750_000), EndBeat = Beat(3_750_000) }],
                 },
             ],
         };
@@ -727,7 +727,7 @@ public class PhigrosV3JudgeLineBuilderTests
         var source = new JudgeLine
         {
             BpmFactor = bpmFactor,
-            Notes =
+            NoteList =
             [
                 new Note { StartBeat = Beat(0.5), EndBeat = Beat(0.5) },
                 new Note
@@ -781,7 +781,7 @@ public class PhigrosV3JudgeLineBuilderTests
     {
         var source = new JudgeLine
         {
-            Notes =
+            NoteList =
             [
                 new Note
                 {
@@ -828,7 +828,7 @@ public class PhigrosV3JudgeLineBuilderTests
                 {
                     Father = 1,
                     BpmFactor = 2f,
-                    Notes =
+                    NoteList =
                     [
                         new Note
                         {
@@ -864,7 +864,7 @@ public class PhigrosV3JudgeLineBuilderTests
             [
                 new JudgeLine
                 {
-                    Notes =
+                    NoteList =
                     [
                         new Note
                         {
@@ -894,7 +894,7 @@ public class PhigrosV3JudgeLineBuilderTests
         var source = new JudgeLine
         {
             Texture = "filtered.png",
-            Notes =
+            NoteList =
             [
                 new Note
                 {
@@ -948,7 +948,7 @@ public class PhigrosV3JudgeLineBuilderTests
         var child = new JudgeLine
         {
             Father = 0,
-            Notes =
+            NoteList =
             [
                 new Note
                 {
@@ -983,7 +983,7 @@ public class PhigrosV3JudgeLineBuilderTests
         var source = new CollidingJudgeLine
         {
             Father = 0,
-            Notes = [new Note { StartBeat = Beat(1), EndBeat = Beat(1) }],
+            NoteList = [new Note { StartBeat = Beat(1), EndBeat = Beat(1) }],
         };
         var options = new IrToPhigrosV3ConvertOptions();
 

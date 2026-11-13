@@ -21,7 +21,7 @@ public static class IrJudgeLineBuilder
         return new Ir.JudgeLine
         {
             Name = $"PhigrosLine_{index}",
-            Notes = NoteBuilder.ConvertNotes(src.NotesAbove, src.NotesBelow),
+            NoteList = NoteBuilder.ConvertNotes(src.NotesAbove, src.NotesBelow),
             EventLayers = [EventLayerBuilder.ConvertEventLayer(src, horizonBeat)],
             BpmFactor = defaultBpm / src.Bpm,
         };

@@ -129,7 +129,7 @@ public class PhiEditJudgeLineBuilder
     /// </summary>
     private void WarnIfUnsupportedControlFields(IrJudgeLine src)
     {
-        if (HasNonDefaultExtendLayer(src.Extended))
+        if (HasNonDefaultExtendLayer(src.ExtendedLayer))
             Warn("PE 不支持 JudgeLine.Extended（包含非默认数据）");
         if (!ControlDefaultChecker.IsDefaultControls(src.PositionControls))
             Warn("PE 不支持 JudgeLine.PositionControls（包含非默认数据）");

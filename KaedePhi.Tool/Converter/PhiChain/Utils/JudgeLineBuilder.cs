@@ -113,7 +113,7 @@ public static class JudgeLineBuilder
             notes.AddRange(expandedNotes);
         }
 
-        irLine.Notes = notes;
+        irLine.NoteList = notes;
 
         return irLine;
     }
@@ -297,7 +297,7 @@ public static class JudgeLineBuilder
         var line = new SerializedLine
         {
             Name = src.Name,
-            Notes = src.Notes.ConvertAll(NoteBuilder.ConvertNote),
+            Notes = src.NoteList.ConvertAll(NoteBuilder.ConvertNote),
         };
 
         // 使用 LayerProcessor 合并多个事件层（PhiChain 不支持多层级）
@@ -336,7 +336,7 @@ public static class JudgeLineBuilder
         }
 
         // 警告音符字段丢失
-        foreach (var note in src.Notes)
+        foreach (var note in src.NoteList)
         {
             ct.ThrowIfCancellationRequested();
             NoteBuilder.WarnIfUnsupportedNoteFields(note, warn);
