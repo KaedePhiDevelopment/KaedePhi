@@ -115,8 +115,12 @@ internal sealed class ExportController : ControllerBase
     private async Task ExportAsync(ExportViewModel exportVm, string targetFormat, string outputPath)
     {
         exportVm.IsExporting = true;
+        exportVm.SetExportProgress(0);
         exportVm.StatusText = status_exporting;
         var ct = BeginOperation();
+        var exportProgress = new Progress<ToolProgress>(progress =>
+            exportVm.SetExportProgress(progress.Percentage * 100)
+        );
 
         var exportOptions = ExportOptionsBuilder.Build(targetFormat, exportVm);
         var useStream = exportVm.UseStream;
@@ -131,11 +135,13 @@ internal sealed class ExportController : ControllerBase
                     useStream,
                     indented,
                     exportOptions,
-                    ct
+                    ct,
+                    exportProgress
                 ),
             ct
         );
 
+        exportVm.SetExportProgress(100);
         var message = string.Format(status_exported_to, outputPath);
         exportVm.StatusText = message;
         Logger.Information(log_export_done);

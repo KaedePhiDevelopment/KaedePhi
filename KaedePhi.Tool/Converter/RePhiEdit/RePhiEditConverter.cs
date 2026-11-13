@@ -1,5 +1,6 @@
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Common;
+using KaedePhi.Tool.Converter;
 using KaedePhi.Tool.Converter.RePhiEdit.Model;
 using KaedePhi.Tool.Converter.RePhiEdit.Utils;
 
@@ -65,10 +66,12 @@ public class RePhiEditConverter
         _ct.ThrowIfCancellationRequested();
 
         var lines = new List<Rpe.JudgeLine>(normalized.JudgeLineList.Count);
-        foreach (var line in normalized.JudgeLineList)
+        for (var index = 0; index < normalized.JudgeLineList.Count; index++)
         {
             _ct.ThrowIfCancellationRequested();
+            var line = normalized.JudgeLineList[index];
             lines.Add(JudgeLineBuilder.ConvertJudgeLine(line, options.Cutting));
+            ChartExportProgressContext.Report(index + 1, normalized.JudgeLineList.Count);
         }
 
         return new Rpe.Chart

@@ -7,6 +7,8 @@ namespace KaedePhi.Tool.App.Gui.ViewModels;
 
 public sealed class ExportViewModel : ViewModelBase
 {
+    private double _exportProgress;
+
     // 目标格式变化时需要重新求值的派生属性
     private static readonly string[] FormatStateProperties =
     [
@@ -118,6 +120,18 @@ public sealed class ExportViewModel : ViewModelBase
         }
     }
 
+    public double ExportProgress
+    {
+        get => _exportProgress;
+        private set
+        {
+            if (SetProperty(ref _exportProgress, value))
+                OnPropertyChanged(nameof(ExportProgressText));
+        }
+    }
+
+    public string ExportProgressText => $"{ExportProgress:0}%";
+
     public string StatusText
     {
         get;
@@ -167,9 +181,13 @@ public sealed class ExportViewModel : ViewModelBase
             SelectedFormat = ChartFormatIds.RePhiEdit;
         IndentedOutput = false;
         StatusText = string.Empty;
+        ExportProgress = 0;
         IsExporting = false;
         ApplyConversionDefaults(defaults);
     }
+
+    public void SetExportProgress(double progress) =>
+        ExportProgress = Math.Clamp(progress, 0, 100);
 
     public void ApplyConversionDefaults(ConvertDefaultsConfig config)
     {

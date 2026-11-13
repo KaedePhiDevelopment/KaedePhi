@@ -1,5 +1,6 @@
 using KaedePhi.Core.Primitives;
 using KaedePhi.Tool.Common;
+using KaedePhi.Tool.Converter;
 using KaedePhi.Tool.Converter.Phigros.v3.Model;
 using KaedePhi.Tool.Converter.Phigros.v3.Utils;
 using IrMeta = KaedePhi.Core.Intermediate.Model.Meta;
@@ -111,12 +112,14 @@ public class PhigrosV3Converter
         }
 
         var judgeLines = new List<PhigrosJudgeLine>(normalized.JudgeLineList.Count);
-        foreach (var line in normalized.JudgeLineList)
+        for (var index = 0; index < normalized.JudgeLineList.Count; index++)
         {
             _ct.ThrowIfCancellationRequested();
+            var line = normalized.JudgeLineList[index];
             var converted = judgeLineConverter.ConvertJudgeLine(line, normalized.JudgeLineList);
             if (converted is not null)
                 judgeLines.Add(converted);
+            ChartExportProgressContext.Report(index + 1, normalized.JudgeLineList.Count);
         }
 
         var blockAreaTimeMapper =

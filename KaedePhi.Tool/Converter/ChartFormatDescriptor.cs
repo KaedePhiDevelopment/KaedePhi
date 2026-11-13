@@ -141,7 +141,9 @@ public sealed class ChartFormatDescriptor
             exporter: async (chart, path, write, options, log, ct) =>
             {
                 var converter = ChartFormatRegistry.Prepare(converterFactory(), log, ct);
+                write.Progress?.Report(new ToolProgress(0.1));
                 var target = converter.FromIr(chart, ResolveOptions<TOutOptions>(options));
+                write.Progress?.Report(new ToolProgress(0.55));
                 ct.ThrowIfCancellationRequested();
                 await ChartFormatRegistry.WriteStreamAsync(
                     path,
@@ -296,7 +298,7 @@ public sealed class ChartFormatDescriptor
     /// <param name="log">日志回调集合</param>
     /// <param name="ct">取消令牌</param>
     /// <returns>导出任务</returns>
-    public Task ExportAsync(
+    public async Task ExportAsync(
         Ir.Chart chart,
         string outputPath,
         ChartWriteSettings? writeSettings = null,
@@ -309,15 +311,22 @@ public sealed class ChartFormatDescriptor
             throw new NotSupportedException($"{FormatName} 不支持作为导出目标。");
         ArgumentNullException.ThrowIfNull(chart);
         ct.ThrowIfCancellationRequested();
+        var settings = writeSettings ?? new ChartWriteSettings();
+        settings.Progress?.Report(new ToolProgress(0.02));
         var normalized = IrChartNormalizer.NormalizeAndValidateNoteEndBeats(chart);
-        return Exporter(
-            normalized,
-            outputPath,
-            writeSettings ?? new ChartWriteSettings(),
-            exportOptions ?? CreateDefaultExportOptions(),
-            log ?? ChartLogSink.None,
-            ct
-        );
+        settings.Progress?.Report(new ToolProgress(0.05));
+        using (ChartExportProgressContext.Use(settings.Progress, 0.1, 0.55))
+        {
+            await Exporter(
+                normalized,
+                outputPath,
+                settings,
+                exportOptions ?? CreateDefaultExportOptions(),
+                log ?? ChartLogSink.None,
+                ct
+            ).ConfigureAwait(false);
+        }
+        settings.Progress?.Report(new ToolProgress(1));
     }
 
     private string FormatName => FormatId;

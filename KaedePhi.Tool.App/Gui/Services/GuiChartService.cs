@@ -135,7 +135,8 @@ public sealed class GuiChartService
         bool stream,
         bool indented,
         object? exportOptions = null,
-        CancellationToken ct = default
+        CancellationToken ct = default,
+        IProgress<ToolProgress>? progress = null
     )
     {
         if (CurrentChart == null)
@@ -147,7 +148,12 @@ public sealed class GuiChartService
             .ExportAsync(
                 CurrentChart,
                 outputPath,
-                new ChartWriteSettings { UseStream = stream, Indented = indented },
+                new ChartWriteSettings
+                {
+                    UseStream = stream,
+                    Indented = indented,
+                    Progress = progress,
+                },
                 exportOptions,
                 CreateLogSink(),
                 ct

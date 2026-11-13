@@ -1,5 +1,6 @@
 using KaedePhi.Core.Formats.PhiChain.v6.Model;
 using KaedePhi.Tool.Converter.PhiChain.Model;
+using KaedePhi.Tool.Converter;
 using KaedePhi.Tool.JudgeLine;
 using KaedePhi.Tool.JudgeLine.Intermediate;
 using KaedePhi.Tool.Layer.Intermediate;
@@ -163,6 +164,7 @@ public static class JudgeLineBuilder
 
         var result = new List<SerializedLine>();
         var childMap = new Dictionary<int, List<int>>();
+        var completedLines = 0;
 
         // 构建父子关系映射
         for (var i = 0; i < processedLines.Count; i++)
@@ -180,7 +182,17 @@ public static class JudgeLineBuilder
         {
             if (processedLines[i].Father < 0)
             {
-                result.Add(BuildLineSubtree(processedLines, i, childMap, options, warn, ct));
+                result.Add(
+                    BuildLineSubtree(
+                        processedLines,
+                        i,
+                        childMap,
+                        options,
+                        ref completedLines,
+                        warn,
+                        ct
+                    )
+                );
             }
         }
 
@@ -253,6 +265,7 @@ public static class JudgeLineBuilder
         int lineIndex,
         Dictionary<int, List<int>> childMap,
         IrToPhiChainConvertOptions options,
+        ref int completedLines,
         Action<string>? warn = null,
         CancellationToken ct = default,
         int depth = 0
@@ -266,15 +279,27 @@ public static class JudgeLineBuilder
         var serializedLine = ConvertLineToPhiChain(irLine, options, warn, ct);
 
         // 递归处理子线
-        if (!childMap.TryGetValue(lineIndex, out var children))
-            return serializedLine;
-        foreach (var childIndex in children)
+        if (childMap.TryGetValue(lineIndex, out var children))
         {
-            serializedLine.Children.Add(
-                BuildLineSubtree(irLines, childIndex, childMap, options, warn, ct, depth + 1)
-            );
+            foreach (var childIndex in children)
+            {
+                serializedLine.Children.Add(
+                    BuildLineSubtree(
+                        irLines,
+                        childIndex,
+                        childMap,
+                        options,
+                        ref completedLines,
+                        warn,
+                        ct,
+                        depth + 1
+                    )
+                );
+            }
         }
 
+        completedLines++;
+        ChartExportProgressContext.Report(completedLines, irLines.Count);
         return serializedLine;
     }
 

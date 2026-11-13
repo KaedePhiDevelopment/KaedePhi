@@ -1,3 +1,5 @@
+using KaedePhi.Tool.Common;
+
 namespace KaedePhi.Tool.Converter;
 
 /// <summary>
@@ -13,4 +15,7 @@ public sealed record ChartWriteSettings
 
     /// <summary>是否为演习模式：完成序列化但跳过文件写入。</summary>
     public bool DryRun { get; init; }
+
+    /// <summary>导出进度回调。</summary>
+    public IProgress<ToolProgress>? Progress { get; init; }
 }

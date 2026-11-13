@@ -1,5 +1,6 @@
 using KaedePhi.Core.Formats.PhiFans.Model;
 using KaedePhi.Tool.Common;
+using KaedePhi.Tool.Converter;
 using KaedePhi.Tool.Converter.PhiFans.Model;
 using KaedePhi.Tool.Converter.PhiFans.Utils;
 
@@ -65,10 +66,12 @@ public class PhiFansConverter
         _ct.ThrowIfCancellationRequested();
 
         var lines = new List<Line>(normalized.JudgeLineList.Count);
-        foreach (var line in normalized.JudgeLineList)
+        for (var index = 0; index < normalized.JudgeLineList.Count; index++)
         {
             _ct.ThrowIfCancellationRequested();
+            var line = normalized.JudgeLineList[index];
             lines.Add(JudgeLineBuilder.ConvertFromIr(line, options));
+            ChartExportProgressContext.Report(index + 1, normalized.JudgeLineList.Count);
         }
 
         return new Chart

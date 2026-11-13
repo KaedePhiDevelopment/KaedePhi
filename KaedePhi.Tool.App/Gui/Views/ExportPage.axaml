@@ -239,7 +239,10 @@
 
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto" VerticalAlignment="Center">
             <StackPanel Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
-                <ProgressBar IsIndeterminate="True" Width="90" Height="5" IsVisible="{Binding IsExporting}" />
+                <ProgressBar Value="{Binding ExportProgress}" Maximum="100" Width="180" Height="7"
+                             IsVisible="{Binding IsExporting}" />
+                <TextBlock Text="{Binding ExportProgressText}" Classes="muted" FontSize="12"
+                           IsVisible="{Binding IsExporting}" />
                 <TextBlock Text="{Binding StatusText}" Classes="muted" FontSize="12"
                            IsVisible="{Binding HasStatusText}" />
             </StackPanel>

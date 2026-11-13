@@ -1,3 +1,4 @@
+using System.Text;
 using KaedePhi.Core.Formats.PhiChain.v6.Serialization;
 using KaedePhi.Core.Formats.PhiEdit.Serialization;
 using KaedePhi.Core.Formats.PhiFans.Serialization;
@@ -47,10 +48,12 @@ public static class ChartFormatRegistry
                 Exporter = async (chart, path, write, options, log, ct) =>
                 {
                     var converter = Prepare(new RePhiEditConverter(), log, ct);
+                    write.Progress?.Report(new ToolProgress(0.1));
                     var target = converter.FromIr(
                         chart,
                         Coerce(options, () => new ConvertOption())
                     );
+                    write.Progress?.Report(new ToolProgress(0.55));
                     await WriteAsync(
                         path,
                         write,
@@ -81,10 +84,12 @@ public static class ChartFormatRegistry
                 Exporter = async (chart, path, write, options, log, ct) =>
                 {
                     var converter = Prepare(new StellateRePhiEditExtendedConverter(), log, ct);
+                    write.Progress?.Report(new ToolProgress(0.1));
                     var target = converter.FromIr(
                         chart,
                         Coerce(options, () => new ConvertOption())
                     );
+                    write.Progress?.Report(new ToolProgress(0.55));
                     await WriteAsync(
                         path,
                         write,
@@ -122,10 +127,12 @@ public static class ChartFormatRegistry
                 Exporter = async (chart, path, write, options, log, ct) =>
                 {
                     var converter = Prepare(new PhiEditConverter(), log, ct);
+                    write.Progress?.Report(new ToolProgress(0.1));
                     var target = converter.FromIr(
                         chart,
                         Coerce(options, () => new IrToPhiEditConvertOptions())
                     );
+                    write.Progress?.Report(new ToolProgress(0.55));
                     await WriteAsync(
                         path,
                         write,
@@ -156,10 +163,12 @@ public static class ChartFormatRegistry
                 Exporter = async (chart, path, write, options, log, ct) =>
                 {
                     var converter = Prepare(new PhigrosV3Converter(), log, ct);
+                    write.Progress?.Report(new ToolProgress(0.1));
                     var target = converter.FromIr(
                         chart,
                         Coerce(options, () => new IrToPhigrosV3ConvertOptions())
                     );
+                    write.Progress?.Report(new ToolProgress(0.55));
                     await WriteAsync(
                         path,
                         write,
@@ -197,10 +206,12 @@ public static class ChartFormatRegistry
                 Exporter = async (chart, path, write, options, log, ct) =>
                 {
                     var converter = Prepare(new PhiChainConverter(), log, ct);
+                    write.Progress?.Report(new ToolProgress(0.1));
                     var target = converter.FromIr(
                         chart,
                         Coerce(options, () => new IrToPhiChainConvertOptions())
                     );
+                    write.Progress?.Report(new ToolProgress(0.55));
                     await WriteAsync(
                         path,
                         write,
@@ -231,10 +242,12 @@ public static class ChartFormatRegistry
                 Exporter = async (chart, path, write, options, log, ct) =>
                 {
                     var converter = Prepare(new PhiFansConverter(), log, ct);
+                    write.Progress?.Report(new ToolProgress(0.1));
                     var target = converter.FromIr(
                         chart,
                         Coerce(options, () => new IrToPhiFansConvertOptions())
                     );
+                    write.Progress?.Report(new ToolProgress(0.55));
                     await WriteAsync(
                         path,
                         write,
@@ -468,26 +481,85 @@ public static class ChartFormatRegistry
         }
         else
         {
+            write.Progress?.Report(new ToolProgress(0.57));
             var text = await serializeText();
             if (!write.DryRun)
+                await WriteTextAsync(fullPath, text, write, ct);
+            else
+                write.Progress?.Report(new ToolProgress(0.99));
+        }
+    }
+
+    private static async Task WriteTextAsync(
+        string path,
+        string text,
+        ChartWriteSettings write,
+        CancellationToken ct
+    )
+    {
+        var temporaryPath = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        Directory.CreateDirectory(
+            Path.GetDirectoryName(path)
+                ?? throw new InvalidOperationException("Invalid output path")
+        );
+
+        try
+        {
+            if (write.Progress is null)
             {
-                var temporaryPath = fullPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
-                Directory.CreateDirectory(
-                    Path.GetDirectoryName(fullPath)
-                        ?? throw new InvalidOperationException("Invalid output path")
-                );
-                try
+                await File.WriteAllTextAsync(temporaryPath, text, ct);
+            }
+            else
+            {
+                var totalBytes = Encoding.UTF8.GetByteCount(text);
+                var reportProgress = CreateWriteProgressReporter(write, totalBytes);
+                await using (
+                    var stream = new FileStream(
+                        temporaryPath,
+                        FileMode.CreateNew,
+                        FileAccess.Write,
+                        FileShare.None,
+                        4096,
+                        useAsync: true
+                    )
+                )
+                await using (
+                    var progressStream = new ProgressWriteStream(
+                        stream,
+                        leaveOpen: true,
+                        onBytesWritten: reportProgress
+                    )
+                )
                 {
-                    await File.WriteAllTextAsync(temporaryPath, text, ct);
-                    ct.ThrowIfCancellationRequested();
-                    File.Move(temporaryPath, fullPath, true);
-                }
-                finally
-                {
-                    if (File.Exists(temporaryPath))
-                        File.Delete(temporaryPath);
+                    await using var writer = new StreamWriter(
+                        progressStream,
+                        new UTF8Encoding(false),
+                        4096,
+                        leaveOpen: true
+                    );
+
+                    const int chunkSize = 4096;
+                    for (var offset = 0; offset < text.Length; offset += chunkSize)
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        var count = Math.Min(chunkSize, text.Length - offset);
+                        await writer.WriteAsync(text.AsMemory(offset, count), ct);
+                        await writer.FlushAsync(ct);
+                    }
+
+                    if (totalBytes == 0)
+                        reportProgress(0);
+                    await stream.FlushAsync(ct);
                 }
             }
+
+            ct.ThrowIfCancellationRequested();
+            File.Move(temporaryPath, path, true);
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath))
+                File.Delete(temporaryPath);
         }
     }
 
@@ -502,8 +574,20 @@ public static class ChartFormatRegistry
         var fullPath = Path.GetFullPath(path);
         if (write.DryRun)
         {
+            write.Progress?.Report(new ToolProgress(0.57));
             await serializeStream(Stream.Null);
+            write.Progress?.Report(new ToolProgress(0.99));
             return;
+        }
+
+        long totalBytes = 0;
+        if (write.Progress is not null)
+        {
+            write.Progress.Report(new ToolProgress(0.57));
+            await using var counter = new ProgressWriteStream(Stream.Null, leaveOpen: true);
+            await serializeStream(counter);
+            totalBytes = counter.BytesWritten;
+            write.Progress.Report(new ToolProgress(0.6));
         }
 
         var temporaryPath = fullPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
@@ -524,7 +608,21 @@ public static class ChartFormatRegistry
                 )
             )
             {
-                await serializeStream(stream);
+                if (write.Progress is null)
+                {
+                    await serializeStream(stream);
+                }
+                else
+                {
+                    await using var progressStream = new ProgressWriteStream(
+                        stream,
+                        leaveOpen: true,
+                        CreateWriteProgressReporter(write, totalBytes)
+                    );
+                    await serializeStream(progressStream);
+                    if (totalBytes == 0)
+                        write.Progress.Report(new ToolProgress(0.99));
+                }
                 await stream.FlushAsync(ct);
             }
             ct.ThrowIfCancellationRequested();
@@ -535,5 +633,26 @@ public static class ChartFormatRegistry
             if (File.Exists(temporaryPath))
                 File.Delete(temporaryPath);
         }
+    }
+
+    private static Action<long> CreateWriteProgressReporter(
+        ChartWriteSettings write,
+        long totalBytes
+    )
+    {
+        var lastReportedProgress = 0.6;
+        return bytesWritten =>
+        {
+            if (write.Progress is null)
+                return;
+
+            var ratio = totalBytes <= 0 ? 1 : Math.Clamp((double)bytesWritten / totalBytes, 0, 1);
+            var progress = 0.6 + ratio * 0.39;
+            if (progress - lastReportedProgress < 0.01 && ratio < 1)
+                return;
+
+            lastReportedProgress = progress;
+            write.Progress.Report(new ToolProgress(progress));
+        };
     }
 }

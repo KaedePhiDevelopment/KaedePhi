@@ -1,4 +1,5 @@
 using KaedePhi.Tool.Common;
+using KaedePhi.Tool.Converter;
 using KaedePhi.Tool.Converter.PhiEdit.Model;
 using Meta = KaedePhi.Core.Intermediate.Model.Meta;
 
@@ -61,12 +62,14 @@ public class PhiEditConverter
 
         var judgeLineConverter = new Utils.PhiEditJudgeLineBuilder(options, OnWarning);
         var judgeLines = new List<Pe.JudgeLine>(normalized.JudgeLineList.Count);
-        foreach (var line in normalized.JudgeLineList)
+        for (var index = 0; index < normalized.JudgeLineList.Count; index++)
         {
             _ct.ThrowIfCancellationRequested();
+            var line = normalized.JudgeLineList[index];
             var converted = judgeLineConverter.ConvertJudgeLine(line, normalized.JudgeLineList);
             if (converted is not null)
                 judgeLines.Add(converted);
+            ChartExportProgressContext.Report(index + 1, normalized.JudgeLineList.Count);
         }
 
         return new Pe.Chart
