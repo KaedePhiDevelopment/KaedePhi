@@ -15,8 +15,6 @@ internal static partial class Program
     [STAThread]
     public static int Main(string[] args)
     {
-        SetDefaultUiCulture();
-
         if (args.Contains("--gui"))
             return RunGui(args);
         // 若存在非 GUI 参数，无论终端状态均走 CLI，避免重定向/管道时误启动 GUI
@@ -29,13 +27,6 @@ internal static partial class Program
             return RunCli(args).GetAwaiter().GetResult();
 
         return RunGui(args);
-    }
-
-    private static void SetDefaultUiCulture()
-    {
-        var culture = CultureInfo.GetCultureInfo("zh-CN");
-        CultureInfo.DefaultThreadCurrentUICulture = culture;
-        CultureInfo.CurrentUICulture = culture;
     }
 
     private static int RunGui(string[] args)
